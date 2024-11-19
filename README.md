@@ -1,5 +1,7 @@
 ![alt text](VMTutorial.png)
 
+# A Fork of Rastko Sknepnek's vertex model tutorial repo
+
 Lorentz Centre workshop Computational Advances in Active Matter (11 - 15 December 2023)
 The Erwin Schrödinger International Institute for Mathematics and Physics summer school on Non-equilibrium Processes in Physics and Biology
 (19 - 30 August 2024)
