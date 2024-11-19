@@ -16,7 +16,7 @@ class Tensor:
         self.T = np.zeros((N, 2, 2))
         self.eigvals = np.zeros((N, 2))
         self.eigvecs = np.zeros((N, 2, 2))
-        self.type = np.zeros(N, dtype=np.int)
+        self.type = np.zeros(N, dtype=int)
         self.has_eigenvals = False
 
     def compute_eigvals(self):
