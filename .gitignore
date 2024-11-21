@@ -1,3 +1,6 @@
+## BUILD STUFF
+_skbuild/
+
 *.bundle.*
 lib/
 node_modules/
