@@ -1,6 +1,6 @@
 import numpy as np
-from vertex import Vertex
-from CellList2D import CellList2D
+from .vertex import Vertex
+from .CellList2D import CellList2D
 
 
 class RandomLattice:

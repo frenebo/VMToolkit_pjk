@@ -1,5 +1,5 @@
 import numpy as np
-from vertex import Vertex
+from .vertex import Vertex
 
 
 class TriangularLattice:

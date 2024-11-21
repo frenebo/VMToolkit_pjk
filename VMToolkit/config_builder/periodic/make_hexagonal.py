@@ -1,5 +1,5 @@
-from triangular_lattice import *
-from make_mesh import *
+from .triangular_lattice import *
+from .make_mesh import *
 
 L = 21
 

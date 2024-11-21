@@ -1,6 +1,6 @@
 #from random_lattice import *
-from voro_lattice import *
-from make_mesh import *
+from .voro_lattice import *
+from .make_mesh import *
 import numpy as np
 import os
 

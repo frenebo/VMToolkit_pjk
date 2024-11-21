@@ -1,4 +1,4 @@
-from honeycomb_lattice import *
+from .honeycomb_lattice import *
 
 def create_honeycomb_json(save_fp):
     # Genrate hexagonal lattice in a rectangular box [-10,10] x [-10,10]

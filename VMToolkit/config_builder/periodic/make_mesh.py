@@ -1,10 +1,10 @@
 import numpy as np
-from cell import Cell
-from vertex import Vertex
+from .cell import Cell
+from .vertex import Vertex
 from scipy.spatial import Delaunay
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
-from CellList2D import *
+from .CellList2D import *
 from itertools import permutations
 import json
 import copy

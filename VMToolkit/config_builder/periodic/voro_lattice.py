@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.spatial import Voronoi
-from CellList2D import CellList2D
-from vertex import Vertex
+from .CellList2D import CellList2D
+from .vertex import Vertex
 
 
 class Box:

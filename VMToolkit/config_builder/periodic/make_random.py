@@ -1,5 +1,5 @@
-from random_lattice import *
-from make_mesh import *
+from .random_lattice import *
+from .make_mesh import *
 import os 
 
 seed = int(os.urandom(4).hex(), base=16)  # generate some large number as seed, it will we stored in the JSON file
