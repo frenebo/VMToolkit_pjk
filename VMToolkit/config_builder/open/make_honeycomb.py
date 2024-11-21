@@ -1,9 +1,9 @@
 from .honeycomb_lattice import *
 
-def create_honeycomb_json(save_fp):
+def create_honeycomb_json(save_fp, honeycomb_a_len=1.0):
     # Genrate hexagonal lattice in a rectangular box [-10,10] x [-10,10]
 
-    h = HoneycombLattice(20.0,20.0,1.0)
+    h = HoneycombLattice(20.0,20.0, a=honeycomb_a_len)
 
     # build lattice 
     h.build()
