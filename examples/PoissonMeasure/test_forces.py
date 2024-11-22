@@ -8,6 +8,7 @@ from VMToolkit import VM as vm
 
 def test_forces(scratch_dirpath):
     os.makedirs(scratch_dirpath)
+    
     side_len_rest = 1.0
     
     ## Setup initial condition file
@@ -28,6 +29,10 @@ def test_forces(scratch_dirpath):
 
     forces.add('area')         # add area force form term E = 0.5*kappa*(A-A0)^2
     forces.add('perimeter')    # add perimeter force term from E = 0.5*gamma*P^2 + lambda*P (maybe -?)
+    
+    area_rest = side_len_rest ** 2 + 3*math.sqrt(3)/2
+    perimeter_rest = side_len_rest * 6
+    
     ###### How do we set gamma and lambda?
     # Making it fit the (P-P0)^2 form, we complete the square to get:
     # 0.5*gamma*P^2+lambda*P = 0.5*g*(P+l/g)^2 + some constant.....
@@ -35,12 +40,12 @@ def test_forces(scratch_dirpath):
     # l/g = P_0 -> l = g * P_0
     # And then 
     k_perimeter = 1.0
-    perimeter_rest = side_len_rest * 6
     gamma = k_perimeter
     lam = gamma * perimeter_rest
     
+    kappa = 1.0
     
-    area_rest = side_len_rest ** 2 + 3*math.sqrt(3)/2
+    
 
     # Set parameters for each cell type
     forces.set_params('area', 'passive' , {'kappa' : kappa})
