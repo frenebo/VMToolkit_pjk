@@ -40,8 +40,10 @@ class HoneycombLattice:
 
     def __build_grid(self):
         vecA, vecB = self.a*np.array([1.0, 0]), self.a*np.array([-1.0, 0.0])
-        a1, a2 = self.a*np.array([1.5, 0.5*np.sqrt(3.0)]
-                                 ), self.a*np.array([1.5, -0.5*np.sqrt(3.0)])
+        
+        a1 = self.a*np.array([1.5, 0.5*np.sqrt(3.0)])
+        a2 = self.a*np.array([1.5, -0.5*np.sqrt(3.0)])
+        
         l = (a1 + a2)[0]
         N = int(self.lx/l)
         idx = 0

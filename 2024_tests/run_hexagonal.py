@@ -2,6 +2,7 @@
 from hexagonal_test.analytic_tools.find_hexagon_rest_area import HexagonalModel, find_hexagon_rest_area
 
 from VMToolkit.config_builder.open.make_honeycomb import create_honeycomb_json
+from VMToolkit.config_builder.open.honeycomb_lattice import HoneycombLattice
 
 
 if __name__ == "__main__":
@@ -12,8 +13,17 @@ if __name__ == "__main__":
         1,
         1,
     )
+    rest_side_length = res["rest_side_length"]
     
-    print(res)
+    honeycomb = HoneycombLattice(
+        lx=25.0,
+        ly=25.0,
+        a=rest_side_length,
+    )
+    
+    honeycomb.json_out("scratch/example.json")
+    
+    # print(res)
     
     # create_honeycomb_json(
     #     honeycomb_pth,
