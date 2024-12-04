@@ -7,11 +7,13 @@ from VMToolkit.config_builder.open.honeycomb_lattice import HoneycombLattice
 
 if __name__ == "__main__":
     hex_model = HexagonalModel()
+    
+    A0_model = 20
     res = hex_model.find_rest_size_of_hexagon(
-        20,
-        1,
-        1,
-        1,
+        A_0=A0_model,
+        P_0=1,
+        K=1,
+        Gamma=1,
     )
     rest_side_length = res["rest_side_length"]
     print(res)
