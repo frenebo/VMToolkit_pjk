@@ -254,7 +254,40 @@ class HexagonalModel:
         
         
         return gradient_function, hessian_function
-
+    
+    def find_rest_size_of_hexagon(
+        self,
+        A_0,
+        P_0,
+        K,
+        Gamma,
+    ):
+        if A_0 <= 0:
+            raise ValueError("Invalid value A_0 = {} - must be positive".format(A_0))
+        if K <= 0:
+            raise ValueError("Invalid value K = {} - must be positive".format(K))
+        
+        mu_val = np.sqrt(A_0) # Scaling factor to get tilded variables
+        
+        Y_val = Gamma / (K*A_0)
+        P_r_til_val = P_0 / mu_val
+        
+        
+        eq_vals = self.get_important_vals_at_givenpoint(Y_val, P_r_til_val)
+        
+        xi_til_eq = eq_vals["xi_til_eq"] # Equilibrium side length, in tilded variable
+        
+        side_length_eq = xi_til_eq * mu_val
+        rest_area = (3*np.sqrt(3)/2) * (side_length_eq ** 2)
+        
+        # eigenvalues, eigenvectors = np.linalg.eig(eq_vals[""]
+        if eq_vals["poisson_ratio"] > 1:
+            raise Exception("Poisson ratio more than one, which means floppy regime - both A0 and P0 can be satisfied in floppy state...")
+        
+        return {
+            "rest_side_length": side_length_eq,
+            "rest_area": rest_area,
+        }
 
     def get_important_vals_at_givenpoint(
         self,
@@ -419,8 +452,6 @@ def find_hexagon_rest_area():
         hex_m.E_mu_subbed,
     ))
     
-    
-
 
     print(sympy.Eq(
         sympy.Function(r"\tilde{E}")(hex_m.alpha_til, hex_m.beta_til, hex_m.Y,hex_m.P_r_til),
