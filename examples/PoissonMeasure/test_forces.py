@@ -26,6 +26,9 @@ def test_forces(scratch_dirpath):
 
 
     sim_sys.read_input(honeycomb_pth)           # read input configuration
+    
+    
+    # @TODO set up the honeycomb to have A0 of 1.0... 
 
     forces.add('area')         # add area force form term E = 0.5*kappa*(A-A0)^2
     forces.add('perimeter')    # add perimeter force term from E = 0.5*gamma*P^2 + lambda*P (maybe -?)
