@@ -14,6 +14,7 @@ if __name__ == "__main__":
         1,
     )
     rest_side_length = res["rest_side_length"]
+    print(res)
     
     honeycomb = HoneycombLattice(
         lx=25.0,
@@ -23,7 +24,6 @@ if __name__ == "__main__":
     
     honeycomb.json_out("scratch/example.json")
     
-    # print(res)
     
     # create_honeycomb_json(
     #     honeycomb_pth,
