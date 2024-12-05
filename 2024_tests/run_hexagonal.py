@@ -78,19 +78,21 @@ if __name__ == "__main__":
         Gamma=gamma,
     )
     rest_side_length = res["rest_side_length"]
+    theoretical_rest_width = rest_side_length*2
+    theoretical_rest_height = rest_side_length*2*np.sqrt(3)/2
     print("MODEL PARAMS")
     if os.path.exists("scratch/example.json"):
         os.remove("scratch/example.json")
     setup_hexagonal_init_mesh(
         A0_model,
         P0_model,
-        init_side_length=rest_side_length*1.1,
+        init_side_length=rest_side_length*1.05,
         json_out_fp="scratch/example.json",
     )
     
     print("A0={A0}  P0={P0}  kappa={kappa} gamma={gamma}".format(A0=A0_model,P0=P0_model,kappa=kappa,gamma=gamma))
     print(res)
-    
+    print("theoretical rest width={}, height={}".format(theoretical_rest_width, theoretical_rest_height))
     ##### Running sim
     tissue  = Tissue()                                               # initialise mesh
     sim_sys = System(tissue)                                         # base object for the system
@@ -152,13 +154,14 @@ if __name__ == "__main__":
     #
     # #################################################################
 
-    dt = 0.01
+    dt = 0.03
     friction_gam = 1.0
     integrators.set_dt(dt) # set time step
     integrators.set_params("brownian", {"gamma": friction_gam})
 
-    step_size = 600      # Step counter in terms of time units
+    step_size = 1200      # Step counter in terms of time units
     
+    ext_forcing_on = []
     checkpoint_fps = []
     # Pulling on the passive system
     # for i in range(args.nrun):
@@ -174,14 +177,18 @@ if __name__ == "__main__":
         #if False:
             pass
             print("Using external forces.. ")
-            fpull=100
+            fpull=0.1
             integrators.set_external_force('brownian', 'right', Vec(fpull,0.0))  # pulling on the right-most column of vertices
             integrators.set_external_force('brownian', 'left', Vec(-fpull,0.0))  # pulling on the left-most column of vertices
     
+            ext_forcing_on.append(True)
+        else:
+            ext_forcing_on.append(False)
         simulation.run(step_size)
     
     print("Running analysis on simulation results")
-    for ckpt_fp in checkpoint_fps:
+    for ckpt_idx, ckpt_fp in enumerate(checkpoint_fps):
+
         print(ckpt_fp,end="")
 
         mesh = Mesh()
@@ -206,6 +213,9 @@ if __name__ == "__main__":
         areas = [face.area() for face in passive_real_cells]
         areas = np.array(areas)
 
+        W_mean = np.array(cell_widths).mean()
+        H_mean = np.array(cell_widths).mean()
+
         print("  A_min={:.4f}, A_max={:.4f}, A_mean={:.4f}, W_mean={W_mean:.4f}, H_mean={H_mean:.4f}".format(
             areas.min(),
             areas.max(),
@@ -213,6 +223,14 @@ if __name__ == "__main__":
             W_mean=np.array(cell_widths).mean(),
             H_mean=np.array(cell_heights).mean(),
             ))
+        if ext_forcing_on[ckpt_idx]:
+            strain_x = (W_mean-theoretical_rest_width)/theoretical_rest_width
+            strain_y = (H_mean - theoretical_rest_height)/theoretical_rest_height
+
+            print("    strain_x={} strain_y={}, poisson_r={}".format(strain_x, strain_y, -strain_y/strain_x))
+        else:
+            pass
+            #print("")
     #### Do stretching test
 
     
