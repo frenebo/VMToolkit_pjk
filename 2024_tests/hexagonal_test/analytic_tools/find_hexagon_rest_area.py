@@ -276,6 +276,7 @@ class HexagonalModel:
         eq_vals = self.get_important_vals_at_givenpoint(Y_val, P_r_til_val)
         
         xi_til_eq = eq_vals["xi_til_eq"] # Equilibrium side length, in tilded variable
+        poisson_ratio = eq_vals["poisson_ratio"] # Same in either variable
         
         side_length_eq = xi_til_eq * mu_val
         rest_area = (3*np.sqrt(3)/2) * (side_length_eq ** 2)
@@ -287,6 +288,7 @@ class HexagonalModel:
         return {
             "rest_side_length": side_length_eq,
             "rest_area": rest_area,
+            "poisson_ratio": ,
         }
 
     def get_important_vals_at_givenpoint(
