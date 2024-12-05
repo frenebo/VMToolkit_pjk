@@ -8,10 +8,11 @@ from VMToolkit.config_builder.open.honeycomb_lattice import HoneycombLattice
 if __name__ == "__main__":
     hex_model = HexagonalModel()
     
-    A0_model = 20
+    A0_model = 20.0
+    P0_model = 1.0
     res = hex_model.find_rest_size_of_hexagon(
         A_0=A0_model,
-        P_0=1,
+        P_0=P0_model,
         K=1,
         Gamma=1,
     )
@@ -25,7 +26,7 @@ if __name__ == "__main__":
     )
     h.build()
     h.minmax()
-    
+    h.set_energy_params(A0=A0_model,P0=P0_model)    
     h.json_out("scratch/example.json")
     
     
