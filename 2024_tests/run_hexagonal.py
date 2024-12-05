@@ -1,9 +1,10 @@
-
+import numpy as np
 from hexagonal_test.analytic_tools.find_hexagon_rest_area import HexagonalModel, find_hexagon_rest_area
 
 from VMToolkit.config_builder.open.make_honeycomb import create_honeycomb_json
 from VMToolkit.config_builder.open.honeycomb_lattice import HoneycombLattice
 from VMToolkit.VM import Tissue, System, Force, Integrate, Topology, Dump, Simulation
+from VMToolkit.VMAnalysis.utils.HalfEdge import Mesh
 
 if __name__ == "__main__":
     hex_model = HexagonalModel()
@@ -12,7 +13,8 @@ if __name__ == "__main__":
     P0_model = 1.0
     kappa = 1.0     # area stiffness
     gamma = 1.0     # perimeter stiffness
-
+    print("MODEL PARAMS")
+    print("A0={A0}  P0={P0}  kappa={kappa} gamma={gamma}".format(A0=A0_model,P0=P0_model,kappa=kappa,gamma=gamma))
     res = hex_model.find_rest_size_of_hexagon(
         A_0=A0_model,
         P_0=P0_model,
@@ -25,7 +27,7 @@ if __name__ == "__main__":
     h = HoneycombLattice(
         lx=25.0,
         ly=25.0,
-        a=rest_side_length,
+        a=rest_side_length*2.0,
     )
     h.build()
     h.minmax()
@@ -92,14 +94,30 @@ if __name__ == "__main__":
     #
     # #################################################################
 
-    dt = 0.1
-    integrators.set_dt(0.1) # set time step
+    dt = 0.005
+    integrators.set_dt(dt) # set time step
 
-    step_size = 10       # Step counter in terms of time units
-
+    step_size = 10      # Step counter in terms of time units
+    
+    checkpoint_fps = []
     # Pulling on the passive system
     # for i in range(args.nrun):
     for i in range(10):
-        simulation.run(step_size)
-        dumps.dump_json("scratch/res{}.json".format(str(i).zfill(3)))
+        ckpt_fp = "scratch/res{}.json".format(str(i).zfill(3))
+        dumps.dump_mesh(ckpt_fp)
+        checkpoint_fps.append(ckpt_fp)
         
+        # Will be reocrded next iteration
+        simulation.run(step_size)
+
+    print("Running analysis on simulation results")
+    for ckpt_fp in checkpoint_fps:
+        print(ckpt_fp,end="")
+
+        mesh = Mesh()
+        mesh.read(ckpt_fp)
+        areas = [face.area() for face in mesh.faces]
+        areas = np.array(areas)
+
+        print("  Min,max,mean area: {},{},{}".format(areas.min(), areas.max(),areas.mean()))
+
