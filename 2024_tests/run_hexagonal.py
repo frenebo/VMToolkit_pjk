@@ -214,6 +214,7 @@ if __name__ == "__main__":
                 
                 passive_real_cells.append(f)
                 #break
+        print(mesh.faces[len(mesh.faces)//3].vertex_coords())
         areas = [face.area() for face in passive_real_cells]
         areas = np.array(areas)
 
