@@ -157,8 +157,8 @@ if __name__ == "__main__":
         
         # Will be reocrded next iteration
 
-        #if i/N_checkpoints>=0.5:
-        if False:
+        if i/N_checkpoints>=0.5:
+        #if False:
             pass
             print("Using external forces.. ")
             fpull=100
@@ -174,16 +174,32 @@ if __name__ == "__main__":
         mesh = Mesh()
         mesh.read(ckpt_fp)
 
+        cell_widths = []
+        cell_heights = []
         passive_real_cells= []
         for f in mesh.faces:
             if f.type=='passive' and f.outer == False:
+                #print(f.vertex_coords())
+                cell_vertices = np.array([v.to_list() for v in f.vertex_coords()],dtype=float)
+                #print(cell_vertices)
+                #break
+                cell_w = cell_vertices[:,0].max() - cell_vertices[:,0].min()
+                cell_h = cell_vertices[:,1].max() - cell_vertices[:,1].min()
+                cell_widths.append(cell_w)
+                cell_heights.append(cell_h)
+                
                 passive_real_cells.append(f)
-            print(f.vertex_coords())
-            break
+                #break
         areas = [face.area() for face in passive_real_cells]
         areas = np.array(areas)
 
-        print("  A_min={:.4f}, A_max={:.4f}, A_mean={:.4f}".format(areas.min(), areas.max(),areas.mean()))
+        print("  A_min={:.4f}, A_max={:.4f}, A_mean={:.4f}, W_mean={W_mean:.4f}, H_mean={H_mean:.4f}".format(
+            areas.min(),
+            areas.max(),
+            areas.mean(),
+            W_mean=np.array(cell_widths).mean(),
+            H_mean=np.array(cell_heights).mean(),
+            ))
     #### Do stretching test
 
     
