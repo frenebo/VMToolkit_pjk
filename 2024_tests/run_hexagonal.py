@@ -95,7 +95,9 @@ if __name__ == "__main__":
     # #################################################################
 
     dt = 0.005
+    friction_gam = 2.0
     integrators.set_dt(dt) # set time step
+    integrators.set_params({"gamma": friction_gam})
 
     step_size = 10      # Step counter in terms of time units
     
