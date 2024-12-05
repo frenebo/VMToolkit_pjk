@@ -22,18 +22,18 @@
 #include <sys/stat.h>
 #include <regex>
 
-#include <vtkVersion.h>
-#include <vtkCellArray.h>
-#include <vtkCellData.h>
-#include <vtkPoints.h>
-#include <vtkPointData.h>
-#include <vtkPolygon.h>
-#include <vtkLine.h>
-#include <vtkXMLPolyDataWriter.h>
-#include <vtkZLibDataCompressor.h>
-#include <vtkPolyData.h>
-#include <vtkSmartPointer.h>
-#include <vtkDoubleArray.h>
+// #include <vtkVersion.h>
+// #include <vtkCellArray.h>
+// #include <vtkCellData.h>
+// #include <vtkPoints.h>
+// #include <vtkPointData.h>
+// #include <vtkPolygon.h>
+// #include <vtkLine.h>
+// #include <vtkXMLPolyDataWriter.h>
+// #include <vtkZLibDataCompressor.h>
+// #include <vtkPolyData.h>
+// #include <vtkSmartPointer.h>
+// #include <vtkDoubleArray.h>
 
 #include "json.hpp"
 
@@ -70,11 +70,11 @@ namespace VMTutorial
 	public:
 		Dump(System &sys, ForceCompute &fc) : _sys{sys}, _force_compute{fc}, _sfc(0.95) {}
 
-		void dump_cells(const string &, bool = false, bool = false);
-		void dump_junctions(const string &, bool = false);
+		// void dump_cells(const string &, bool = false, bool = false);
+		// void dump_junctions(const string &, bool = false);
 		void dump_mesh(const string &, bool = false);
 		void dump_json(const string &);
-		void dump_cell_directors(const string&, bool = false, bool = false);
+		// void dump_cell_directors(const string&, bool = false, bool = false);
 
 		void set_sfc(double sfc) { _sfc = sfc; }
 
