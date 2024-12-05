@@ -1,4 +1,5 @@
 import numpy as np
+import os
 from hexagonal_test.analytic_tools.find_hexagon_rest_area import HexagonalModel, find_hexagon_rest_area
 
 from VMToolkit.config_builder.open.make_honeycomb import create_honeycomb_json
@@ -32,23 +33,35 @@ def setup_hexagonal_init_mesh(A0_model,P0_model,init_side_length,json_out_fp):
     left_box_corners = [
         [-box_lx*0.6, -box_ly*0.6],
         [-box_lx*0.6, box_ly*0.6],
-        [leftmost_center_x + init_side_length*0.01, box_ly*0.6],
-        [leftmost_center_x + init_side_length*0.01, -box_ly*0.6],
+        [
+            leftmost_center_x,# + init_side_length*0.01,
+            box_ly*0.6,
+        ],
+        [
+            leftmost_center_x,# + init_side_length*0.01,
+            -box_ly*0.6,
+        ],
     ]
 
     right_box_corners = [
         [box_lx*0.6, -box_ly*0.6],
         [box_lx*0.6, box_ly*0.6],
-        [rightmost_center_x - init_side_length*0.01, box_ly*0.6],
-        [rightmost_center_x - init_side_length*0.01, -box_ly*0.6],
+        [
+            rightmost_center_x,# - init_side_length*0.01,
+            box_ly*0.6,
+        ],
+        [
+            rightmost_center_x,# - init_side_length*0.01,
+            -box_ly*0.6,
+        ],
     ]
 
-    h.set_cell_type(left_box_corners, "left")
-    h.set_cell_type(right_box_corners, "right")
+    h.set_vertex_type(left_box_corners, "left")
+    h.set_vertex_type(right_box_corners, "right")
     left_faces = [face for face in h.cells if face.type=='left']
     right_faces = [face for face in h.cells if face.type=='right']
     print("set types of {} left, {} right cells".format(len(left_faces), len(right_faces)))
-    h.json_out("scratch/example.json")
+    h.json_out(json_out_fp)
 
 if __name__ == "__main__":
     hex_model = HexagonalModel()
@@ -66,8 +79,8 @@ if __name__ == "__main__":
     )
     rest_side_length = res["rest_side_length"]
     print("MODEL PARAMS")
-    
-    
+    if os.path.exists("scratch/example.json"):
+        os.remove("scratch/example.json")
     setup_hexagonal_init_mesh(
         A0_model,
         P0_model,
@@ -111,7 +124,7 @@ if __name__ == "__main__":
 
     lambda_val = P0_model * gamma # @TODO either the sim uses this, or it uses the P0... add a way to force P0 usage in set_params in cpp file?
 
-    for c_type in ['left','right', 'passive']:
+    for c_type in ['passive']:
         forces.set_params('area', c_type, {'kappa' : kappa})
         forces.set_params('perimeter', c_type,  {'gamma': gamma, "lambda": lambda_val})
 
