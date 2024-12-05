@@ -66,8 +66,9 @@ def setup_hexagonal_init_mesh(A0_model,P0_model,init_side_length,json_out_fp):
 if __name__ == "__main__":
     hex_model = HexagonalModel()
     
-    A0_model = 5
-    P0_model = 6.0
+    p0_shapefac = 3.6
+    A0_model = 4
+    P0_model = p0_shapefac*np.sqrt(A0_model)
     kappa = 1.0     # area stiffness
     gamma = 1.0     # perimeter stiffness
     
@@ -154,18 +155,18 @@ if __name__ == "__main__":
     #
     # #################################################################
 
-    dt = 0.03
+    dt = 0.05
     friction_gam = 1.0
     integrators.set_dt(dt) # set time step
     integrators.set_params("brownian", {"gamma": friction_gam})
 
-    step_size = 1200      # Step counter in terms of time units
+    step_size = 200      # Step counter in terms of time units
     
     ext_forcing_on = []
     checkpoint_fps = []
     # Pulling on the passive system
     # for i in range(args.nrun):
-    N_checkpoints = 10
+    N_checkpoints =50
     for i in range(N_checkpoints):
         ckpt_fp = "scratch/res{}.json".format(str(i).zfill(3))
         dumps.dump_mesh(ckpt_fp)
@@ -173,7 +174,7 @@ if __name__ == "__main__":
         
         # Will be reocrded next iteration
 
-        if i/N_checkpoints>=0.5:
+        if i/N_checkpoints>=0.3:
         #if False:
             pass
             print("Using external forces.. ")
@@ -214,19 +215,19 @@ if __name__ == "__main__":
         areas = np.array(areas)
 
         W_mean = np.array(cell_widths).mean()
-        H_mean = np.array(cell_widths).mean()
+        H_mean = np.array(cell_heights).mean()
 
         print("  A_min={:.4f}, A_max={:.4f}, A_mean={:.4f}, W_mean={W_mean:.4f}, H_mean={H_mean:.4f}".format(
             areas.min(),
             areas.max(),
             areas.mean(),
-            W_mean=np.array(cell_widths).mean(),
-            H_mean=np.array(cell_heights).mean(),
+            W_mean=W_mean,
+            H_mean=H_mean,
             ))
         if ext_forcing_on[ckpt_idx]:
-            strain_x = (W_mean-theoretical_rest_width)/theoretical_rest_width
-            strain_y = (H_mean - theoretical_rest_height)/theoretical_rest_height
+            strain_x = (W_mean - theoretical_rest_width)/theoretical_rest_width
 
+            strain_y = (H_mean - theoretical_rest_height)/theoretical_rest_height
             print("    strain_x={} strain_y={}, poisson_r={}".format(strain_x, strain_y, -strain_y/strain_x))
         else:
             pass

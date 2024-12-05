@@ -288,7 +288,7 @@ class HexagonalModel:
         return {
             "rest_side_length": side_length_eq,
             "rest_area": rest_area,
-            "poisson_ratio": ,
+            "poisson_ratio": poisson_ratio,
         }
 
     def get_important_vals_at_givenpoint(
