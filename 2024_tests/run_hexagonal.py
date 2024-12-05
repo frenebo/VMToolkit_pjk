@@ -7,8 +7,8 @@ from VMToolkit.VM import Tissue, System, Force, Integrate, Topology, Dump, Simul
 from VMToolkit.VMAnalysis.utils.HalfEdge import Mesh
 
 def setup_hexagonal_init_mesh(A0_model,P0_model,init_side_length,json_out_fp):
-    box_lx = 20.0
-    box_ly = 20.0
+    box_lx = 25.0
+    box_ly = 25.0
     h = HoneycombLattice(
         lx=box_lx,
         ly=box_ly,
@@ -24,16 +24,37 @@ def setup_hexagonal_init_mesh(A0_model,P0_model,init_side_length,json_out_fp):
     #     [init_side_length],
     # ]
     print("C point:")
-    print(h.cpoints)
     
+    cell_centers = np.array([cell.rc for cell in h.cells])
+    leftmost_center_x = cell_centers[:,0].min()
+    rightmost_center_x = cell_centers[:,0].max()
     
+    left_box_corners = [
+        [-box_lx*0.6, -box_ly*0.6],
+        [-box_lx*0.6, box_ly*0.6],
+        [leftmost_center_x + init_side_length*0.01, box_ly*0.6],
+        [leftmost_center_x + init_side_length*0.01, -box_ly*0.6],
+    ]
+
+    right_box_corners = [
+        [box_lx*0.6, -box_ly*0.6],
+        [box_lx*0.6, box_ly*0.6],
+        [rightmost_center_x - init_side_length*0.01, box_ly*0.6],
+        [rightmost_center_x - init_side_length*0.01, -box_ly*0.6],
+    ]
+
+    h.set_cell_type(left_box_corners, "left")
+    h.set_cell_type(right_box_corners, "right")
+    left_faces = [face for face in h.cells if face.type=='left']
+    right_faces = [face for face in h.cells if face.type=='right']
+    print("set types of {} left, {} right cells".format(len(left_faces), len(right_faces)))
     h.json_out("scratch/example.json")
 
 if __name__ == "__main__":
     hex_model = HexagonalModel()
     
-    A0_model = 20.0
-    P0_model = 1.0
+    A0_model = 5
+    P0_model = 6.0
     kappa = 1.0     # area stiffness
     gamma = 1.0     # perimeter stiffness
     
@@ -50,7 +71,7 @@ if __name__ == "__main__":
     setup_hexagonal_init_mesh(
         A0_model,
         P0_model,
-        init_side_length=rest_side_length*1.5,
+        init_side_length=rest_side_length*1.1,
         json_out_fp="scratch/example.json",
     )
     
@@ -90,8 +111,9 @@ if __name__ == "__main__":
 
     lambda_val = P0_model * gamma # @TODO either the sim uses this, or it uses the P0... add a way to force P0 usage in set_params in cpp file?
 
-    forces.set_params('area', 'passive', {'kappa' : kappa})
-    forces.set_params('perimeter', 'passive',  {'gamma': gamma, "lambda": lambda_val})
+    for c_type in ['left','right', 'passive']:
+        forces.set_params('area', c_type, {'kappa' : kappa})
+        forces.set_params('perimeter', c_type,  {'gamma': gamma, "lambda": lambda_val})
 
     
     # #################################################################
@@ -117,12 +139,12 @@ if __name__ == "__main__":
     #
     # #################################################################
 
-    dt = 0.005
-    friction_gam = 2.0
+    dt = 0.01
+    friction_gam = 1.0
     integrators.set_dt(dt) # set time step
     integrators.set_params("brownian", {"gamma": friction_gam})
 
-    step_size = 100      # Step counter in terms of time units
+    step_size = 600      # Step counter in terms of time units
     
     checkpoint_fps = []
     # Pulling on the passive system
@@ -134,13 +156,16 @@ if __name__ == "__main__":
         checkpoint_fps.append(ckpt_fp)
         
         # Will be reocrded next iteration
-        simulation.run(step_size)
 
-        if i / N_checkpoints  >= 0.5:
-            fpull=0.1
+        #if i/N_checkpoints>=0.5:
+        if False:
+            pass
+            print("Using external forces.. ")
+            fpull=100
             integrators.set_external_force('brownian', 'right', Vec(fpull,0.0))  # pulling on the right-most column of vertices
             integrators.set_external_force('brownian', 'left', Vec(-fpull,0.0))  # pulling on the left-most column of vertices
     
+        simulation.run(step_size)
     
     print("Running analysis on simulation results")
     for ckpt_fp in checkpoint_fps:
@@ -148,10 +173,17 @@ if __name__ == "__main__":
 
         mesh = Mesh()
         mesh.read(ckpt_fp)
-        areas = [face.area() for face in mesh.faces if not face.outer]
+
+        passive_real_cells= []
+        for f in mesh.faces:
+            if f.type=='passive' and f.outer == False:
+                passive_real_cells.append(f)
+            print(f.vertex_coords())
+            break
+        areas = [face.area() for face in passive_real_cells]
         areas = np.array(areas)
 
-        print("  Min,max,mean area: {},{},{}".format(areas.min(), areas.max(),areas.mean()))
+        print("  A_min={:.4f}, A_max={:.4f}, A_mean={:.4f}".format(areas.min(), areas.max(),areas.mean()))
     #### Do stretching test
 
     
