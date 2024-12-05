@@ -133,6 +133,28 @@ class Face:
                 break
         return (1.0/(6*self.area()))*Rc + r0
     
+    def vertex_coords(self):
+        first = self.he
+        he = self.he
+        vtx_coords = []
+        # r0 = he.vfrom.r
+        # Rc = Vec([0.0, 0.0])
+        while True:
+            vtx_xy = he.vfrom.r
+            vtx_coords.append(vtx_xy)
+            # ri = he.vfrom.r - r0
+            # rj = he.vto.r - r0
+            # fact = ri.r[0]*rj.r[1] - ri.r[1]*rj.r[0]
+            # Rc.r[0] += (ri.r[0] + rj.r[0])*fact
+            # Rc.r[1] += (ri.r[1] + rj.r[1])*fact
+            he = he.next
+            if he.idx == first.idx:
+                break
+                
+        return vtx_coords
+        # return (1.0/(6*self.area()))*Rc + r0
+        
+    
     def get_shape(self):
         first = self.he
         he = self.he
