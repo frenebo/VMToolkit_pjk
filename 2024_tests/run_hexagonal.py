@@ -97,7 +97,7 @@ if __name__ == "__main__":
     dt = 0.005
     integrators.set_dt(dt) # set time step
 
-    step_size = 10      # Step counter in terms of time units
+    step_size = 30      # Step counter in terms of time units
     
     checkpoint_fps = []
     # Pulling on the passive system
@@ -116,7 +116,7 @@ if __name__ == "__main__":
 
         mesh = Mesh()
         mesh.read(ckpt_fp)
-        areas = [face.area() for face in mesh.faces]
+        areas = [face.area() for face in mesh.faces if not face.outer]
         areas = np.array(areas)
 
         print("  Min,max,mean area: {},{},{}".format(areas.min(), areas.max(),areas.mean()))
