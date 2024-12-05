@@ -89,7 +89,7 @@ if ("${is_system}" STREQUAL "-1")
     # if (VTKLocal)
     #  add_dependencies(VMTOOLKIT VTKLocal)
     #  install(DIRECTORY "${lib_path}/extern/VTK" DESTINATION extern)
-  endif()
+    #endif()
       
 endif()
 
