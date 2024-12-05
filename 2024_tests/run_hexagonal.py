@@ -3,7 +3,7 @@ from hexagonal_test.analytic_tools.find_hexagon_rest_area import HexagonalModel,
 
 from VMToolkit.config_builder.open.make_honeycomb import create_honeycomb_json
 from VMToolkit.config_builder.open.honeycomb_lattice import HoneycombLattice
-from VMToolkit.VM import Tissue, System, Force, Integrate, Topology, Dump, Simulation
+from VMToolkit.VM import Tissue, System, Force, Integrate, Topology, Dump, Simulation, Vec
 from VMToolkit.VMAnalysis.utils.HalfEdge import Mesh
 
 if __name__ == "__main__":
@@ -25,8 +25,8 @@ if __name__ == "__main__":
     print(res)
     
     h = HoneycombLattice(
-        lx=25.0,
-        ly=25.0,
+        lx=50.0,
+        ly=50.0,
         a=rest_side_length*2.0,
     )
     h.build()
@@ -97,14 +97,15 @@ if __name__ == "__main__":
     dt = 0.005
     friction_gam = 2.0
     integrators.set_dt(dt) # set time step
-    integrators.set_params({"gamma": friction_gam})
+    integrators.set_params("brownian", {"gamma": friction_gam})
 
-    step_size = 30      # Step counter in terms of time units
+    step_size = 100      # Step counter in terms of time units
     
     checkpoint_fps = []
     # Pulling on the passive system
     # for i in range(args.nrun):
-    for i in range(10):
+    N_checkpoints = 10
+    for i in range(N_checkpoints):
         ckpt_fp = "scratch/res{}.json".format(str(i).zfill(3))
         dumps.dump_mesh(ckpt_fp)
         checkpoint_fps.append(ckpt_fp)
@@ -112,6 +113,12 @@ if __name__ == "__main__":
         # Will be reocrded next iteration
         simulation.run(step_size)
 
+        if i / N_checkpoints  >= 0.5:
+            fpull=0.1
+            integrators.set_external_force('brownian', 'right', Vec(fpull,0.0))  # pulling on the right-most column of vertices
+            integrators.set_external_force('brownian', 'left', Vec(-fpull,0.0))  # pulling on the left-most column of vertices
+    
+    
     print("Running analysis on simulation results")
     for ckpt_fp in checkpoint_fps:
         print(ckpt_fp,end="")
@@ -122,4 +129,7 @@ if __name__ == "__main__":
         areas = np.array(areas)
 
         print("  Min,max,mean area: {},{},{}".format(areas.min(), areas.max(),areas.mean()))
+    #### Do stretching test
+
+    
 
