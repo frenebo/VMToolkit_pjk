@@ -14,10 +14,10 @@ import json
 import bz2
 import numpy as np
 import pathlib
-try:
-    import vtk
-except ImportError:
-    raise Exception('Python VTK support needs to be installed. Please check VTK documentation (vtk.org) on how to install it.')
+# try:
+#     import vtk
+# except ImportError:
+#     raise Exception('Python VTK support needs to be installed. Please check VTK documentation (vtk.org) on how to install it.')
 
 
 class Mesh:
@@ -361,90 +361,90 @@ class Mesh:
         with open(json_file, 'w') as out:
             json.dump(self.to_json(A0 = A0), out, indent=4)
 
-    def write_vtp(self, fname):
-        points = vtk.vtkPoints()
-        faces = vtk.vtkCellArray()
-        for (i, v) in enumerate(self.vertices):
-            X, Y = v.r.r
-            points.InsertNextPoint([X, Y, 0.0])
+    # def write_vtp(self, fname):
+    #     points = vtk.vtkPoints()
+    #     faces = vtk.vtkCellArray()
+    #     for (i, v) in enumerate(self.vertices):
+    #         X, Y = v.r.r
+    #         points.InsertNextPoint([X, Y, 0.0])
 
-        areas = vtk.vtkDoubleArray()
-        areas.SetNumberOfComponents(1)
-        areas.SetName("Area")
-        perims = vtk.vtkDoubleArray()
-        perims.SetNumberOfComponents(1)
-        perims.SetName("Perimeter")
-        if self.faces[0].property:
-            prop = vtk.vtkDoubleArray()
-            prop.SetNumberOfComponents(1)
-            prop.SetName("Property")
-        for f in self.faces:
-            add_face = not (f.crosses_boundary() or f.outer)
-            if add_face:
-                face = vtk.vtkTriangle()
-                face.GetPointIds().SetNumberOfIds(f.num_sides())
-                he = f.he
-                first = f.he
-                i = 0
-                while True:
-                    face.GetPointIds().SetId(i, he.vfrom.idx)
-                    he = he.next
-                    if he.idx == first.idx:
-                        break
-                    i += 1
-                faces.InsertNextCell(face)
-                areas.InsertNextValue(f.area())
-                perims.InsertNextValue(f.perimeter())
-                if f.property:
-                    prop.InsertNextValue(f.property)
+    #     areas = vtk.vtkDoubleArray()
+    #     areas.SetNumberOfComponents(1)
+    #     areas.SetName("Area")
+    #     perims = vtk.vtkDoubleArray()
+    #     perims.SetNumberOfComponents(1)
+    #     perims.SetName("Perimeter")
+    #     if self.faces[0].property:
+    #         prop = vtk.vtkDoubleArray()
+    #         prop.SetNumberOfComponents(1)
+    #         prop.SetName("Property")
+    #     for f in self.faces:
+    #         add_face = not (f.crosses_boundary() or f.outer)
+    #         if add_face:
+    #             face = vtk.vtkTriangle()
+    #             face.GetPointIds().SetNumberOfIds(f.num_sides())
+    #             he = f.he
+    #             first = f.he
+    #             i = 0
+    #             while True:
+    #                 face.GetPointIds().SetId(i, he.vfrom.idx)
+    #                 he = he.next
+    #                 if he.idx == first.idx:
+    #                     break
+    #                 i += 1
+    #             faces.InsertNextCell(face)
+    #             areas.InsertNextValue(f.area())
+    #             perims.InsertNextValue(f.perimeter())
+    #             if f.property:
+    #                 prop.InsertNextValue(f.property)
 
-        polyData = vtk.vtkPolyData()
-        polyData.SetPoints(points)
-        polyData.SetPolys(faces)
-        polyData.GetCellData().AddArray(areas)
-        polyData.GetCellData().AddArray(perims)
-        if self.faces[0].property:
-            polyData.GetCellData().AddArray(prop)
+    #     polyData = vtk.vtkPolyData()
+    #     polyData.SetPoints(points)
+    #     polyData.SetPolys(faces)
+    #     polyData.GetCellData().AddArray(areas)
+    #     polyData.GetCellData().AddArray(perims)
+    #     if self.faces[0].property:
+    #         polyData.GetCellData().AddArray(prop)
 
-        writer = vtk.vtkXMLPolyDataWriter()
-        writer.SetFileName(fname)
-        if vtk.VTK_MAJOR_VERSION <= 5:
-            writer.SetInput(polyData)
-        else:
-            writer.SetInputData(polyData)
-        writer.SetDataModeToAscii()
-        writer.Write()    
+    #     writer = vtk.vtkXMLPolyDataWriter()
+    #     writer.SetFileName(fname)
+    #     if vtk.VTK_MAJOR_VERSION <= 5:
+    #         writer.SetInput(polyData)
+    #     else:
+    #         writer.SetInputData(polyData)
+    #     writer.SetDataModeToAscii()
+    #     writer.Write()    
 
-    def write_vtp_nematic(self, fname, scale = 1.0):
-        points = vtk.vtkPoints()
-        lines = vtk.vtkCellArray()
-        i = 0
-        for f in self.faces:
-            if not f.outer:
-                r = f.centroid()
-                points.InsertNextPoint([r.r[0], r.r[1], 0.0])
-                xi = r.r[0] + 0.5*scale*f.n[0]
-                yi = r.r[1] + 0.5*scale*f.n[1]
-                points.InsertNextPoint([xi, yi, 0.0])
-                l = vtk.vtkLine()
-                l.GetPointIds().SetId(0, i)
-                l.GetPointIds().SetId(1, i+1)
-                lines.InsertNextCell(l)
-                xi = r.r[0] - 0.5*scale*f.n[0]
-                yi = r.r[1] - 0.5*scale*f.n[1]
-                points.InsertNextPoint([xi, yi, 0.0])
-                l = vtk.vtkLine()
-                l.GetPointIds().SetId(0, i)
-                l.GetPointIds().SetId(1, i+2)
-                lines.InsertNextCell(l)
-                i += 3
+    # def write_vtp_nematic(self, fname, scale = 1.0):
+    #     points = vtk.vtkPoints()
+    #     lines = vtk.vtkCellArray()
+    #     i = 0
+    #     for f in self.faces:
+    #         if not f.outer:
+    #             r = f.centroid()
+    #             points.InsertNextPoint([r.r[0], r.r[1], 0.0])
+    #             xi = r.r[0] + 0.5*scale*f.n[0]
+    #             yi = r.r[1] + 0.5*scale*f.n[1]
+    #             points.InsertNextPoint([xi, yi, 0.0])
+    #             l = vtk.vtkLine()
+    #             l.GetPointIds().SetId(0, i)
+    #             l.GetPointIds().SetId(1, i+1)
+    #             lines.InsertNextCell(l)
+    #             xi = r.r[0] - 0.5*scale*f.n[0]
+    #             yi = r.r[1] - 0.5*scale*f.n[1]
+    #             points.InsertNextPoint([xi, yi, 0.0])
+    #             l = vtk.vtkLine()
+    #             l.GetPointIds().SetId(0, i)
+    #             l.GetPointIds().SetId(1, i+2)
+    #             lines.InsertNextCell(l)
+    #             i += 3
 
-        polyData = vtk.vtkPolyData()
-        polyData.SetPoints(points)
-        polyData.SetLines(lines)
+    #     polyData = vtk.vtkPolyData()
+    #     polyData.SetPoints(points)
+    #     polyData.SetLines(lines)
         
-        writer = vtk.vtkXMLPolyDataWriter()
-        writer.SetFileName(fname)
-        writer.SetInputData(polyData)
-        writer.SetDataModeToAscii()
-        writer.Write()
+    #     writer = vtk.vtkXMLPolyDataWriter()
+    #     writer.SetFileName(fname)
+    #     writer.SetInputData(polyData)
+    #     writer.SetDataModeToAscii()
+    #     writer.Write()

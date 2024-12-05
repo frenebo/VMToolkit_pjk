@@ -50,16 +50,12 @@ include_directories(${CMAKE_BINARY_DIR}/generated)
 include (CMakeCFlagsSetup.txt)
 # Configure some source files, include directories, and create variables listing all source files
 include (CMakeSRCSetup.txt)
-# Configure VTK libraries
-# include (CMakeVTKSetup.txt)
+
+
 # Find Boost libraries
 include (CMakeBoostSetup.txt)
 # Find submodules (used to pull pybind11)
 include (CMakeSubmodule.txt)
-
-################################
-## Define common libraries used by every target in MEMBRANE
-# set(VMTOOLKIT_LIBS ${VTK_LIBS})
 
 
 # ##############################################
@@ -86,18 +82,12 @@ if ("${is_system}" STREQUAL "-1")
     install(TARGETS VMTOOLKIT DESTINATION .)
     set_target_properties(VMTOOLKIT PROPERTIES PREFIX ""  OUTPUT_NAME "vm" SUFFIX ".so" CXX_STANDARD 14  INSTALL_RPATH_USE_LINK_PATH TRUE INSTALL_RPATH "${lib_path}")
     set(CMAKE_INSTALL_RPATH "$ORIGIN/../lib")
-    # if (VTKLocal)
-    #  add_dependencies(VMTOOLKIT VTKLocal)
-    #  install(DIRECTORY "${lib_path}/extern/VTK" DESTINATION extern)
-    #endif()
+    
       
 endif()
 
 #set_target_properties(VMTOOLKIT PROPERTIES PREFIX ""  OUTPUT_NAME "vm" SUFFIX ".so" BUILD_RPATH_USE_ORIGIN TRUE CXX_STANDARD 14)
 #set(CMAKE_INSTALL_RPATH "$ORIGIN/../lib")
-#if (VTKLocal)
-#  add_dependencies(VMTOOLKIT VTKLocal)
-#  install(DIRECTORY ${CMAKE_BINARY_DIR}/extern/VTK DESTINATION extern)
-#endif()
+
 
 

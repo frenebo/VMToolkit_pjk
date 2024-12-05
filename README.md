@@ -20,12 +20,14 @@ This tutorial is not intended for research, but could be used to develop researc
 
 ## Requirements
 
+Python reqs:
+ - shapely
+
 The package is tested on Linux and Mac OSX.
 
 You will need:
 
-- boost 
-- pyvista 
+- boost
 
 Depending on your local Python installation, both can be installed through conda or pip.
 

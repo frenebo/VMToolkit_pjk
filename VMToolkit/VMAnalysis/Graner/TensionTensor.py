@@ -43,5 +43,5 @@ class TensionTensor:
                 self.Tension.T[idx, :, :] /= f.area()
                 idx += 1
 
-    def plot_vtk_tensor(self, filename):
-        self.Tension.plot_vtk_tensor(filename, self.mesh, 'Tension_tensor')
+    # def plot_vtk_tensor(self, filename):
+    #     self.Tension.plot_vtk_tensor(filename, self.mesh, 'Tension_tensor')

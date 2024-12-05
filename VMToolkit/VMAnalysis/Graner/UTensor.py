@@ -39,5 +39,5 @@ class UTensor:
             logM = np.dot(np.linalg.inv(R_frame), np.dot(log_frame, R_frame))
             self.U.T[i, :, :] = 0.5*(logM - logM0)
 
-    def plot_vtk_tensor(self, filename):
-        self.U.plot_vtk_tensor(filename, self.M.mesh, 'U_tensor')
+    # def plot_vtk_tensor(self, filename):
+    #     self.U.plot_vtk_tensor(filename, self.M.mesh, 'U_tensor')

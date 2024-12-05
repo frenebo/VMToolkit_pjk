@@ -39,8 +39,8 @@ class VTensor:
             self.V.T[i, :, :] = 0.5*(term_1 + term_2)
             self.Omega.T[i, :, :] = 0.5*(term_1 - term_2)
 
-    def plot_vtk_tensor(self, filename, plot_omega=False):
-        self.V.plot_vtk_tensor(filename, self.B.mesh_2, 'V_tensor')
-        if plot_omega:
-            self.Omega.plot_vtk_tensor(
-                'omega_'+filename, self.B.mesh_2, 'Omega_tensor')
+    # def plot_vtk_tensor(self, filename, plot_omega=False):
+    #     self.V.plot_vtk_tensor(filename, self.B.mesh_2, 'V_tensor')
+    #     if plot_omega:
+    #         self.Omega.plot_vtk_tensor(
+    #             'omega_'+filename, self.B.mesh_2, 'Omega_tensor')

@@ -140,11 +140,11 @@ class MTensor:
                         Ntot += 1
                 self.M.T /= Ntot
 
-    def plot_vtk_tensor(self, filename):
-        self.M.plot_vtk_tensor(filename, self.mesh, 'M_tensor')
+    # def plot_vtk_tensor(self, filename):
+    #     self.M.plot_vtk_tensor(filename, self.mesh, 'M_tensor')
     
-    def plot_vtk_ellipse(self, filename, N = 20, scale = 1.0):
-        self.M.plot_vtk_ellipse(filename, self.mesh, N = N, scale = scale)
+    # def plot_vtk_ellipse(self, filename, N = 20, scale = 1.0):
+    #     self.M.plot_vtk_ellipse(filename, self.mesh, N = N, scale = scale)
 
-    def plot_vtk_lines(self, filename, scale = 1.0):
-        self.M.plot_vtk_lines(filename, self.mesh, scale = scale)
+    # def plot_vtk_lines(self, filename, scale = 1.0):
+    #     self.M.plot_vtk_lines(filename, self.mesh, scale = scale)
