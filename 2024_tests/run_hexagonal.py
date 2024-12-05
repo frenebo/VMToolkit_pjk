@@ -36,7 +36,7 @@ if __name__ == "__main__":
     tissue  = Tissue()                                               # initialise mesh
     sim_sys = System(tissue)                                         # base object for the system
     forces = Force(sim_sys)                                          # handles all types of forces
-    integrators = Integrate(sim_sys, forces, args.seed)              # handles all integrators
+    integrators = Integrate(sim_sys, forces, None)              # handles all integrators
     topology = Topology(sim_sys, forces)                             # handles all topology changes (T1, division, ingression)
     dumps = Dump(sim_sys, forces)                                    # handles all data output 
     simulation = Simulation(sim_sys, integrators, forces, topology)  # simulation object
