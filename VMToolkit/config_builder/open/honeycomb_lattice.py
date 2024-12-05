@@ -9,17 +9,17 @@ import json
 import copy
 
 
-def area(r):
-    i = np.arange(r.shape[0])
-    j = np.roll(i, 1)
-    return 0.5*np.abs(np.sum(r[i, 0]*r[j, 1]-r[i, 1]*r[j, 0]))
+# def area(r):
+#     i = np.arange(r.shape[0])
+#     j = np.roll(i, 1)
+#     return 0.5*np.abs(np.sum(r[i, 0]*r[j, 1]-r[i, 1]*r[j, 0]))
 
 
-def perim(r):
-    i = np.arange(r.shape[0])
-    j = np.roll(i, 1)
-    dx, dy = r[j, 0] - r[i, 0], r[j, 1] - r[i, 1]
-    return np.sum(np.sqrt(dx**2 + dy**2))
+# def perim(r):
+#     i = np.arange(r.shape[0])
+#     j = np.roll(i, 1)
+#     dx, dy = r[j, 0] - r[i, 0], r[j, 1] - r[i, 1]
+#     return np.sum(np.sqrt(dx**2 + dy**2))
 
 
 class HoneycombLattice:
@@ -37,6 +37,9 @@ class HoneycombLattice:
         self.cells = []
         self.cell_list = CellList2D([1.5*lx, 1.25*ly], 1.5*a)
         self.boundary = []
+        
+        self.energy_param_A0 = None
+        self.energy_param_P0 = None
 
     def __build_grid(self):
         vecA, vecB = self.a*np.array([1.0, 0]), self.a*np.array([-1.0, 0.0])
@@ -310,8 +313,16 @@ class HoneycombLattice:
                 if self.vertices[v].type == vert_type and not c.id in cells:
                     cells.append(c.id)
         return cells
+    
+    def set_energy_params(self, A0, P0):
+        self.energy_param_A0 = A0
+        self.energy_param_P0 = P0
 
     def json_out(self, fname):
+        if self.energy_param_A0 is None:
+            raise ValueError("Parameter A0 not set. Must be configured before generating JSON.")
+        if self.energy_param_P0 is None:
+            raise ValueError("Parameter P0 not set. Must be configured before generating JSON.")
         jsonData = {}
         jsonData["mesh"] = {}
         jsonData["mesh"]["vertices"] = []
@@ -342,8 +353,8 @@ class HoneycombLattice:
             for v in c.verts:
                 r.append(self.vertices[v].r)
             r = np.asarray(r)
-            cd["A0"] = area(r)
-            cd["P0"] = perim(r)
+            cd["A0"] = self.energy_param_A0
+            cd["P0"] = self.energy_param_P0
             jsonData["mesh"]["faces"].append(cd)
         bd = {}
         bd["id"] = self.cells[-1].id + 1
