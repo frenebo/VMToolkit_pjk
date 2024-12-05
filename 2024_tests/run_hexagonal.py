@@ -163,13 +163,13 @@ if __name__ == "__main__":
     integrators.set_dt(dt) # set time step
     integrators.set_params("brownian", {"gamma": friction_gam})
 
-    step_size = 200      # Step counter in terms of time units
+    step_size = 1000      # Step counter in terms of time units
     
     ext_forcing_on = []
     checkpoint_fps = []
     # Pulling on the passive system
     # for i in range(args.nrun):
-    N_checkpoints =50
+    N_checkpoints =10
     for i in range(N_checkpoints):
         ckpt_fp = "scratch/res{}.json".format(str(i).zfill(3))
         dumps.dump_mesh(ckpt_fp)
@@ -181,7 +181,7 @@ if __name__ == "__main__":
         #if False:
             pass
             print("Using external forces.. ")
-            fpull=0.1
+            fpull=-0.2
             integrators.set_external_force('brownian', 'right', Vec(fpull,0.0))  # pulling on the right-most column of vertices
             integrators.set_external_force('brownian', 'left', Vec(-fpull,0.0))  # pulling on the left-most column of vertices
     
