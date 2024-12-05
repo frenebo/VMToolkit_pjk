@@ -36,7 +36,7 @@ if __name__ == "__main__":
     tissue  = Tissue()                                               # initialise mesh
     sim_sys = System(tissue)                                         # base object for the system
     forces = Force(sim_sys)                                          # handles all types of forces
-    integrators = Integrate(sim_sys, forces, None)              # handles all integrators
+    integrators = Integrate(sim_sys, forces, 0)              # handles all integrators
     topology = Topology(sim_sys, forces)                             # handles all topology changes (T1, division, ingression)
     dumps = Dump(sim_sys, forces)                                    # handles all data output 
     simulation = Simulation(sim_sys, integrators, forces, topology)  # simulation object
@@ -62,8 +62,11 @@ if __name__ == "__main__":
     forces.add('perimeter')    # add perimeter force term from E = 0.5*gamma*P^2 + lambda*P (maybe -?)
 
     # Set parameters for each cell type
+
+    lambda_val = P0_model * gamma # @TODO either the sim uses this, or it uses the P0... add a way to force P0 usage in set_params in cpp file?
+
     forces.set_params('area', 'passive', {'kappa' : kappa})
-    forces.set_params('perimeter', 'passive',  {'gamma': gamma, 'lambda': lam})
+    forces.set_params('perimeter', 'passive',  {'gamma': gamma, "lambda": lambda_val})
 
     
     # #################################################################
@@ -98,5 +101,5 @@ if __name__ == "__main__":
     # for i in range(args.nrun):
     for i in range(10):
         simulation.run(step_size)
-        dumps.dump_jon("example/res{}.json".format(str(i).zfill(3)))
+        dumps.dump_json("scratch/res{}.json".format(str(i).zfill(3)))
         
