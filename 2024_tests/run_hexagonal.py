@@ -6,6 +6,29 @@ from VMToolkit.config_builder.open.honeycomb_lattice import HoneycombLattice
 from VMToolkit.VM import Tissue, System, Force, Integrate, Topology, Dump, Simulation, Vec
 from VMToolkit.VMAnalysis.utils.HalfEdge import Mesh
 
+def setup_hexagonal_init_mesh(A0_model,P0_model,init_side_length,json_out_fp):
+    box_lx = 20.0
+    box_ly = 20.0
+    h = HoneycombLattice(
+        lx=box_lx,
+        ly=box_ly,
+        a=init_side_length,
+    )
+    h.build()
+    h.minmax()
+    h.set_energy_params(A0=A0_model,P0=P0_model)    
+    
+    # left_box_corners = [
+    #     [-1.0, -1],
+    #     [-1.0, box_lx+1],
+    #     [init_side_length],
+    # ]
+    print("C point:")
+    print(h.cpoints)
+    
+    
+    h.json_out("scratch/example.json")
+
 if __name__ == "__main__":
     hex_model = HexagonalModel()
     
@@ -13,8 +36,7 @@ if __name__ == "__main__":
     P0_model = 1.0
     kappa = 1.0     # area stiffness
     gamma = 1.0     # perimeter stiffness
-    print("MODEL PARAMS")
-    print("A0={A0}  P0={P0}  kappa={kappa} gamma={gamma}".format(A0=A0_model,P0=P0_model,kappa=kappa,gamma=gamma))
+    
     res = hex_model.find_rest_size_of_hexagon(
         A_0=A0_model,
         P_0=P0_model,
@@ -22,17 +44,18 @@ if __name__ == "__main__":
         Gamma=gamma,
     )
     rest_side_length = res["rest_side_length"]
-    print(res)
+    print("MODEL PARAMS")
     
-    h = HoneycombLattice(
-        lx=50.0,
-        ly=50.0,
-        a=rest_side_length*2.0,
+    
+    setup_hexagonal_init_mesh(
+        A0_model,
+        P0_model,
+        init_side_length=rest_side_length*1.5,
+        json_out_fp="scratch/example.json",
     )
-    h.build()
-    h.minmax()
-    h.set_energy_params(A0=A0_model,P0=P0_model)    
-    h.json_out("scratch/example.json")
+    
+    print("A0={A0}  P0={P0}  kappa={kappa} gamma={gamma}".format(A0=A0_model,P0=P0_model,kappa=kappa,gamma=gamma))
+    print(res)
     
     ##### Running sim
     tissue  = Tissue()                                               # initialise mesh
