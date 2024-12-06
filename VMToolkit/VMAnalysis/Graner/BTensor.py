@@ -71,11 +71,11 @@ class BTensor:
                     self.C.T[idx, :, :].T
                 idx += 1
 
-    def plot_vtk_tensor(self, filename):
-        self.B.plot_vtk_tensor(filename, self.mesh_2, 'B_tensor')
+    # def plot_vtk_tensor(self, filename):
+    #     self.B.plot_vtk_tensor(filename, self.mesh_2, 'B_tensor')
     
-    def plot_vtk_ellipse(self, filename, N = 20, scale = 1.0):
-        self.B.plot_vtk_ellipse(filename, self.mesh_2, N = N, scale = scale)
+    # def plot_vtk_ellipse(self, filename, N = 20, scale = 1.0):
+    #     self.B.plot_vtk_ellipse(filename, self.mesh_2, N = N, scale = scale)
 
-    def plot_vtk_lines(self, filename, scale = 1.0):
-        self.B.plot_vtk_lines(filename, self.mesh_2, scale = scale)
+    # def plot_vtk_lines(self, filename, scale = 1.0):
+    #     self.B.plot_vtk_lines(filename, self.mesh_2, scale = scale)

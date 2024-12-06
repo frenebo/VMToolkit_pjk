@@ -1,4 +1,5 @@
 import numpy as np
+import argparse
 import os
 from hexagonal_test.analytic_tools.find_hexagon_rest_area import HexagonalModel, find_hexagon_rest_area
 
@@ -67,6 +68,10 @@ def setup_hexagonal_init_mesh(A0_model,P0_model,init_side_length,json_out_fp):
     h.json_out(json_out_fp)
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--fpull", default=-0.2,type=float, help="Force to squeeze/stretch")
+    
+    args = parser.parse_args()
     hex_model = HexagonalModel()
     
     p0_shapefac = 3.6
@@ -158,18 +163,18 @@ if __name__ == "__main__":
     #
     # #################################################################
 
-    dt = 0.05
+    dt = 0.09
     friction_gam = 1.0
     integrators.set_dt(dt) # set time step
     integrators.set_params("brownian", {"gamma": friction_gam})
 
-    step_size = 1000      # Step counter in terms of time units
+    step_size = 500      # Step counter in terms of time units
     
     ext_forcing_on = []
     checkpoint_fps = []
     # Pulling on the passive system
     # for i in range(args.nrun):
-    N_checkpoints =10
+    N_checkpoints = 40
     for i in range(N_checkpoints):
         ckpt_fp = "scratch/res{}.json".format(str(i).zfill(3))
         dumps.dump_mesh(ckpt_fp)
@@ -177,11 +182,11 @@ if __name__ == "__main__":
         
         # Will be reocrded next iteration
 
-        if i/N_checkpoints>=0.3:
+        if i/N_checkpoints>=0.25:
         #if False:
             pass
             print("Using external forces.. ")
-            fpull=-0.2
+            fpull=args.fpull
             integrators.set_external_force('brownian', 'right', Vec(fpull,0.0))  # pulling on the right-most column of vertices
             integrators.set_external_force('brownian', 'left', Vec(-fpull,0.0))  # pulling on the left-most column of vertices
     

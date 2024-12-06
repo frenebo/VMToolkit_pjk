@@ -22,19 +22,6 @@
 #include <sys/stat.h>
 #include <regex>
 
-// #include <vtkVersion.h>
-// #include <vtkCellArray.h>
-// #include <vtkCellData.h>
-// #include <vtkPoints.h>
-// #include <vtkPointData.h>
-// #include <vtkPolygon.h>
-// #include <vtkLine.h>
-// #include <vtkXMLPolyDataWriter.h>
-// #include <vtkZLibDataCompressor.h>
-// #include <vtkPolyData.h>
-// #include <vtkSmartPointer.h>
-// #include <vtkDoubleArray.h>
-
 #include "json.hpp"
 
 #include "system.hpp"

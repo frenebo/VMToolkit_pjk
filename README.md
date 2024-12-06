@@ -22,6 +22,10 @@ This tutorial is not intended for research, but could be used to develop researc
 
 Python reqs:
  - shapely
+ 
+for visualization
+ - plotly
+ - pandas
 
 The package is tested on Linux and Mac OSX.
 
