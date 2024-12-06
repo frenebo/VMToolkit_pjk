@@ -8,7 +8,7 @@ import plotly.graph_objects as go
 
 class TissueVisualizer:
     @classmethod
-    def tiss_struct_from_json_obj(cls, json_o):
+    def tiss_struct_from_json_obj(cls, json_o,verbose=False):
         if "mesh" not in json_o:
             raise ValueError("Expected to find mesh in json object")
         if "vertices" not in json_o["mesh"]:
@@ -29,7 +29,8 @@ class TissueVisualizer:
             if "erased" in f and f["erased"]:
                 raise NotImplementedError()
             if f["outer"]:
-                print("SKIPPING outer face - boundary")
+                if verbose:
+                    print("SKIPPING outer face - boundary")
                 continue
             
             # If not outer, and not erased, we want to graph it

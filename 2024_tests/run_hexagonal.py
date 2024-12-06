@@ -8,9 +8,8 @@ from VMToolkit.config_builder.open.honeycomb_lattice import HoneycombLattice
 from VMToolkit.VM import Tissue, System, Force, Integrate, Topology, Dump, Simulation, Vec
 from VMToolkit.VMAnalysis.utils.HalfEdge import Mesh
 
-def setup_hexagonal_init_mesh(A0_model,P0_model,init_side_length,json_out_fp):
-    box_lx = 25.0
-    box_ly = 25.0
+def setup_hexagonal_init_mesh(A0_model,P0_model,init_side_length,json_out_fp, box_lx=25.0, box_ly=25.0):
+    
     h = HoneycombLattice(
         lx=box_lx,
         ly=box_ly,
@@ -70,6 +69,8 @@ def setup_hexagonal_init_mesh(A0_model,P0_model,init_side_length,json_out_fp):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--fpull", default=-0.2,type=float, help="Force to squeeze/stretch")
+    parser.add_argument("--box_lx", default=25.0,type=float, help="X size of tissue")
+    parser.add_argument("--box_ly", default=25.0,type=float, help="Y size of tissue")
     
     args = parser.parse_args()
     hex_model = HexagonalModel()
@@ -97,6 +98,8 @@ if __name__ == "__main__":
         P0_model,
         init_side_length=rest_side_length*1.05,
         json_out_fp="scratch/example.json",
+        box_lx=args.box_lx,
+        box_ly = args.box_ly,
     )
     
     print("A0={A0}  P0={P0}  kappa={kappa} gamma={gamma}".format(A0=A0_model,P0=P0_model,kappa=kappa,gamma=gamma))
