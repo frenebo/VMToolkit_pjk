@@ -8,8 +8,12 @@ from VMToolkit.config_builder.open.honeycomb_lattice import HoneycombLattice
 from VMToolkit.VM import Tissue, System, Force, Integrate, Topology, Dump, Simulation, Vec
 from VMToolkit.VMAnalysis.utils.HalfEdge import Mesh
 
+
+
+
+# class 
+
 def setup_hexagonal_init_mesh(A0_model,P0_model,init_side_length,json_out_fp, box_lx=25.0, box_ly=25.0):
-    
     h = HoneycombLattice(
         lx=box_lx,
         ly=box_ly,
@@ -18,12 +22,6 @@ def setup_hexagonal_init_mesh(A0_model,P0_model,init_side_length,json_out_fp, bo
     h.build()
     h.minmax()
     h.set_energy_params(A0=A0_model,P0=P0_model)    
-    
-    # left_box_corners = [
-    #     [-1.0, -1],
-    #     [-1.0, box_lx+1],
-    #     [init_side_length],
-    # ]
     print("C point:")
     
     cell_centers = np.array([cell.rc for cell in h.cells])
@@ -65,6 +63,10 @@ def setup_hexagonal_init_mesh(A0_model,P0_model,init_side_length,json_out_fp, bo
     right_faces = [face for face in h.cells if face.type=='right']
     print("set types of {} left, {} right cells".format(len(left_faces), len(right_faces)))
     h.json_out(json_out_fp)
+
+
+
+# def get_pts
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -192,7 +194,8 @@ if __name__ == "__main__":
             fpull=args.fpull
             integrators.set_external_force('brownian', 'right', Vec(fpull,0.0))  # pulling on the right-most column of vertices
             integrators.set_external_force('brownian', 'left', Vec(-fpull,0.0))  # pulling on the left-most column of vertices
-    
+            
+            integrators.set_external_forces_by_vertex('brownian', [0], [Vec(1.0,0.0)])
             ext_forcing_on.append(True)
         else:
             ext_forcing_on.append(False)

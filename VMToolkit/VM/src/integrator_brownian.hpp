@@ -69,6 +69,19 @@ namespace VMTutorial
       { 
         _constant_force[_sys.vert_types()[vtype]] = f;
       }
+      void set_external_forces_by_vertex(const vector<int>& vids, const vector<Vec>& forces) override
+      {
+        if (vids.size() != forces.size()) {
+          throw runtime_error("Number of vertex indices and forces do not match");
+        }
+        
+        for (size_t i = 0; i < vids.size(); ++i)
+        {
+          _constant_force.at(vids[i]) = forces[i];
+        }
+        // std::cout 
+        // throw runtime_error("Not implemented");
+      }
       
       void set_flag(const string& flag) override 
       {  
