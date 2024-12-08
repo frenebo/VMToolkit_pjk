@@ -59,9 +59,13 @@ def setup_hexagonal_init_mesh(A0_model,P0_model,init_side_length,json_out_fp, bo
 
     h.set_cell_type(left_box_corners, "leftcell")
     h.set_cell_type(right_box_corners, "rightcell")
-    left_faces = [face for face in h.cells if face.type=='left']
-    right_faces = [face for face in h.cells if face.type=='right']
-    print("set types of {} left, {} right cells".format(len(left_faces), len(right_faces)))
+    left_vertices = [v for v in h.vertices if v.type=='left']
+    right_vertices = [v for v in h.vertices if v.type=='right']
+    # print("set types of {} left, {} right cells".format(len(left_faces), len(right_faces)))
+    print("set types of {} left, {} right vertices".format(len(left_vertices), len(right_vertices)))
+    
+    if len(left_vertices) != len(right_vertices):
+        raise ValueError("The number of vertices on the left and right should be symmetrical... tissue was apparently not set up properly")
     h.json_out(json_out_fp)
 
 
@@ -168,18 +172,18 @@ if __name__ == "__main__":
     #
     # #################################################################
 
-    dt = 0.09
+    dt = 0.08
     friction_gam = 1.0
     integrators.set_dt(dt) # set time step
     integrators.set_params("brownian", {"gamma": friction_gam})
 
-    step_size = 500      # Step counter in terms of time units
+    step_size = 1000      # Step counter in terms of time units
     
     ext_forcing_on = []
     checkpoint_fps = []
     # Pulling on the passive system
     # for i in range(args.nrun):
-    N_checkpoints = 40
+    N_checkpoints = 20
     for i in range(N_checkpoints):
         ckpt_fp = "scratch/res{}.json".format(str(i).zfill(3))
         dumps.dump_mesh(ckpt_fp)
@@ -195,11 +199,11 @@ if __name__ == "__main__":
             integrators.set_external_force('brownian', 'right', Vec(fpull,0.0))  # pulling on the right-most column of vertices
             integrators.set_external_force('brownian', 'left', Vec(-fpull,0.0))  # pulling on the left-most column of vertices
             
-            integrators.set_external_forces_by_vertex('brownian', [0], [Vec(1.0,0.0)])
+            # integrators.set_external_forces_by_vertex('brownian', [0], [Vec(1.0,0.0)])
             ext_forcing_on.append(True)
         else:
             ext_forcing_on.append(False)
-        simulation.run(step_size)
+        simulation.run(step_size, topological_change=False)
     
     print("Running analysis on simulation results")
     for ckpt_idx, ckpt_fp in enumerate(checkpoint_fps):

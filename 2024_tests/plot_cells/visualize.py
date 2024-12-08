@@ -52,11 +52,12 @@ class TissueVisualizer:
 
 
 
-def plotly_coords_list_from_checkpoint_obj(json_o_f):
+def plotly_coords_list_from_checkpoint_obj(json_o_f, vertices_to_highlight=None):
     tiss_struct = TissueVisualizer.tiss_struct_from_json_obj(json_o_f)
 
     xx = []
     yy = []
+    vtx_colors = []
 
     face_ids = sorted(list(tiss_struct["faces"].keys()))
     
@@ -68,19 +69,31 @@ def plotly_coords_list_from_checkpoint_obj(json_o_f):
             vtx_r = tiss_struct['vertices'][vtx_id]['r']
             xx.append(vtx_r[0])
             yy.append(vtx_r[1])
+            if vertices_to_highlight is not None and vtx_id in vertices_to_highlight:
+                vtx_colors.append("blue")
+            else:
+                vtx_colors.append("black")
             
         xx.append(None)
         yy.append(None)
         
-    return xx,yy
+    return {
+        "xx":xx,
+        "yy":yy,
+        "colors": vtx_colors,
+    }
     
     
-def build_framedata(checkpoint_objs):
+def build_framedata(checkpoint_objs, vertices_to_highlight=None):
     
     frame_coords = []
+    # vtx_colors = 
+    frame_vtx_colors = []
     for ckpt_obj in checkpoint_objs:
-        xx,yy = plotly_coords_list_from_checkpoint_obj(ckpt_obj)
+        f_res= plotly_coords_list_from_checkpoint_obj(ckpt_obj, vertices_to_highlight=vertices_to_highlight)
+        xx,yy,vtx_colors = f_res["xx"], f_res["yy"], f_res["colors"]
         frame_coords.append([xx,yy])
+        frame_vtx_colors.append(vtx_colors)
 
     frame_coords = np.array(frame_coords,dtype=float)
     
@@ -91,6 +104,7 @@ def build_framedata(checkpoint_objs):
     
     return {
         "plotly_cell_coords": frame_coords,
+        "f_vtx_colors": frame_vtx_colors,
         # "vtx_pos_range": {
         "xlims": xlims,
         "ylims": ylims,
@@ -119,7 +133,8 @@ def make_animated_tissue_plot(frame_data):
             mode="lines", 
             marker_size=8,
             fill="toself",
-            line=dict(color="red", width=2)
+            marker_color=frame_data["f_vtx_colors"][0],
+            # line=dict(color="red", width=2)
         ),
     )
 
@@ -208,7 +223,7 @@ def make_animated_tissue_plot(frame_data):
 
 
 
-def make_plotly_visualizer(tiss_ckpt_fps):
+def make_plotly_visualizer(tiss_ckpt_fps, vertices_to_highlight=None):
     checkpoint_objs = []
     for ckpt_fp in tiss_ckpt_fps:
         with open(ckpt_fp, "r") as f:
@@ -216,6 +231,6 @@ def make_plotly_visualizer(tiss_ckpt_fps):
         checkpoint_objs.append(ckpt_obj)
         
     
-    frame_data = build_framedata(checkpoint_objs)
+    frame_data = build_framedata(checkpoint_objs, vertices_to_highlight=vertices_to_highlight)
     
     make_animated_tissue_plot(frame_data)
