@@ -18,6 +18,7 @@
 #include <chrono>
 #include <utility>
 #include <map>
+#include <string> 
 #include <memory>
 
 using namespace std::chrono;
@@ -74,11 +75,21 @@ namespace VMTutorial
         if (vids.size() != forces.size()) {
           throw runtime_error("Number of vertex indices and forces do not match");
         }
+        throw runtime_error("This doesn't work the way I thought it did... this sets forces by type");
+        // if ()
         
-        for (size_t i = 0; i < vids.size(); ++i)
-        {
-          _constant_force.at(vids[i]) = forces[i];
-        }
+        // for (size_t i = 0; i < vids.size(); ++i)
+        // {
+        //   if (i >= vids.size()) {
+        //     throw runtime_error("there are not enough vids in here. Count is " + std::to_string(vids.size()));
+        //   }
+        //   if (i >= forces.size()) {
+        //     throw runtime_error("there are not enough forces in here. Count is " + std::to_string(forces.size()));
+        //   }
+        //   std::cout << "Setting force of vertex " << vids[i] << " to " << forces[i].x << ", " << forces[i].y << std::endl;
+          
+        //   _constant_force.at(vids[i]) = forces[i];
+        // }
         // std::cout 
         // throw runtime_error("Not implemented");
       }

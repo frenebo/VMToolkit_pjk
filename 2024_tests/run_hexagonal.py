@@ -10,6 +10,7 @@ from VMToolkit.VMAnalysis.utils.HalfEdge import Mesh
 
 
 
+from tissue_builder.hexagonal import HexagonalCellMesh
 
 # class 
 
@@ -21,7 +22,10 @@ def setup_hexagonal_init_mesh(A0_model,P0_model,init_side_length,json_out_fp, bo
     )
     h.build()
     h.minmax()
-    h.set_energy_params(A0=A0_model,P0=P0_model)    
+    h.set_energy_params(
+        A0=A0_model,
+        P0=P0_model,
+        )    
     print("C point:")
     
     cell_centers = np.array([cell.rc for cell in h.cells])
@@ -82,10 +86,10 @@ if __name__ == "__main__":
     hex_model = HexagonalModel()
     
     p0_shapefac = 3.6
-    A0_model = 4
-    P0_model = p0_shapefac*np.sqrt(A0_model)
+    A0_model = 1
+    P0_model = 0.2
     kappa = 1.0     # area stiffness
-    gamma = 1.0     # perimeter stiffness
+    gamma = 0.15    # perimeter stiffness
     
     res = hex_model.find_rest_size_of_hexagon(
         A_0=A0_model,
@@ -99,6 +103,7 @@ if __name__ == "__main__":
     print("MODEL PARAMS")
     if os.path.exists("scratch/example.json"):
         os.remove("scratch/example.json")
+    
     setup_hexagonal_init_mesh(
         A0_model,
         P0_model,
@@ -107,6 +112,14 @@ if __name__ == "__main__":
         box_lx=args.box_lx,
         box_ly = args.box_ly,
     )
+    # cm = HexagonalCellMesh(
+    #     side_length=rest_side_length*1.05,
+    #     box_lx=args.box_lx,
+    #     box_ly=args.box_ly,
+    # )
+    # cm.set_all_A0(A0_model)
+    # cm.set_all_P0(P0_model)
+    # cm.build_vm_mesh("scratch/example.json")
     
     print("A0={A0}  P0={P0}  kappa={kappa} gamma={gamma}".format(A0=A0_model,P0=P0_model,kappa=kappa,gamma=gamma))
     print(res)
@@ -144,7 +157,7 @@ if __name__ == "__main__":
 
     lambda_val = P0_model * gamma # @TODO either the sim uses this, or it uses the P0... add a way to force P0 usage in set_params in cpp file?
 
-    for c_type in ['leftcell', 'rightcell','passive']:
+    for c_type in ['passive']:
         forces.set_params('area', c_type, {'kappa' : kappa})
         forces.set_params('perimeter', c_type,  {'gamma': gamma, "lambda": lambda_val})
 
@@ -195,11 +208,12 @@ if __name__ == "__main__":
         #if False:
             pass
             print("Using external forces.. ")
-            fpull=args.fpull
-            integrators.set_external_force('brownian', 'right', Vec(fpull,0.0))  # pulling on the right-most column of vertices
-            integrators.set_external_force('brownian', 'left', Vec(-fpull,0.0))  # pulling on the left-most column of vertices
+            # fpull=args.fpull
+            # integrators.set_external_force('brownian', 'right', Vec(fpull,0.0))  # pulling on the right-most column of vertices
+            # integrators.set_external_force('brownian', 'left', Vec(-fpull,0.0))  # pulling on the left-most column of vertices
             
-            # integrators.set_external_forces_by_vertex('brownian', [0], [Vec(1.0,0.0)])
+            # integrators.set_external_forces_by_vertex('brownian', [0], [Vec(0.1,0.0)])
+            # integrators.set_external_forces_by_vertex('brownian', [10], [Vec(-0.1,0.0)])
             ext_forcing_on.append(True)
         else:
             ext_forcing_on.append(False)
