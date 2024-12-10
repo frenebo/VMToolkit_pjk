@@ -9,16 +9,21 @@
 
 namespace VMTutorial
 {
-  void Simulation::run(int steps, bool topological_change, bool old_style)
+  void Simulation::run(int steps, bool topological_change, bool old_style, bool verbose)
   {
+    
     double progress = 0.0;
+    if (verbose) { cout << "Simulation::run - Running simulation for " << steps << " steps" << endl; }
     for (int i = sim_step; i < sim_step + steps; i++)
     {
+      if (verbose) { std::cout << "doing step #" << i << endl; }
       if (topological_change)
       {
           _topology.T1();
       }
-      _integ.apply();
+      
+      if (verbose) { cout << "doing integration" << endl; }
+      _integ.apply(verbose);
       _sys.set_topology_change(false);
 
       if (this->print_freq > 0) 
@@ -36,13 +41,13 @@ namespace VMTutorial
         
       }
     }
-    if (this->print_freq > 0 && !old_style)
+    if (this->print_freq > 0 && !old_style) {
       progress_bar(progress, " ");
-    
+    }
     sim_step += steps;
-    if (this->print_freq > 0 && !old_style)
+    if (this->print_freq > 0 && !old_style) {
       std::cout << " --> Completed " << sim_step << " simulation steps " << std::endl;  
-    
+    }
   }
 
   void Simulation::progress_bar(double progress, const string& end_of_line)
@@ -69,7 +74,7 @@ namespace VMTutorial
           .def(py::init<System&,Integrate&,ForceCompute&,Topology&>())
           .def_readwrite("print_freq", &Simulation::print_freq)
           .def_readwrite("bar_width", &Simulation::bar_width)
-          .def("run", &Simulation::run, py::arg("steps"), py::arg("topological_change") = true, py::arg("old_style") = false)
+          .def("run", &Simulation::run, py::arg("steps"), py::arg("topological_change") = true, py::arg("old_style") = false, py::arg("verbose") = false)
           .def("print_version", &Simulation::print_version);
   }  
 
@@ -96,5 +101,9 @@ PYBIND11_MODULE(vm, m)
   VMTutorial::export_Topology(m);
   VMTutorial::export_Dump(m);
   VMTutorial::export_Simulation(m);
+  
+  py::register_exception<std::domain_error>(m, "DomainError");
+  py::register_exception<std::invalid_argument>(m, "InvalidArgumentError");
+  py::register_exception<std::length_error>(m, "LengthError");
 }
 

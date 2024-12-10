@@ -80,23 +80,26 @@ namespace VMTutorial
                              _num_junction_types{0},
                              _mesh_set{false},
                              _topology_changed{true}
-                             { 
-                               
+                             {
                              }
 
       // System setup
       void set_box(const shared_ptr<Box>& box) { _mesh.set_box(box); }
-      void read_input(const string&);
+      
+      void read_input(const string&, bool verbose=false);
       void set_simulation_time_step(int time_step) { _time_step = time_step; }
       const string get_cell_type_name(const int type_id) const { return _cell_types_map.at(type_id); }
       const string get_vert_type_name(const int type_id) const { return _vert_types_map.at(type_id); }
       void add_cell_type(const string& cell_type)
       {
+        // cout << "Adding cell type " << cell_type << endl;
         if (_cell_types.find(cell_type) == _cell_types.end())
         {
           _cell_types_map[_num_cell_types] = cell_type;
           _cell_types[cell_type] = _num_cell_types++;
         }
+        // cout << "finished adding cell type " << endl;
+        log_debug_stats();
       }
       void set_cell_type(int id, const string& type)
       {
@@ -111,6 +114,10 @@ namespace VMTutorial
           _vert_types_map[_num_vert_types] = vert_type;
           _vert_types[vert_type] = _num_vert_types++;
         }
+      }
+      void log_debug_stats()
+      {
+        cout << "   CURRENT size of _halfedges: " << _mesh.halfedges().size() << endl; 
       }
       void set_topology_change(bool flag) { _topology_changed = flag; }
 

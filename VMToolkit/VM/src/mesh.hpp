@@ -52,7 +52,7 @@ namespace VMTutorial
 		void add_edge(const Edge<Property> &e) { _edges.push_back(e); }
 		void add_halfedge(const HalfEdge<Property> &he) { _halfedges.push_back(he); }
 		void set_box(const shared_ptr<Box> &box) { _box = box; }
-		void add_face(const vector<int> &, bool = false);
+		void add_face(const vector<int> &vert_ids, bool erased = false, bool verbose=false);
 
 
 		void wipe()
@@ -216,8 +216,9 @@ namespace VMTutorial
 
 	// mesh setup functions
 	template <typename Property>
-	void Mesh<Property>::add_face(const vector<int> &vert_ids, bool erased)
+	void Mesh<Property>::add_face(const vector<int> &vert_ids, bool erased, bool verbose)
 	{
+		if (verbose) { cout << "Adding face" << endl; }
 		_faces.push_back(Face<Property>(_n_faces++, erased, *this));
 		if (!erased)
 		{
@@ -225,22 +226,39 @@ namespace VMTutorial
 			HEHandle<Property> he;
 			int prev_he;
 			int first_he;
+			if (verbose) {
+				cout << "Adding vertices" << endl;
+				cout << "  # of vertice in vert_ids: " << vert_ids.size() << endl;
+			}
 			for (int i = 0; i < vert_ids.size(); i++)
 			{
+				if (verbose) { cout << "  vtx idx " << i << endl; }
 				int v1_id = vert_ids[i], v2_id = vert_ids[(i == (vert_ids.size() - 1)) ? 0 : i + 1];
+				
 				VertexHandle<Property> vh_from = this->get_mesh_vertex(v1_id);
+				
 				VertexHandle<Property> vh_to = this->get_mesh_vertex(v2_id);
-				_halfedges.push_back(HalfEdge<Property>(*this));
+				
+				
+				HalfEdge<Property> he_new = HalfEdge<Property>(*this);
+				
+				// cout << "    in loc 4" << endl;
+				// cout << "      CURRENT size of _halfedges: " << _halfedges.size() << endl;
+				_halfedges.push_back(he_new);
+				// cout << "    in loc 5" << endl;
 				_halfedges.back().set_idx(_halfedges.size() - 1);
+				// cout << "    in loc 6" << endl;
 				he = this->get_mesh_he(_halfedges.size() - 1);
-				if (i == 0)
+				
+				if (i == 0) {
 					first_he = he->idx();
+				}
 				he->_from = vh_from->id;
 				he->_to = vh_to->id;
 				vh_from->_he = he->idx();
 				EdgeHandle<Property> eh = find_if(_edges.begin(), _edges.end(), [v1_id, v2_id](const Edge<Property> &e) -> bool
 												  { return (v1_id == e.i && v2_id == e.j) || (v1_id == e.j && v2_id == e.i); });
-
+				// cout << "    in loc 8" << endl;
 				if (eh == _edges.end())
 				{
 					_edges.push_back(Edge<Property>(v1_id, v2_id, *this));
@@ -256,6 +274,7 @@ namespace VMTutorial
 				}
 				he->_edge = eh->idx();
 				he->_face = fh->id;
+				// cout << "    in loc 9" << endl;
 				if (i > 0)
 				{
 					he->_prev = _halfedges[prev_he].idx();

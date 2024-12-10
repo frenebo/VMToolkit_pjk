@@ -1,80 +1,16 @@
 import numpy as np
 import argparse
+import json
 import os
 from hexagonal_test.analytic_tools.find_hexagon_rest_area import HexagonalModel, find_hexagon_rest_area
 
-from VMToolkit.config_builder.open.make_honeycomb import create_honeycomb_json
 from VMToolkit.config_builder.open.honeycomb_lattice import HoneycombLattice
 from VMToolkit.VM import Tissue, System, Force, Integrate, Topology, Dump, Simulation, Vec
 from VMToolkit.VMAnalysis.utils.HalfEdge import Mesh
 
-
-
 from tissue_builder.hexagonal import HexagonalCellMesh
+from sim_model.sim_model import SimModel
 
-# class 
-
-def setup_hexagonal_init_mesh(A0_model,P0_model,init_side_length,json_out_fp, box_lx=25.0, box_ly=25.0):
-    h = HoneycombLattice(
-        lx=box_lx,
-        ly=box_ly,
-        a=init_side_length,
-    )
-    h.build()
-    h.minmax()
-    h.set_energy_params(
-        A0=A0_model,
-        P0=P0_model,
-        )    
-    print("C point:")
-    
-    cell_centers = np.array([cell.rc for cell in h.cells])
-    leftmost_center_x = cell_centers[:,0].min()
-    rightmost_center_x = cell_centers[:,0].max()
-    
-    left_box_corners = [
-        [-box_lx*0.6, -box_ly*0.6],
-        [-box_lx*0.6, box_ly*0.6],
-        [
-            leftmost_center_x + init_side_length*0.01,
-            box_ly*0.6,
-        ],
-        [
-            leftmost_center_x + init_side_length*0.01,
-            -box_ly*0.6,
-        ],
-    ]
-
-    right_box_corners = [
-        [box_lx*0.6, -box_ly*0.6],
-        [box_lx*0.6, box_ly*0.6],
-        [
-            rightmost_center_x - init_side_length*0.01,
-            box_ly*0.6,
-        ],
-        [
-            rightmost_center_x - init_side_length*0.01,
-            -box_ly*0.6,
-        ],
-    ]
-
-    h.set_vertex_type(left_box_corners, "left")
-    h.set_vertex_type(right_box_corners, "right")
-
-    h.set_cell_type(left_box_corners, "leftcell")
-    h.set_cell_type(right_box_corners, "rightcell")
-    left_vertices = [v for v in h.vertices if v.type=='left']
-    right_vertices = [v for v in h.vertices if v.type=='right']
-    # print("set types of {} left, {} right cells".format(len(left_faces), len(right_faces)))
-    print("set types of {} left, {} right vertices".format(len(left_vertices), len(right_vertices)))
-    
-    if len(left_vertices) != len(right_vertices):
-        raise ValueError("The number of vertices on the left and right should be symmetrical... tissue was apparently not set up properly")
-    h.json_out(json_out_fp)
-
-
-
-# def get_pts
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -83,7 +19,6 @@ if __name__ == "__main__":
     parser.add_argument("--box_ly", default=25.0,type=float, help="Y size of tissue")
     
     args = parser.parse_args()
-    hex_model = HexagonalModel()
     
     p0_shapefac = 3.6
     A0_model = 1
@@ -91,104 +26,59 @@ if __name__ == "__main__":
     kappa = 1.0     # area stiffness
     gamma = 0.15    # perimeter stiffness
     
-    res = hex_model.find_rest_size_of_hexagon(
+    analytical_predictions = HexagonalModel().find_rest_size_of_hexagon(
         A_0=A0_model,
         P_0=P0_model,
         K=kappa,
         Gamma=gamma,
     )
-    rest_side_length = res["rest_side_length"]
+    
+    rest_side_length = analytical_predictions["rest_side_length"]
     theoretical_rest_width = rest_side_length*2
     theoretical_rest_height = rest_side_length*2*np.sqrt(3)/2
+    
     if os.path.exists("scratch/example.json"):
         os.remove("scratch/example.json")
     
-    # setup_hexagonal_init_mesh(
-    #     A0_model,
-    #     P0_model,
-    #     init_side_length=rest_side_length*1.05,
-    #     json_out_fp="scratch/example.json",
-    #     box_lx=args.box_lx,
-    #     box_ly = args.box_ly,
-    # )
     cm = HexagonalCellMesh(
         side_length=rest_side_length*1.05,
         box_lx=args.box_lx,
         box_ly=args.box_ly,
     )
+    # cm.log_
     cm.set_all_A0(A0_model)
     cm.set_all_P0(P0_model)
-    cm.build_vm_mesh("scratch/example.json", verbose=True)
+    
+    with open("scratch/example.json", "w") as f:
+        json.dump(cm.build_vm_mesh_obj(verbose=True), f)
     
     print("MODEL PARAMS")
     print("A0={A0}  P0={P0}  kappa={kappa} gamma={gamma}".format(A0=A0_model,P0=P0_model,kappa=kappa,gamma=gamma))
-    print(res)
+    print(analytical_predictions)
     print("theoretical rest width={}, height={}".format(theoretical_rest_width, theoretical_rest_height))
-    ##### Running sim
-    tissue  = Tissue()                                               # initialise mesh
-    sim_sys = System(tissue)                                         # base object for the system
-    forces = Force(sim_sys)                                          # handles all types of forces
-    integrators = Integrate(sim_sys, forces, 0)              # handles all integrators
-    topology = Topology(sim_sys, forces)                             # handles all topology changes (T1, division, ingression)
-    dumps = Dump(sim_sys, forces)                                    # handles all data output 
-    simulation = Simulation(sim_sys, integrators, forces, topology)  # simulation object
-
-    # #################################################################
-    #
-    # Create the initial configuration and read it
-    #
-    # #################################################################
-
-    sim_sys.read_input("scratch/example.json")           # read input configuration
+    # ##### Running sim
+    # tissue  = Tissue()                                               # initialise mesh
+    # sim_sys = System(tissue)                                         # base object for the system
+    # forces = Force(sim_sys)                                          # handles all types of forces
+    # integrators = Integrate(sim_sys, forces, 0)              # handles all integrators
+    # topology = Topology(sim_sys, forces)                             # handles all topology changes (T1, division, ingression)
+    # dumps = Dump(sim_sys, forces)                                    # handles all data output 
+    # simulation = Simulation(sim_sys, integrators, forces, topology)  # simulation object
 
 
-    # #################################################################
-    #
-    # Add forces to the system
-    #
-    # #################################################################
 
-        
-
-    forces.add('area')         # add area force form term E = 0.5*kappa*(A-A0)^2
-    forces.add('perimeter')    # add perimeter force term from E = 0.5*gamma*P^2 + lambda*P (maybe -?)
-
-    # Set parameters for each cell type
-
-    lambda_val = P0_model * gamma # @TODO either the sim uses this, or it uses the P0... add a way to force P0 usage in set_params in cpp file?
-
-    for c_type in ['passive']:
-        forces.set_params('area', c_type, {'kappa' : kappa})
-        forces.set_params('perimeter', c_type,  {'gamma': gamma, "lambda": lambda_val})
-
+    # # #################################################################
+    # #
+    # # Create the initial configuration and read it
+    # #
+    # # #################################################################
+    sim_model = SimModel(verbose=True)
     
-    # #################################################################
-    #
-    # Set conditions for the T1 transition
-    #
-    # #################################################################
+    sim_model.configure_forces(P0_model, gamma, kappa, verbose=True)
 
-    topology.set_params({'min_edge_len': 0.05, 'new_edge_len': 0.055}) 
-
-
-    # #################################################################
-    #
-    # Add Brownian integrator that will handle mechanical part
-    #
-    # #################################################################
-
-    integrators.add('brownian')    
-
-    # #################################################################
-    #
-    # Simulation starts here
-    #
-    # #################################################################
-
-    dt = 0.08
-    friction_gam = 1.0
-    integrators.set_dt(dt) # set time step
-    integrators.set_params("brownian", {"gamma": friction_gam})
+    sim_model.load_json("scratch/example.json",verbose=True)           # read input configuration
+    
+    sim_model.configure_integrators(verbose=True)
 
     step_size = 1000      # Step counter in terms of time units
     
@@ -199,7 +89,7 @@ if __name__ == "__main__":
     N_checkpoints = 20
     for i in range(N_checkpoints):
         ckpt_fp = "scratch/res{}.json".format(str(i).zfill(3))
-        dumps.dump_mesh(ckpt_fp)
+        sim_model.dump_json(ckpt_fp)
         checkpoint_fps.append(ckpt_fp)
         
         # Will be reocrded next iteration
@@ -217,7 +107,8 @@ if __name__ == "__main__":
             ext_forcing_on.append(True)
         else:
             ext_forcing_on.append(False)
-        simulation.run(step_size, topological_change=False)
+        # simulation.run(step_size, topological_change=False)
+        sim_model.run_steps(step_size, verbose=True)
     
     print("Running analysis on simulation results")
     for ckpt_idx, ckpt_fp in enumerate(checkpoint_fps):
@@ -264,8 +155,5 @@ if __name__ == "__main__":
             print("    strain_x={} strain_y={}, poisson_r={}".format(strain_x, strain_y, -strain_y/strain_x))
         else:
             pass
-            #print("")
-    #### Do stretching test
-
     
 

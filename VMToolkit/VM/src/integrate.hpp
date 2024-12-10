@@ -43,11 +43,19 @@ namespace VMTutorial
 
       Integrate(const ForceCompute&) = delete;
 
-      void apply()
+      void apply(bool verbose=false)
       {
-        for (auto i : this->integ_order)
-          if (this->factory_map[i]->is_enabled())
-            this->factory_map[i]->step();
+        // bool verbose = true;
+        
+        if (verbose) {
+          cout << "In Integrate::apply" << endl;
+        }
+        for (auto i : this->integ_order) {
+          if (this->factory_map[i]->is_enabled()) {
+            if (verbose) { cout << "Going to apply a step " << endl; }
+            this->factory_map[i]->step(verbose);
+          }
+        }
         _sys.time_step()++;
         _sys.simulation_time() += _dt;
       }

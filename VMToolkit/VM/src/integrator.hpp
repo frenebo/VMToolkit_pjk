@@ -44,7 +44,7 @@ namespace VMTutorial
       }
       virtual ~Integrator() { }
       
-      virtual void step() = 0;
+      virtual void step(bool verbose=false) = 0;
       virtual void set_params(const params_type&) = 0;
       virtual void set_type_params(const string&, const params_type&) = 0;
       virtual void set_string_params(const string_params_type& params) = 0;

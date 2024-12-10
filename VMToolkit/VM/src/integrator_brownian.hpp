@@ -44,14 +44,16 @@ namespace VMTutorial
       { 
         map<string,int>& vert_types = _sys.vert_types();
         map<string,int>& cell_types = _sys.cell_types();
-        for (int i = 0; i < vert_types.size(); i++)  _constant_force.push_back(Vec(0.0,0.0));
+        for (int i = 0; i < vert_types.size(); i++) {
+          _constant_force.push_back(Vec(0.0,0.0));
+        }
 
         _constrainer = make_unique<Constrainer>();
         _constrainer->add<ConstraintNone>("none");
         _constrainer->add<ConstraintFixed>("fixed");
       }
 
-      void step() override;
+      void step(bool verbose) override;
       void set_params(const params_type& params) override 
       { 
         for (auto& p : params)

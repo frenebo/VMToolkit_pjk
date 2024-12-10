@@ -9,30 +9,73 @@
 
 namespace VMTutorial
 {
-  void IntegratorBrownian::step()
+  void IntegratorBrownian::step(bool verbose)
   {
+    // bool verbose = true;
+    if (verbose) {
+      cout << "IntegratorBrownian::step" << endl;
+    }
+    // cout << "Doing"
     double mu = 1.0 / _gamma;    // mobility 
     double B = sqrt(2.0*mu*_T);
     double sqrt_dt = sqrt(_dt);
     // Compute force on each vertex
-    for (auto& v : _sys.mesh().vertices())
-      if (!v.erased)
-        _force_compute.compute(v);
-    
-    // This is actual integrator 
+    size_t logvi = 0;
     for (auto& v : _sys.mesh().vertices())
     {
       if (!v.erased)
       {
+        if (verbose) {
+          cout << "  first round Computing force on vertex " << logvi << endl;
+        }
+        logvi++;
+        _force_compute.compute(v);
+      }
+    }
+    if (verbose) {
+    cout << "Done computing vertex forces" << endl;
+    }
+    
+    // This is actual integrator 
+    logvi = 0;
+    for (auto& v : _sys.mesh().vertices())
+    {
+      if (verbose) {
+        cout << "   second round " << logvi++ << endl;
+      }
+      if (!v.erased)
+      {
+        if (verbose) {
+          cout << "     adding force to constant force" << endl;
+        }
+        // if (v)
         // add external force 
+        if (verbose) {
+          cout << "vert type is " << v.data().vert_type << endl;
+          cout << "_constant_force size: " << _constant_force.size() << endl;
+        }
+        
+        // @TODO check that the _constant_force has been properly set up at this point.
         Vec f = v.data().force + _constant_force[v.data().vert_type];
         
         // apply constraint
-        if (_constraint_enabled)
+        if (_constraint_enabled) {
+          if (verbose) {
+            cout << "     Applying constraint " << endl;
+          }
           f = _constrainer->apply_vertex(v, f);
+        }
 
+        if (verbose) {
+          cout << "     Adding to the r vector" << endl;
+        }
         Vec rold = v.r;
         v.r += _dt*mu*f;  // deterministic part of the integrator step
+        
+        if (verbose) {
+          cout << "     added _dt*mu*f" << endl;
+        }
+        
         if (_T > 0.0)
         {
           Vec ffr(B*_rng.gauss_rng(), B*_rng.gauss_rng());  // random noise contribution to force
@@ -43,6 +86,9 @@ namespace VMTutorial
         }
         v.data().vel = (1.0 / _dt) * (v.r - rold);  
       }
+    }
+    if (verbose) {
+      cout << "Finished second round thingy" << endl;
     }
 
     // Update direction of cell director using simple Brownian dynamics

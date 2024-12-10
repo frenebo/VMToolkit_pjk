@@ -11,8 +11,15 @@ namespace VMTutorial
 {
   
   // Read input from a JSON file
-  void System::read_input(const string& json_file)
+  void System::read_input(const string& json_file, bool verbose)
   {
+    // bool verbose = true;
+    if (verbose) {
+      // cout << "CURRENT size of _halfedges: " << _mesh.halfedges().size() << endl;
+      cout << "Reading input json into system" << endl;
+      
+      log_debug_stats();
+    }
     if (_mesh_set)
     {
       cout << "Warning! Mesh has already been set. Overwriting it." << endl;
@@ -70,20 +77,39 @@ namespace VMTutorial
     cout << "Finished reading vertices." << endl;
     // Populate faces
     bool erased_face = false;
+    if (verbose)
+    {
+      cout << "vertices populated" << endl;
+      log_debug_stats();
+      cout << "Beginning to read j -> mesh -> face" << endl;
+      cout << "Size of mesh face:" << endl;
+      cout << "  " << j["mesh"]["faces"].size() << endl;
+    }
     for (int i = 0; i < j["mesh"]["faces"].size(); i++)
     {
+      // cout << "Reading face index " << i << endl;
+      
+      // cout 
       if (j["mesh"]["faces"][i].find("erased") != j["mesh"]["faces"][i].end())
       {
+        // cout << "ckpt 1" << endl;
         erased_face = j["mesh"]["faces"][i]["erased"];
         if (erased_face)
-          _mesh.add_face(vector<int>(),  true);
+          _mesh.add_face(vector<int>(),  true, verbose);
         else
-          _mesh.add_face(j["mesh"]["faces"][i]["vertices"], false);
+          _mesh.add_face(j["mesh"]["faces"][i]["vertices"], false, verbose);
       }
       else 
-        _mesh.add_face(j["mesh"]["faces"][i]["vertices"]);
+      {
+        // cout << "ckpt 2" << endl;
+        _mesh.add_face(j["mesh"]["faces"][i]["vertices"], false, verbose);
+      }
+      
+      // cout << "ckpt 3" << endl;
       Face<Property>& f = _mesh.faces().back();
       f.data().unique_id = f.id;
+      
+      // cout << "ckpt 4" << endl;
       if (!erased_face)
       {
         this->add_cell_type(j["mesh"]["faces"][i]["type"]);
@@ -269,7 +295,7 @@ namespace VMTutorial
   {
     py::class_<System>(m, "System")
       .def(py::init<MyMesh&>())
-      .def("read_input", &System::read_input, py::arg("input_file"))
+      .def("read_input", &System::read_input, py::arg("input_file"), py::arg("verbose")=false)
       .def("add_cell_type", &System::add_cell_type)
       .def("set_cell_type", &System::set_cell_type)
       .def("mesh", &System::mesh)
@@ -278,7 +304,8 @@ namespace VMTutorial
       .def("simulation_time", &System::simulation_time)
       .def("set_simulation_time_step", &System::set_simulation_time_step)
       .def("get_cell_type_name", &System::get_cell_type_name)
-      .def("get_vert_type_name", &System::get_vert_type_name);
+      .def("get_vert_type_name", &System::get_vert_type_name)
+      .def("log_debug_stats", &System::log_debug_stats);
   }
 
   

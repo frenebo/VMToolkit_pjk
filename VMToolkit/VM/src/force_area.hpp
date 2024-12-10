@@ -50,8 +50,20 @@ namespace VMTutorial
 
         try 
         {
-          if (_sys.cell_types().find(cell_type) == _sys.cell_types().end())
+          if (_sys.cell_types().find(cell_type) == _sys.cell_types().end()) {
+            cout << "Cell types are :";
+            for(auto iter = _sys.cell_types().begin(); iter != _sys.cell_types().end(); ++iter)
+            {
+              // asdfasdf;
+              auto k =  iter->first;
+              auto v = iter->second;
+              cout << v << " ";
+            //ignore value
+            //Value v = iter->second;
+            }
+            cout << endl;
             throw runtime_error("Force area: Cell type " + cell_type + " is not defined.");
+          }
           if (_kappa.size() < _sys.get_num_cell_types())
             _kappa.resize(_sys.get_num_cell_types(), 0.0);
           int ct = _sys.cell_types()[cell_type];

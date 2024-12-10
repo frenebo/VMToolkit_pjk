@@ -43,7 +43,7 @@ namespace VMTutorial
     { 
 
     }
-    void run(int, bool = true, bool = true);
+    void run(int, bool = true, bool = true, bool = false);
     const string print_version() { return  "branch : "+static_cast<string>(XSTR(GIT_BRANCH))+" commit : "+static_cast<string>(XSTR(GIT_COMMIT_HASH)); }
     void progress_bar(double, const string&);
     void store_rng_state();

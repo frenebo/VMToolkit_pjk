@@ -2,7 +2,7 @@ import math
 import numpy as np
 import json
 
-class HexagonalCellMesh:
+class HexagonalMeshBoxBuilder:
     
     @classmethod
     def _generate_cell_row_xpositions(cls, side_length, cell_row_idx, num_cell_rows, num_cell_columns, verbose=False):
@@ -49,7 +49,8 @@ class HexagonalCellMesh:
             cell_column_indices = [i for i in range(num_cell_columns) if abs(i - center_col_idx) % 2 != 0]
         
         return xpositions, cell_column_indices
-        
+    
+    
     @classmethod
     def _calculate_hexrow_x_positions(cls, side_length, row_is_odd, num_cells_wide, verbose=False):
         # side
@@ -122,7 +123,7 @@ class HexagonalCellMesh:
         num_cell_columns_odd = ( (num_cell_columns - 1)//2 )*2 + 1
         
         return num_cell_columns_odd
-        
+    
     
     @classmethod
     def _calculate_n_cell_rows(cls, side_length, box_ly):
@@ -140,6 +141,7 @@ class HexagonalCellMesh:
         
         return num_cell_rows_odd
     
+    
     @classmethod
     def _calculate_hexagon_row_y_positions(cls, n_rows, hex_h):
         """ Hexagon rows will be staggered, each half a hexagon height high. The center row will be at y=0.
@@ -147,7 +149,8 @@ class HexagonalCellMesh:
         if n_rows % 2 != 1:
             raise Exception("Expected n_rows={} to be odd".format(n_rows))
         return (hex_h/2)*(np.arange(n_rows) - n_rows//2)
-        
+    
+    
     @classmethod
     def _is_vertex_row_odd(cls, vtx_row_idx, n_cell_rows):
         """ Determines whether a row of VERTICES is 'odd'
@@ -157,18 +160,17 @@ class HexagonalCellMesh:
             so every other row starting from there is odd.
         """
         return (vtx_row_idx - (n_cell_rows//2 + 1)) % 2 == 0
-        
+    
+    
     @classmethod
     def _calculate_vtx_row_y_positions(cls, side_length, n_cell_rows):
         hex_h = side_length*math.sqrt(3)
         
         return (np.arange(n_cell_rows + 2) - (n_cell_rows/2)) * (hex_h/2)
-        
     
-    # def _generate_
-        
+    
     @classmethod
-    def _build_hex_tissue(cls, side_length, box_lx, box_ly, verbose=False):
+    def build_hex_tissue(cls, side_length, box_lx, box_ly, verbose=False):
         hex_h = side_length*math.sqrt(3)
         hex_w = side_length*2
         
@@ -304,9 +306,40 @@ class HexagonalCellMesh:
         for vtx_id, vtx in vertices_map.items():
             vtx["neighbours"] = [n_id for n_id in vtx["neighbours"] if n_id in vertices_map]
         
-        return cells_map, vertices_map
+        return {
+            "cells_map": cells_map,
+            "vertices_map": vertices_map,
+        }
+    
+    
+    
+    
+
+class HexagonalCellMesh:
+    @classmethod
+    def _angle_subtract(cls, angle1, angle2):
+        """ Assumes angle1 and angle 2 are between 0 and 2*pi """
+        diff_ang = angle1 - angle2
         
+        ### Put both angles in 0 to 2 pi range
+        while angle1 < 0:
+            angle1 += 2*np.pi
+        while angle1 > 2*np.pi:
+            angle1 -= 2*np.pi
+        while angle2 < 0:
+            angle2 += 2*np.pi
+        while angle2 > 2*np.pi:
+            angle2 -= 2*np.pi
+        # if angle1 < 0 or angle2 < 0 or angle1 > 2*np.pi or angle2 > 2*np.pi:
+        #     raise ValueError("expected angles between 0 and 2pi. invalid args {}, {}".format(angle1, angle2))
         
+        if angle2 > angle1:
+            angle2 -= 2*np.pi
+        # diff_angle = angle1 - angle2
+        # raise NotImplementedError("This isn't doing what I think it's doing...")
+        return angle1 - angle2
+    
+    
     @classmethod
     def _vtx_angle_to(cls, vtx1, vtx2):
         x1, y1 = vtx1["x"], vtx1["y"]
@@ -330,34 +363,9 @@ class HexagonalCellMesh:
             ang = 2*np.pi
         
         return ang
-        
     
     @classmethod
-    def _angle_subtract(cls, angle1, angle2):
-        """ Assumes angle1 and angle 2 are between 0 and 2*pi """
-        diff_ang = angle1 - angle2
-        
-        ### Put both angles in 0 to 2 pi range
-        while angle1 < 0:
-            angle1 += 2*np.pi
-        while angle1 > 2*np.pi:
-            angle1 -= 2*np.pi
-        while angle2 < 0:
-            angle2 += 2*np.pi
-        while angle2 > 2*np.pi:
-            angle2 -= 2*np.pi
-        # if angle1 < 0 or angle2 < 0 or angle1 > 2*np.pi or angle2 > 2*np.pi:
-        #     raise ValueError("expected angles between 0 and 2pi. invalid args {}, {}".format(angle1, angle2))
-        
-        if angle2 > angle1:
-            angle2 -= 2*np.pi
-        # diff_angle = angle1 - angle2
-        # raise NotImplementedError("This isn't doing what I think it's doing...")
-        return angle1 - angle2
-        
-    
-    @classmethod
-    def generate_boundary_face_export_obj(cls, vertices_map, cell_id, verbose=False):
+    def _generate_boundary_face_export_obj(cls, vertices_map, cell_id, verbose=False):
         # @NOTE this assuems there is only one boundary, around the perimeter
         
         # Start at the leftmost vertex - should be on the boundary
@@ -463,11 +471,12 @@ class HexagonalCellMesh:
         self.cells_map = None
         self.vertices_map = None
         
-        self.build_cells()
+        self._build_cells()
     
-    def build_cells(self,verbose=False):
-        self.cells_map, self.vertices_map = self._build_hex_tissue(self.side_length, self.box_lx, self.box_ly)    
-        # raise Exception("Have not excuded the corners for even rows that are first or lat row")
+    def _build_cells(self,verbose=False):
+        tissue_box = HexagonalMeshBoxBuilder.build_hex_tissue(self.side_length, self.box_lx, self.box_ly)    
+        self.cells_map, self.vertices_map = tissue_box["cells_map"], tissue_box["vertices_map"]
+        
         if verbose:
             print("BUILT CELLS")
             print(self.cells_map)
@@ -482,7 +491,7 @@ class HexagonalCellMesh:
             self.cells_map[cell_id]["P0"] = P0_value
         
         
-    def build_vm_mesh(self, out_json_fp, verbose=False):
+    def build_vm_mesh_obj(self, verbose=False):
         """
         Generates a tissue mesh in a JSON format that VMTutorial code will understand.
         """
@@ -521,16 +530,12 @@ class HexagonalCellMesh:
                 # "vertices": cell_ve
             })
             
-        boundary_face = self.generate_boundary_face_export_obj(self.vertices_map, cell_id=len(self.cells_map), verbose=verbose)
+        boundary_face = self._generate_boundary_face_export_obj(self.vertices_map, cell_id=len(self.cells_map), verbose=verbose)
         vm_faces.append(boundary_face)
-        # for v in boundary_face['vertices']:
-        #     vm_
         
         
         #### Build vertices
         vm_vertices = []
-        
-        # raise NotImplementedError("Need to replace non indexed ids with real indexed ids!")
         
         for vertex_id in self.vertices_map:
             vtx = self.vertices_map[vertex_id]
@@ -601,5 +606,4 @@ class HexagonalCellMesh:
             print("Old to new vertex id map: {}".format(old_to_new_vid_map))
             # print(json.dumps(data, indent=4))
         
-        with open(out_json_fp, "w") as f:
-            json.dump(data, f, indent=4)
+        return data
