@@ -5,11 +5,25 @@ import json
 class HexagonalCellMesh:
     
     @classmethod
-    def get_cell_row_xpositions(cls, side_length, n_cells_in_row, row_is_odd):
-        if (n_cells_in_row % 2 != 1 and row_is_odd) or (n_cells_in_row % 2 != 0 and not row_is_odd):
-            raise Exception(
-                "Odd rows should have odd number of cells, and even should have even number." +
-                "But in this row, n_cells={}, oddness={}".format(n_cells_in_row, row_is_odd))
+    def _generate_cell_row_xpositions(cls, side_length, cell_row_idx, num_cell_rows, num_cell_columns, verbose=False):
+        assert num_cell_rows % 2 == 1, 'n cell rows should be odd'
+        assert num_cell_columns % 2 == 1, 'n cell columns should be odd'
+            # raise Va
+        num_non_center_cell_columns = num_cell_columns - 1
+        n_cells_in_ODD_rows = 1 + (num_non_center_cell_columns // 4)*2
+        n_cells_in_EVEN_rows = num_cell_columns - n_cells_in_ODD_rows
+        
+        row_is_odd = abs(cell_row_idx - num_cell_rows//2) % 2 == 0
+        
+        if row_is_odd:
+            n_cells_in_row = n_cells_in_ODD_rows
+        else:
+            n_cells_in_row = n_cells_in_EVEN_rows
+            
+        # if (n_cells_in_row % 2 != 1 and row_is_odd) or (n_cells_in_row % 2 != 0 and not row_is_odd):
+        #     raise Exception(
+        #         "Odd rows should have odd number of cells, and even should have even number." +
+        #         "But in this row, n_cells={}, oddness={}".format(n_cells_in_row, row_is_odd))
         
         if row_is_odd:
             middle_idx = (n_cells_in_row//2 + 1)
@@ -24,14 +38,20 @@ class HexagonalCellMesh:
             cell_xpos = (cell_idx - middle_idx) * cells_in_row_spacing
             xpositions.append(cell_xpos)
         
-        return xpositions
+        if verbose:
+            print("   Row index={} row_is_odd={} n_cells_in_row={}".format(cell_row_idx, row_is_odd, n_cells_in_row))
+            
+        center_col_idx = num_cell_columns // 2
+        if row_is_odd:
+            cell_column_indices = [i for i in range(num_cell_columns) if abs(i - center_col_idx) % 2 == 0]
+            # cell_column_indices = list(np.arange(n_cells_in_row) * 2)
+        else:
+            cell_column_indices = [i for i in range(num_cell_columns) if abs(i - center_col_idx) % 2 != 0]
         
+        return xpositions, cell_column_indices
         
-        
-    
-    # def generate_vertex_row(n_cells_horizontal)
     @classmethod
-    def generate_vertex_row_untrimmed(cls, side_length, row_is_odd, num_cells_wide, verbose=False):
+    def _calculate_hexrow_x_positions(cls, side_length, row_is_odd, num_cells_wide, verbose=False):
         # side
         if num_cells_wide % 2 != 1:
             raise ValueError("The tissue should be an odd number of cells wide.")
@@ -79,157 +99,153 @@ class HexagonalCellMesh:
             vertex_x_positions.append(left_vtx_x)
             vertex_x_positions.append(right_vtx_x)
         
+        
+        
         return vertex_x_positions
         
     
     @classmethod
-    def build_tissue(cls, side_length, box_lx, box_ly, verbose=False):
-        hex_h = side_length*math.sqrt(3)
+    def _calculate_n_cell_columns(cls, side_length, box_lx):
+        """ Finding number of hexagon columns that will fit in box. Note: each row will either have 'even' or 'odd' columns.
+            Columns are counted by vertical series of hexagons, not zig-zags.
+            Number is rounded down to the largest possible odd # of columns.
+         The first cell has width hex_w. Each additional hexagon adds width 1.5*hex_w.
+         So for n_cells, total width is = hex_w + (n_cells - 1)*1.5*hex_w
+                              width_tot = hex_w*((3/2)*n_cells - 1/2)
+                              width_tot / (hex_w*3/2) +1/2 = n_cells
+         So finding n_cells:
+        """
         hex_w = side_length*2
+        num_cell_columns = math.floor((box_lx / (hex_w*(3/2))) + (1/2))
         
+        # Round down to odd number
+        num_cell_columns_odd = ( (num_cell_columns - 1)//2 )*2 + 1
+        
+        return num_cell_columns_odd
+        
+    
+    @classmethod
+    def _calculate_n_cell_rows(cls, side_length, box_ly):
+        """ Finding number of hexagon rows that will fit in a box.
+            Number is rounded down to the largest possible odd # of rows.
+        """
+        hex_h = side_length*math.sqrt(3)
         # The 'first' row has the height of one hexagon - each additional one adds half a hexagon height.
         # so...
         # tissue_height = (num_rows/2 + 1/2)*hexagon_height
         num_cell_rows = math.floor(2*((box_ly / hex_h) - 1/2))
         # Round down to an odd number - things will be easier if we have one cell at the origin, and build
         # outwards. otherwise, we might end up with asymettrical tissue and stuff
-        num_cell_rows = ((num_cell_rows - 1)//2)*2 + 1
+        num_cell_rows_odd = ((num_cell_rows - 1)//2)*2 + 1
+        
+        return num_cell_rows_odd
+    
+    @classmethod
+    def _calculate_hexagon_row_y_positions(cls, n_rows, hex_h):
+        """ Hexagon rows will be staggered, each half a hexagon height high. The center row will be at y=0.
+        """
+        if n_rows % 2 != 1:
+            raise Exception("Expected n_rows={} to be odd".format(n_rows))
+        return (hex_h/2)*(np.arange(n_rows) - n_rows//2)
+        
+    @classmethod
+    def _is_vertex_row_odd(cls, vtx_row_idx, n_cell_rows):
+        """ Determines whether a row of VERTICES is 'odd'
+                - aka, appears like the vertices straight along the axis of the middle row.
+            The total number of vertex rows is n_cell_rows + 2.
+            The vertex row corresponding the the middle cell row's axis is at index n_cell_rows//2 + 1,
+            so every other row starting from there is odd.
+        """
+        return (vtx_row_idx - (n_cell_rows//2 + 1)) % 2 == 0
+        
+    @classmethod
+    def _calculate_vtx_row_y_positions(cls, side_length, n_cell_rows):
+        hex_h = side_length*math.sqrt(3)
+        
+        return (np.arange(n_cell_rows + 2) - (n_cell_rows/2)) * (hex_h/2)
+        
+    
+    # def _generate_
+        
+    @classmethod
+    def _build_hex_tissue(cls, side_length, box_lx, box_ly, verbose=False):
+        hex_h = side_length*math.sqrt(3)
+        hex_w = side_length*2
+        
+        num_cell_rows = cls._calculate_n_cell_rows(side_length=side_length, box_ly=box_ly)
         
         
-        # num_cell_columns = 
-        #### Finding number of cell columns
-        # The first cell has width hex_w. Each additional hexagon adds width 1.5*hex_w.
-        # So for n_cells, total width is = hex_w + (n_cells - 1)*1.5*hex_w
-        #                      width_tot = hex_w*((3/2)*n_cells - 1/2)
-        #                      width_tot / (hex_w*3/2) +1/2 = n_cells
-        # So finding n_cells:
-        # print("Box lx={}   box_lx/(hex_w*(3/2))={}".format(box_lx, box_lx/(hex_w*3/2)))
-        num_cell_columns = math.floor((box_lx / (hex_w*(3/2))) + (1/2))
-        
-        num_cell_columns = ( (num_cell_columns - 1)//2 )*2 + 1
+        num_cell_columns = cls._calculate_n_cell_columns(side_length=side_length, box_lx=box_lx)
         
         if verbose:
             print("hex_w={} hex_h={}".format(hex_w,hex_h))
             print("Number of cell columns: {}".format(num_cell_columns))
             print("Number of cell rows: {}".format(num_cell_rows))
-        if num_cell_columns % 2 != 1:
-            raise Exception("Should be odd number of columns... something is wrong")
-        if num_cell_rows % 2 != 1:
-            raise Exception("Should be odd number of rows... something is wrong.")
-        # print("Number of cell columns: {}".format(num_cell_columns))
         
-        # The middle row is at origin, and the others are spaced apart from it
-        cell_row_ypositions = (hex_h/2)*(np.arange(num_cell_rows) - num_cell_rows//2)
+        cell_row_ypositions = cls._calculate_hexagon_row_y_positions(num_cell_rows, hex_h)
+        vtx_row_ypositions = cls._calculate_vtx_row_y_positions(side_length=side_length, n_cell_rows=num_cell_rows)
         
-        # print("Cell row y positions: {}".format(cell_row_ypositions))
-        
-        # vtx_row_positions = (hex_h/2)*(np.arange(num_cell_rows + 2) - (num_cell_rows + / // 2)
         vtx_rows = []
         for vtx_row_idx in range(num_cell_rows + 2):
-            # The middle cell row is "odd" - has cell in it's center.
-            # So, the row of vertices that are along the middle of that row are 'odd'.
-            #  - this middle row of vertices has index  n_cell_rows//2 + 1
-            # Since vertex rows alternate being 'even' or 'odd',
-            # a row with index i is odd, if (i - (n_cell_rows//2 + 1)) % 2 == 0
-            # print(vtx_row_idx)
-            vtx_row_is_odd = (vtx_row_idx - (num_cell_rows//2 + 1)) % 2 == 0
+            vtx_row_is_odd = cls._is_vertex_row_odd(vtx_row_idx=vtx_row_idx, n_cell_rows=num_cell_rows)
             
-            vtx_x_positions = cls.generate_vertex_row_untrimmed(
+            vtx_x_positions = cls._calculate_hexrow_x_positions(
                 side_length=side_length,
                 row_is_odd=vtx_row_is_odd,
                 num_cells_wide=num_cell_columns,
             )
             if verbose:
                 print("# of vertex x positions generated: {}".format(len(vtx_x_positions)))
-            vtx_row_y = (vtx_row_idx - (num_cell_rows/2)) * (hex_h/2)
-            # vtx_y_positions = 
-            # row_vertices
+            
+            vtx_row_y = vtx_row_ypositions[vtx_row_idx]
+            
             vertices_in_row = [ {"x": vtx_x_positions[i], "y": vtx_row_y} for i in range(num_cell_columns + 1) ]
             
             
             vtx_rows.append(vertices_in_row)
         
-        # There should be no duplicates
-        # @TODO remove, slow
-        # all_vertices_to_examine = 
-        # for 
-        
         ##### Calculate the number of cells in odd or even rows
-        num_non_center_cell_columsn = num_cell_columns - 1
-        n_cells_in_ODD_rows = 1 + (num_non_center_cell_columsn // 4)*2
-        n_cells_in_EVEN_rows = num_cell_columns - n_cells_in_ODD_rows
         
         
+        if verbose:
+            print("N cells in odd rows: {}".format(n_cells_in_ODD_rows))
+            print("N cells in even rows: {}".format(n_cells_in_EVEN_rows))
+            print("BUILDING CELL ROWS")
         
-        # cell_objs = {}
         cells_map = {}
-        # vertices_map = {}
-        # reverse_vertices_map = {}
-        # vertex_objs = {}
         cell_id = 0
         vtx_id = 0
         
         ##############
         # Assign cells to their corresponding vertices
-        if verbose:
-            print("N cells in odd rows: {}".format(n_cells_in_ODD_rows))
-            print("N cells in even rows: {}".format(n_cells_in_EVEN_rows))
-            print("BUILDING CELL ROWS")
+        
         for c_row_idx in range(num_cell_rows):
-            # middle_cell
-            # The middle row is odd, and there is odd number of rows -
-            #  so if there are 5 rows, then 0,2,4 are odd, 1,3 are even.
-            row_is_odd = abs(c_row_idx - num_cell_rows//2) % 2 == 0
+            cell_centers_x, cell_column_indices= cls._generate_cell_row_xpositions(
+                side_length=side_length,
+                cell_row_idx=c_row_idx,
+                num_cell_rows=num_cell_rows,
+                num_cell_columns=num_cell_columns,
+                verbose=verbose,
+            )
             
-            if row_is_odd:
-                n_cells_in_row = n_cells_in_ODD_rows
-            else:
-                n_cells_in_row = n_cells_in_EVEN_rows
-            
-            # print("Tot number of cell columns: {}".format(num_cell_columns))
-            # print()
-            if verbose:
-                print("   Row index={} row_is_odd={} n_cells_in_row={}".format(c_row_idx, row_is_odd, n_cells_in_row))
-            
-            cell_centers_x = cls.get_cell_row_xpositions(side_length, n_cells_in_row, row_is_odd)
-            # cell_col
-            center_col_idx = num_cell_columns // 2
-            if row_is_odd:
-                cell_column_indices = [i for i in range(num_cell_columns) if abs(i - center_col_idx) % 2 == 0]
-                # cell_column_indices = list(np.arange(n_cells_in_row) * 2)
-            else:
-                cell_column_indices = [i for i in range(num_cell_columns) if abs(i - center_col_idx) % 2 != 0]
-                # cell_column_indices = list(np.arange(n_cells_in_row) * 2 + 1)
-            # print(cell_centers_x)
-            
-            
-            # cells_map = {}
-            # vertices_map = {}
             if len(cell_centers_x) != len(cell_column_indices):
                 print("Cell center x values: {}".format(cell_centers_x))
                 print("Cell column indices: {}".format(cell_column_indices))
                 raise ValueError("Expected number of cell centers to match number of cell column indices")
             
             for cell_x_pos, c_col_idx in zip(cell_centers_x, cell_column_indices):
-            # for cell_row_idx in 
-                # for cell_y_pos
-                try:
-                    cell_vertices = [
-                        vtx_rows[c_row_idx][c_col_idx],
-                        vtx_rows[c_row_idx][c_col_idx + 1],
-                        vtx_rows[c_row_idx + 1][c_col_idx + 1],
-                        vtx_rows[c_row_idx + 2][c_col_idx + 1],
-                        vtx_rows[c_row_idx + 2][c_col_idx],
-                        vtx_rows[c_row_idx + 1][c_col_idx],
-                    ]
-                except:
-                    print("Cell column indices: {}".format(cell_column_indices))
-                    print("C_row_idx={} c_col_idx={}".format(c_row_idx, c_col_idx))
-                    raise
+                # Ordered list of vertices that correspond to cell at this index
+                cell_vertices = [
+                    vtx_rows[c_row_idx][c_col_idx],
+                    vtx_rows[c_row_idx][c_col_idx + 1],
+                    vtx_rows[c_row_idx + 1][c_col_idx + 1],
+                    vtx_rows[c_row_idx + 2][c_col_idx + 1],
+                    vtx_rows[c_row_idx + 2][c_col_idx],
+                    vtx_rows[c_row_idx + 1][c_col_idx],
+                ]
                 
                 matching_vertex_ids = []
                 for cell_vtx in cell_vertices:
-                    # print(cell_vtx)
                     if "id" not in cell_vtx:
                         cell_vtx["id"] = vtx_id
                         cell_vtx["cells"] = []
@@ -257,7 +273,6 @@ class HexagonalCellMesh:
                         cell_vertices[vi]["neighbours"].append(prev_id)
                     if next_id not in cell_vertices[vi]["neighbours"]:
                         cell_vertices[vi]["neighbours"].append(next_id)
-                    # cell_vertices[vi]
                 
                 cells_map[cell_id] = {
                     "vertices": matching_vertex_ids,
@@ -288,54 +303,9 @@ class HexagonalCellMesh:
         # @TODO - these should be set in the fucntion that defines the boundary! Not separately.
         for vtx_id, vtx in vertices_map.items():
             vtx["neighbours"] = [n_id for n_id in vtx["neighbours"] if n_id in vertices_map]
-            
-            # # vertices in the interior will be part of three faces
-            # if len(vtx["cells"]) == 3:
-            #     vtx["is_boundary"] = False
-            # elif len(vtx["cells"]) < 3:
-            #     vtx["is_boundary"] = True
-            # else:
-            #     print()
-            #     raise Exception("Vertex should not be part of more than three cells")
         
         return cells_map, vertices_map
         
-        
-        
-    def __init__(
-        self,
-        side_length,
-        box_lx,
-        box_ly,
-    ):
-        # raise NotImplementedError()
-        
-        # center_cell = 
-        # cent
-        # centself.
-        self.side_length = side_length
-        self.box_lx = box_lx
-        self.box_ly = box_ly
-        self.cells_map = None
-        self.vertices_map = None
-        
-        self.build_cells()
-    
-    def build_cells(self,verbose=False):
-        self.cells_map, self.vertices_map = self.build_tissue(self.side_length, self.box_lx, self.box_ly)    
-        # raise Exception("Have not excuded the corners for even rows that are first or lat row")
-        if verbose:
-            print("BUILT CELLS")
-            print(self.cells_map)
-            print(self.vertices_map)
-    
-    def set_all_A0(self, A0_value):
-        for cell_id in self.cells_map:
-            self.cells_map[cell_id]["A0"] = A0_value
-
-    def set_all_P0(self, P0_value):
-        for cell_id in self.cells_map:
-            self.cells_map[cell_id]["P0"] = P0_value
         
     @classmethod
     def _vtx_angle_to(cls, vtx1, vtx2):
@@ -474,11 +444,56 @@ class HexagonalCellMesh:
             "type": "passive",
         }
     
+    # @classmethod 
+        
+    def __init__(
+        self,
+        side_length,
+        box_lx,
+        box_ly,
+    ):
+        # raise NotImplementedError()
+        
+        # center_cell = 
+        # cent
+        # centself.
+        self.side_length = side_length
+        self.box_lx = box_lx
+        self.box_ly = box_ly
+        self.cells_map = None
+        self.vertices_map = None
+        
+        self.build_cells()
+    
+    def build_cells(self,verbose=False):
+        self.cells_map, self.vertices_map = self._build_hex_tissue(self.side_length, self.box_lx, self.box_ly)    
+        # raise Exception("Have not excuded the corners for even rows that are first or lat row")
+        if verbose:
+            print("BUILT CELLS")
+            print(self.cells_map)
+            print(self.vertices_map)
+    
+    def set_all_A0(self, A0_value):
+        for cell_id in self.cells_map:
+            self.cells_map[cell_id]["A0"] = A0_value
+
+    def set_all_P0(self, P0_value):
+        for cell_id in self.cells_map:
+            self.cells_map[cell_id]["P0"] = P0_value
+        
         
     def build_vm_mesh(self, out_json_fp, verbose=False):
+        """
+        Generates a tissue mesh in a JSON format that VMTutorial code will understand.
+        """
+        
         if self.cells_map is None or self.vertices_map is None:
             raise Exception("Cannot build vm mesh until cells have been built.")
-            
+        for cid, cell in self.cells_map.items():
+            if cell["A0"] == None:
+                raise ValueError("A0 not set for cell {}".format(cid))
+            if cell["P0"] == None:
+                raise ValueError("P0 not set for cell {}".format(cid))
             
         #### Build faces
         vm_faces = []
@@ -573,6 +588,7 @@ class HexagonalCellMesh:
                 "vertices": vm_vertices,
             }
         }
+        
         if verbose:
             print("Box:")
             print("  " + str(data["mesh"]["box"]))
