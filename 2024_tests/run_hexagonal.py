@@ -100,27 +100,27 @@ if __name__ == "__main__":
     rest_side_length = res["rest_side_length"]
     theoretical_rest_width = rest_side_length*2
     theoretical_rest_height = rest_side_length*2*np.sqrt(3)/2
-    print("MODEL PARAMS")
     if os.path.exists("scratch/example.json"):
         os.remove("scratch/example.json")
     
-    setup_hexagonal_init_mesh(
-        A0_model,
-        P0_model,
-        init_side_length=rest_side_length*1.05,
-        json_out_fp="scratch/example.json",
-        box_lx=args.box_lx,
-        box_ly = args.box_ly,
-    )
-    # cm = HexagonalCellMesh(
-    #     side_length=rest_side_length*1.05,
+    # setup_hexagonal_init_mesh(
+    #     A0_model,
+    #     P0_model,
+    #     init_side_length=rest_side_length*1.05,
+    #     json_out_fp="scratch/example.json",
     #     box_lx=args.box_lx,
-    #     box_ly=args.box_ly,
+    #     box_ly = args.box_ly,
     # )
-    # cm.set_all_A0(A0_model)
-    # cm.set_all_P0(P0_model)
-    # cm.build_vm_mesh("scratch/example.json")
+    cm = HexagonalCellMesh(
+        side_length=rest_side_length*1.05,
+        box_lx=args.box_lx,
+        box_ly=args.box_ly,
+    )
+    cm.set_all_A0(A0_model)
+    cm.set_all_P0(P0_model)
+    cm.build_vm_mesh("scratch/example.json", verbose=True)
     
+    print("MODEL PARAMS")
     print("A0={A0}  P0={P0}  kappa={kappa} gamma={gamma}".format(A0=A0_model,P0=P0_model,kappa=kappa,gamma=gamma))
     print(res)
     print("theoretical rest width={}, height={}".format(theoretical_rest_width, theoretical_rest_height))

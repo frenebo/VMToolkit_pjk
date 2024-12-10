@@ -250,13 +250,13 @@ class HexagonalCellMesh:
                         raise Exception("??????")
                     
                     # cell_vertices["vi"]
-                    if "neighbors" not in cell_vertices[vi]:
-                        cell_vertices[vi]["neighbors"] = []
+                    if "neighbours" not in cell_vertices[vi]:
+                        cell_vertices[vi]["neighbours"] = []
                     
-                    if prev_id not in cell_vertices[vi]["neighbors"]:
-                        cell_vertices[vi]["neighbors"].append(prev_id)
-                    if next_id not in cell_vertices[vi]["neighbors"]:
-                        cell_vertices[vi]["neighbors"].append(next_id)
+                    if prev_id not in cell_vertices[vi]["neighbours"]:
+                        cell_vertices[vi]["neighbours"].append(prev_id)
+                    if next_id not in cell_vertices[vi]["neighbours"]:
+                        cell_vertices[vi]["neighbours"].append(next_id)
                     # cell_vertices[vi]
                 
                 cells_map[cell_id] = {
@@ -280,14 +280,14 @@ class HexagonalCellMesh:
                         "x": vtx["x"],
                         "y": vtx["y"],
                         "cells": vtx["cells"],
-                        "neighbors": vtx["neighbors"],
+                        "neighbours": vtx["neighbours"],
                     }
         
         # Remove unused vertices from the neighbor lists
         # Also decide which vertices are on boundary
         # @TODO - these should be set in the fucntion that defines the boundary! Not separately.
         for vtx_id, vtx in vertices_map.items():
-            vtx["neighbors"] = [n_id for n_id in vtx["neighbors"] if n_id in vertices_map]
+            vtx["neighbours"] = [n_id for n_id in vtx["neighbours"] if n_id in vertices_map]
             
             # # vertices in the interior will be part of three faces
             # if len(vtx["cells"]) == 3:
@@ -321,11 +321,13 @@ class HexagonalCellMesh:
         
         self.build_cells()
     
-    def build_cells(self):
+    def build_cells(self,verbose=False):
         self.cells_map, self.vertices_map = self.build_tissue(self.side_length, self.box_lx, self.box_ly)    
         # raise Exception("Have not excuded the corners for even rows that are first or lat row")
-        print(self.cells_map)
-        print(self.vertices_map)
+        if verbose:
+            print("BUILT CELLS")
+            print(self.cells_map)
+            print(self.vertices_map)
     
     def set_all_A0(self, A0_value):
         for cell_id in self.cells_map:
@@ -363,40 +365,57 @@ class HexagonalCellMesh:
     @classmethod
     def _angle_subtract(cls, angle1, angle2):
         """ Assumes angle1 and angle 2 are between 0 and 2*pi """
-        if angle1 < 0 or angle2 < 0 or angle1 > 2*np.pi or angle2 > 2*np.pi:
-            raise ValueError("expected angles between 0 and 2pi. invalid args {}, {}".format(angle1, angle2))
-            
+        diff_ang = angle1 - angle2
+        
+        ### Put both angles in 0 to 2 pi range
+        while angle1 < 0:
+            angle1 += 2*np.pi
+        while angle1 > 2*np.pi:
+            angle1 -= 2*np.pi
+        while angle2 < 0:
+            angle2 += 2*np.pi
+        while angle2 > 2*np.pi:
+            angle2 -= 2*np.pi
+        # if angle1 < 0 or angle2 < 0 or angle1 > 2*np.pi or angle2 > 2*np.pi:
+        #     raise ValueError("expected angles between 0 and 2pi. invalid args {}, {}".format(angle1, angle2))
+        
         if angle2 > angle1:
             angle2 -= 2*np.pi
-        
+        # diff_angle = angle1 - angle2
+        # raise NotImplementedError("This isn't doing what I think it's doing...")
         return angle1 - angle2
         
     
     @classmethod
-    def generate_boundary_face_export_obj(cls, vertices_map, cell_id):
+    def generate_boundary_face_export_obj(cls, vertices_map, cell_id, verbose=False):
         # @NOTE this assuems there is only one boundary, around the perimeter
         
         # Start at the leftmost vertex - should be on the boundary
-        starting_vertex_id = list(vertices_map.keys())[0]
+        # starting_vertex_id = list(vertices_map.keys())[0]
+        starting_vertex_id = None
         for vtx_id, vtx in vertices_map.items():
-            if vtx["x"] < vertices_map[starting_vertex_id]["x"]:
+            
+            if starting_vertex_id is None or (vtx["x"] < vertices_map[starting_vertex_id]["x"]):
                 starting_vertex_id = vtx_id
                 
-        print("Starting vertex id: ", starting_vertex_id)
-        print(vertices_map[starting_vertex_id])
+        if verbose:
+            print("Starting vertex id: ", starting_vertex_id)
+            print(vertices_map[starting_vertex_id])
         
         
         boundary_vertices = [starting_vertex_id]
         # We pretend that the vertex before the leftmost one was pointing directly to the left, so 
         # that it will find a vertex on the boundary when it scans for the next link int he chain. Otherwise it might start working towards the interior of the mesh.
-        last_angle = np.pi
+        last_angle = None
         
         
         while True:
             current_vtx_id = boundary_vertices[-1]
+            prev_vtx_id = boundary_vertices[-2] if len(boundary_vertices) > 1 else None
             current_vtx = vertices_map[current_vtx_id]
             
-            next_candidates = current_vtx["neighbors"]
+            next_candidates = current_vtx["neighbours"]
+            next_candidates = [vid for vid in next_candidates if vid != prev_vtx_id]
             try:
                 neighbor_angles = [cls._vtx_angle_to(current_vtx, vertices_map[neigh_id]) for neigh_id in next_candidates]
             except:
@@ -408,12 +427,28 @@ class HexagonalCellMesh:
                 print("Neighbors: {}".format([vertices_map[vid] for vid in next_candidates]))
                 raise
             # neighbor_angl
-            neighbor_diffs_from_last_angle = [cls._angle_subtract(n_ang, last_angle) for n_ang in neighbor_angles]
-            next_vtx_id = next_candidates[np.argmax(neighbor_diffs_from_last_angle)]
-            next_angle = neighbor_angles[np.argmax(neighbor_diffs_from_last_angle)]
+            if verbose:
+                print("current vertex id: {}".format(current_vtx_id))
+                print("        position: {},{}".format(current_vtx['x'], current_vtx['y']))
+                print("        next candidates: {}".format(next_candidates))
             
+            if last_angle is None: # the first edge to find
+                neighbor_diffs_from_left_direction = [cls._angle_subtract(n_ang, np.pi) for n_ang in neighbor_angles]
+                # next_vtx_id = next_candidates
+                selected_cand_idx = np.argmax(neighbor_diffs_from_left_direction)
+                if verbose:
+                    print("    Neighbor diffs from pi: {}".format(neighbor_diffs_from_left_direction))
+            else:
+                neighbor_diffs_from_last_angle = [cls._angle_subtract(n_ang, last_angle + np.pi) for n_ang in neighbor_angles]
+                selected_cand_idx = np.argmax(neighbor_diffs_from_last_angle)
+                if verbose:
+                    print("    neighbor diffs from previous angles: {}".format(neighbor_diffs_from_last_angle))
+            next_vtx_id = next_candidates[selected_cand_idx]
+            next_angle = neighbor_angles[selected_cand_idx]
             
-            print(next_candidates)
+            # if next_vtx_id == 5:
+            #     print(neigh)
+                # print(next_candidates)
             if next_vtx_id in boundary_vertices:
                 if next_vtx_id == boundary_vertices[0]:
                     # Then we're circled back
@@ -440,9 +475,10 @@ class HexagonalCellMesh:
         }
     
         
-    def build_vm_mesh(self, out_json_fp):
+    def build_vm_mesh(self, out_json_fp, verbose=False):
         if self.cells_map is None or self.vertices_map is None:
             raise Exception("Cannot build vm mesh until cells have been built.")
+            
             
         #### Build faces
         vm_faces = []
@@ -470,27 +506,36 @@ class HexagonalCellMesh:
                 # "vertices": cell_ve
             })
             
-        boundary_face = self.generate_boundary_face_export_obj(self.vertices_map, cell_id=len(self.cells_map))
+        boundary_face = self.generate_boundary_face_export_obj(self.vertices_map, cell_id=len(self.cells_map), verbose=verbose)
         vm_faces.append(boundary_face)
+        # for v in boundary_face['vertices']:
+        #     vm_
         
         
         #### Build vertices
         vm_vertices = []
         
+        # raise NotImplementedError("Need to replace non indexed ids with real indexed ids!")
+        
         for vertex_id in self.vertices_map:
             vtx = self.vertices_map[vertex_id]
             
-            vtx_neighbors = list(vtx["neighbors"])
+            vtx_neighbors = list(vtx["neighbours"])
             
             vtx_type = "regular"
             vtx_x, vtx_y = vtx["x"], vtx["y"]
             
             vtx_is_boundary = vertex_id in boundary_face['vertices']
             
+            num_faces = 0
+            for face in vm_faces:
+                if vertex_id in face["vertices"]:
+                    num_faces += 1
+            
             vm_vertices.append({
                 "boundary": vtx_is_boundary,
                 "constraint": "none",
-                "coordination": "none",
+                "coordination": num_faces,
                 "erased": False,
                 "id": vertex_id,
                 "neighbours": vtx_neighbors,
@@ -498,7 +543,25 @@ class HexagonalCellMesh:
                 "type": vtx_type,
             })
             
+        ##### Reindex faces
+        # reindex_vm_faces = []
+        for i, f in enumerate(vm_faces):
+            f["id"] = i
+            
         
+        old_to_new_vid_map = {}
+        ##### Reindex vertices
+        for i, v in enumerate(vm_vertices):
+            old_idx = v["id"]
+            v["id"] = i
+            old_to_new_vid_map[old_idx] = i
+        
+        for f in vm_faces:
+            f["vertices"] = [old_to_new_vid_map[old_i] for old_i in f["vertices"]]
+        
+        
+        
+        # return res
         data = {
             "mesh": {
                 "box": {
@@ -510,8 +573,17 @@ class HexagonalCellMesh:
                 "vertices": vm_vertices,
             }
         }
-        
-        # return res
+        if verbose:
+            print("Box:")
+            print("  " + str(data["mesh"]["box"]))
+            print("Faces:")
+            for f in data["mesh"]["faces"]:
+                print(f)
+            print("Vertices:")
+            for v in data["mesh"]["vertices"]:
+                print(v)
+            print("Old to new vertex id map: {}".format(old_to_new_vid_map))
+            # print(json.dumps(data, indent=4))
         
         with open(out_json_fp, "w") as f:
             json.dump(data, f, indent=4)
