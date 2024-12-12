@@ -37,20 +37,16 @@ if __name__ == "__main__":
     theoretical_rest_width = rest_side_length*2
     theoretical_rest_height = rest_side_length*2*np.sqrt(3)/2
     
-    # if os.path.exists("scratch/example.json"):
-    #     os.remove("scratch/example.json")
     
     cm = HexagonalCellMesh(
         side_length=rest_side_length*0.8,
         box_lx=args.box_lx,
         box_ly=args.box_ly,
     )
-    # cm.log_
+    
     cm.set_all_A0(A0_model)
     cm.set_all_P0(P0_model)
     
-    # with open("scratch/example.json", "w") as f:
-    #     json.dump( f)
     
     print("MODEL PARAMS")
     print("A0={A0}  P0={P0}  kappa={kappa} gamma={gamma}".format(A0=A0_model,P0=P0_model,kappa=kappa,gamma=gamma))
@@ -79,7 +75,8 @@ if __name__ == "__main__":
     sim_model.load_json_obj(
         cm.build_vm_mesh_obj(verbose=True),
     )
-    # sim_model.load_json("scratch/example.json",verbose=True)           # read input configuration
+    
+    
     # with open("scratch/forgodot.json", "w") as f:
     #     json.dump(sim_model.get_json_state(), f)
     
@@ -90,7 +87,7 @@ if __name__ == "__main__":
     ext_forcing_on = []
     checkpoint_fps = []
     # Pulling on the passive system
-    # for i in range(args.nrun):
+    
     N_checkpoints = 40
     for i in range(N_checkpoints):
         ckpt_fp = "scratch/res{}.json".format(str(i).zfill(3))
@@ -103,18 +100,14 @@ if __name__ == "__main__":
         # Will be reocrded next iteration
 
         if i/N_checkpoints>=0.25:
-        #if False:
             pass
             print("Using external forces.. ")
             sim_model.set_some_forces()
-            # fpull=args.fpull
-            # integrators.set_external_force('brownian', 'right', Vec(fpull,0.0))  # pulling on the right-most column of vertices
-            # integrators.set_external_force('brownian', 'left', Vec(-fpull,0.0))  # pulling on the left-most column of vertices
             
             ext_forcing_on.append(True)
         else:
             ext_forcing_on.append(False)
-        # simulation.run(step_size, topological_change=False)
+        
         sim_model.run_steps(step_size, verbose=True)
     
     print("Running analysis on simulation results")
@@ -130,17 +123,17 @@ if __name__ == "__main__":
         passive_real_cells= []
         for f in mesh.faces:
             if f.type=='passive' and f.outer == False:
-                #print(f.vertex_coords())
+                
                 cell_vertices = np.array([v.to_list() for v in f.vertex_coords()],dtype=float)
-                #print(cell_vertices)
-                #break
+                
+                
                 cell_w = cell_vertices[:,0].max() - cell_vertices[:,0].min()
                 cell_h = cell_vertices[:,1].max() - cell_vertices[:,1].min()
                 cell_widths.append(cell_w)
                 cell_heights.append(cell_h)
                 
                 passive_real_cells.append(f)
-                #break
+        
         print(mesh.faces[len(mesh.faces)//3].vertex_coords())
         areas = [face.area() for face in passive_real_cells]
         areas = np.array(areas)

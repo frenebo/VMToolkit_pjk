@@ -2,6 +2,8 @@ import json
 from VMToolkit.VM import Tissue, System, ForceCompute, Integrate, Topology, Dump, Simulation, Vec
 
 
+# @TODO the categories and forces should be totally abstracted out of the base vertex model and wrapper
+# the vertex model and the cass that controls it should only care about the forces for each individual vertex.
 class SimModel:
     def __init__(self, verbose):
         self._sim_sys = None
@@ -107,15 +109,9 @@ class SimModel:
         self._default_lambda_val = P0_model * gamma
         self._default_kappa = kappa
 
-        # for c_type in ['passive']:
-        #     self._sim_sys.add_cell_type(c_type)
-        #     self._forces.set_params('area', c_type, {'kappa' : kappa})
-        #     self._forces.set_params('perimeter', c_type,  {'gamma': gamma, "lambda": lambda_val})
-        
+
         self.forces_configured = True
     
-    # def l
-    # read_input_from_jsonstring
     
     def load_json_obj(self, json_obj, verbose=False):
         if not self.forces_configured:
@@ -219,15 +215,15 @@ default_config = {
     }
 }
 
-class SimCell:
-    def __init__(self, ctype):
-        self.ctype = ctype
+# class SimCell:
+#     def __init__(self, ctype):
+#         self.ctype = ctype
     
     
 
-class NewSimModel:
-    def __init__(self):
-        self._vm_wrapper = VMWrapper()
+# class NewSimModel:
+#     def __init__(self):
+#         self._vm_wrapper = VMWrapper()
     
     
     
