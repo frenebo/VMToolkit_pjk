@@ -10,25 +10,9 @@
 namespace VMTutorial
 {
   
-  // Read input from a JSON file
-  void System::read_input(const string& json_file, bool verbose)
+  void System::input_from_jsonobj(json& j, bool verbose)
   {
-    // bool verbose = true;
-    if (verbose) {
-      // cout << "CURRENT size of _halfedges: " << _mesh.halfedges().size() << endl;
-      cout << "Reading input json into system" << endl;
-      
-      log_debug_stats();
-    }
-    if (_mesh_set)
-    {
-      cout << "Warning! Mesh has already been set. Overwriting it." << endl;
-      _mesh.wipe();
-    }
-    ifstream inp(json_file.c_str());
-    json j;
-    inp >> j;
-    inp.close();
+    
     // Check if simulation box exists
     if (j["mesh"].find("box") != j["mesh"].end())
       if (j["mesh"]["box"]["periodic"])
@@ -138,6 +122,37 @@ namespace VMTutorial
     _mesh_set = true;
     
     cout << "Finished reading input configuration." << endl;
+    
+  }
+  
+  void System::read_input_from_jsonstring(const string& json_contents, bool verbose)
+  {
+    json j;
+    istringstream s(json_contents);
+    s >> j;
+    
+    input_from_jsonobj(j, verbose);
+  }
+  
+  // Read input from a JSON file
+  void System::read_input_from_json_fp(const string& json_file, bool verbose)
+  {
+    if (verbose) {
+      cout << "Reading input json into system" << endl;
+      
+      log_debug_stats();
+    }
+    if (_mesh_set)
+    {
+      cout << "Warning! Mesh has already been set. Overwriting it." << endl;
+      _mesh.wipe();
+    }
+    ifstream inp(json_file.c_str());
+    json j;
+    inp >> j;
+    inp.close();
+    
+    input_from_jsonobj(j, verbose);
   }
 
 
@@ -153,8 +168,6 @@ namespace VMTutorial
   void export_VertexProperty(py::module& m)
   {
     py::class_<Property::VertexProperty>(m, "VertexProperty")
-      // .def_readonly("type", &Property::VertexProperty::vert_type)
-      // .def_readonly("type_name", &Property::VertexProperty::type_name)
       .def_readonly("vel", &Property::VertexProperty::vel)
       .def_readonly("force", &Property::VertexProperty::force);
   }
@@ -163,8 +176,7 @@ namespace VMTutorial
   {
     py::class_<Property::EdgeProperty>(m, "EdgeProperty")
       .def_readwrite("tension", &Property::EdgeProperty::tension)
-      .def_readwrite("l0", &Property::EdgeProperty::l0)
-      .def_readwrite("type", &Property::EdgeProperty::edge_type);
+      .def_readwrite("l0", &Property::EdgeProperty::l0);
   }
 
   void export_HEProperty(py::module& m)
@@ -179,12 +191,9 @@ namespace VMTutorial
   void export_FaceProperty(py::module& m)
   {
     py::class_<Property::FaceProperty>(m, "CellProperty")
-      .def_readonly("type", &Property::FaceProperty::face_type)
-      // .def_readonly("type_name", &Property::FaceProperty::type_name)
       .def_readonly("unique_id", &Property::FaceProperty::unique_id)
       .def_readwrite("A0", &Property::FaceProperty::A0)
       .def_readwrite("P0", &Property::FaceProperty::P0)
-      // .def_readwrite("cell_type", &Property::FaceProperty::face_type)
       .def_readwrite("n", &Property::FaceProperty::n);
   }
 
@@ -223,7 +232,6 @@ namespace VMTutorial
       .def_readonly("boundary", &Edge<Property>::boundary)
       .def_property_readonly("id", &Edge<Property>::idx)
       .def("he", [](Edge<Property>& e) { return *(e.he()); })
-      .def("type", [](Edge<Property>& e) { return e.data().edge_type; })
       .def("property", (Property::EdgeProperty& (Edge<Property>::*)()) &Edge<Property>::data, py::return_value_policy::reference);
   }
 
@@ -250,7 +258,7 @@ namespace VMTutorial
       .def_readonly("neighbours", &Face<Property>::nsides)
       .def_readonly("outer", &Face<Property>::outer)
       .def_readonly("erased", &Face<Property>::erased)
-      .def("type", [](Face<Property>& f) { return f.data().face_type; })
+      // .def("type", [](Face<Property>& f) { return f.data().face_type; })
       .def("A0", [](Face<Property>& f) { return f.data().A0; })
       .def("P0", [](Face<Property>& f) { return f.data().P0; })
       .def("he", [](Face<Property>& f) { return *(f.he()); })
@@ -273,8 +281,6 @@ namespace VMTutorial
       .def("num_vert", &Mesh<Property>::num_vert)
       .def("num_cells", &Mesh<Property>::num_faces)
       .def("tidyup", &Mesh<Property>::tidyup)
-      // .def("set_cell_type", [](Mesh<Property>& m, int i, int type) { m.get_face(i).data().face_type = type; })
-      .def("set_junction_type", [](Mesh<Property>& m, int i, int type) { m.get_edge(i).data().edge_type = type; })
       .def("set_cell_A0", [](Mesh<Property>& m, int i, double A0) { m.get_face(i).data().A0 = A0;  })
       .def("set_cell_P0", [](Mesh<Property>& m, int i, double P0) { m.get_face(i).data().P0 = P0;  })
       .def("get_vertex", &Mesh<Property>::get_vertex , py::return_value_policy::reference)
@@ -295,16 +301,12 @@ namespace VMTutorial
   {
     py::class_<System>(m, "System")
       .def(py::init<MyMesh&>())
-      .def("read_input", &System::read_input, py::arg("input_file"), py::arg("verbose")=false)
-      // .def("add_cell_type", &System::add_cell_type)
-      // .def("set_cell_type", &System::set_cell_type)
+      .def("read_input_from_json_fp", &System::read_input_from_json_fp, py::arg("input_file"), py::arg("verbose")=false)
+      .def("read_input_from_jsonstring", &System::read_input_from_jsonstring, py::arg("json_contents"), py::arg("verbose")=false)
       .def("mesh", &System::mesh)
-      // .def("cell_types", &System::cell_types)
       .def("time_step", &System::time_step)
       .def("simulation_time", &System::simulation_time)
       .def("set_simulation_time_step", &System::set_simulation_time_step)
-      // .def("get_cell_type_name", &System::get_cell_type_name)
-      // .def("get_vert_type_name", &System::get_vert_type_name)
       .def("log_debug_stats", &System::log_debug_stats);
   }
 

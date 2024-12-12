@@ -58,7 +58,7 @@ namespace VMTutorial
 			pt::ptree boundary;
 			pt::ptree x;
 			pt::ptree y;
-			pt::ptree type;
+			// pt::ptree type;
 			pt::ptree r;
 			pt::ptree fx;
 			pt::ptree fy;
@@ -85,7 +85,7 @@ namespace VMTutorial
 			erased.put("", v.erased);
 			vertex.add_child("id", id);
 			vertex.add_child("boundary", boundary);
-			vertex.add_child("type", type);
+			// vertex.add_child("type", type);
 			vertex.add_child("r", r);
 			vertex.add_child("force", force);
 			vertex.add_child("velocity", velocity);
@@ -112,7 +112,7 @@ namespace VMTutorial
 			pt::ptree id;
 			pt::ptree outer;
 			pt::ptree nsides;
-			pt::ptree type;
+			// pt::ptree type;
 			pt::ptree erased;
 			pt::ptree A0;
 			pt::ptree P0;
@@ -136,7 +136,7 @@ namespace VMTutorial
 			
 			face.add_child("id", id);
 			face.add_child("outer", outer);
-			face.add_child("type", type);
+			// face.add_child("type", type);
 			face.add_child("erased", erased);
 			face.add_child("A0", A0);
 			face.add_child("P0", P0);

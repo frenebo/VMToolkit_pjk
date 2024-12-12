@@ -15,7 +15,6 @@ namespace VMTutorial
 	{
 		struct HEProperty
 		{
-			int he_type = -1;
 		};
 		struct VertexProperty
 		{
@@ -29,16 +28,14 @@ namespace VMTutorial
 		};
 		struct EdgeProperty
 		{
-			int edge_type = -1;
 		};
 		struct FaceProperty
 		{
-			int face_type = -1;
 			FaceProperty &operator=(const FaceProperty &p)
 			{
 				if (this == &p)
 					return *this;
-				this->face_type = p.face_type;
+				
 				return *this;
 			}
 		};

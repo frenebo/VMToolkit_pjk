@@ -68,13 +68,6 @@ namespace VMTutorial
           throw runtime_error("set_params: Integrator type " + iname + " is not used in this simulation.");
       }
 
-      void set_type_params(const string& iname, const string& type, const params_type& params)
-      {
-        if (this->factory_map.find(iname) != this->factory_map.end())
-          this->factory_map[iname]->set_type_params(type, params);
-        else
-          throw runtime_error("set_type_params: Integrator type " + iname + " is not used in this simulation.");
-      }
 
       void set_string_params(const string& iname, const string_params_type& params)
       {

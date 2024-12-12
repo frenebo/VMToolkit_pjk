@@ -130,7 +130,7 @@ namespace VMTutorial
 
       void add_force(const string& fname)
       {
-        // Check if this type of force has already been added.
+        // Check if this force has already been added.
         if (this->factory_map.find(fname) != this->factory_map.end()) {
           throw runtime_error("ForceCompute::add_force - Cannot add force '" + fname + "' - already has been added to ForceCompute class.");
         }
@@ -142,7 +142,7 @@ namespace VMTutorial
         // else if (fname == "self-propulsion")
           // this->add<ForceSelfPropulsion,System&>(fname, _sys);
         } else  {
-          throw runtime_error("Unknown force type : " + fname + ".");
+          throw runtime_error("Unknown force name : " + fname + ".");
         }
       }
 

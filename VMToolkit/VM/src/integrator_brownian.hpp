@@ -63,7 +63,7 @@ namespace VMTutorial
             _Dr = p.second;
         }
       };
-      void set_type_params(const string& type, const params_type& params) override { }
+      
       void set_string_params(const string_params_type& params) override { }
       
       void set_external_forces_by_vertex(const vector<int>& vids, const vector<Vec>& forces) override

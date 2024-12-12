@@ -71,7 +71,7 @@ namespace VMTutorial
 			{
 				if (this == &p)
 					return *this;
-				this->face_type = p.face_type;
+				// this->face_type = p.face_type;
 				this->A0 = p.A0;
 				this->P0 = p.P0;
 				// this->type_name = p.type_name;

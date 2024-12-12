@@ -56,7 +56,7 @@ namespace VMTutorial
         }
         
         // @TODO check that the _constant_force has been properly set up at this point.
-        Vec f = v.data().force; //+ _constant_force[v.data().vert_type];
+        Vec f = v.data().force;
         
         // Add external force if present for this vertex id...
         map<int,Vec>::iterator extf_it = _const_ext_forces_by_vid.find(v.id);

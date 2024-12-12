@@ -39,7 +39,7 @@ class TissueVisualizer:
             
             faces[f["id"]] = {
                 "vtx_ids": f["vertices"],
-                "type": f["type"],
+                # "type": f["type"],
             }
         
         return {

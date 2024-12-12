@@ -40,9 +40,6 @@ namespace VMTutorial
 			}
 		};
 
-		void set_type_params(const string &type, const params_type &params)
-		{
-		}
 
 		void set_flag(const string &flag)
 		{

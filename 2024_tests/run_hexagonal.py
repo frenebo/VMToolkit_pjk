@@ -5,7 +5,7 @@ import os
 from analytic_tools.find_hexagon_rest_area import HexagonalModel, find_hexagon_rest_area
 
 from VMToolkit.config_builder.open.honeycomb_lattice import HoneycombLattice
-from VMToolkit.VM import Tissue, System, Force, Integrate, Topology, Dump, Simulation, Vec
+# from VMToolkit.VM import Tissue, System, ForceCompute, Integrate, Topology, Dump, Simulation, Vec
 from VMToolkit.VMAnalysis.utils.HalfEdge import Mesh
 
 from tissue_builder.hexagonal import HexagonalCellMesh
@@ -37,8 +37,8 @@ if __name__ == "__main__":
     theoretical_rest_width = rest_side_length*2
     theoretical_rest_height = rest_side_length*2*np.sqrt(3)/2
     
-    if os.path.exists("scratch/example.json"):
-        os.remove("scratch/example.json")
+    # if os.path.exists("scratch/example.json"):
+    #     os.remove("scratch/example.json")
     
     cm = HexagonalCellMesh(
         side_length=rest_side_length*0.8,
@@ -49,8 +49,8 @@ if __name__ == "__main__":
     cm.set_all_A0(A0_model)
     cm.set_all_P0(P0_model)
     
-    with open("scratch/example.json", "w") as f:
-        json.dump(cm.build_vm_mesh_obj(verbose=True), f)
+    # with open("scratch/example.json", "w") as f:
+    #     json.dump( f)
     
     print("MODEL PARAMS")
     print("A0={A0}  P0={P0}  kappa={kappa} gamma={gamma}".format(A0=A0_model,P0=P0_model,kappa=kappa,gamma=gamma))
@@ -75,10 +75,13 @@ if __name__ == "__main__":
     sim_model = SimModel(verbose=True)
     
     sim_model.configure_forces(P0_model, gamma, kappa, verbose=True)
-
-    sim_model.load_json("scratch/example.json",verbose=True)           # read input configuration
-    with open("scratch/forgodot.json", "w") as f:
-        json.dump(sim_model.get_json_state(), f)
+    
+    sim_model.load_json_obj(
+        cm.build_vm_mesh_obj(verbose=True),
+    )
+    # sim_model.load_json("scratch/example.json",verbose=True)           # read input configuration
+    # with open("scratch/forgodot.json", "w") as f:
+    #     json.dump(sim_model.get_json_state(), f)
     
     sim_model.configure_integrators(verbose=True)
 

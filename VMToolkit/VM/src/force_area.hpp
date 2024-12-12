@@ -93,7 +93,7 @@ namespace VMTutorial
         
         for (size_t i = 0; i < fids.size(); ++i) {
           int fid = fids[i];
-          const params_type& fparam = params[i];
+          const auto& fparam = params[i];
  
           // _set_params_for_face(fid, fparam);
           _kappa.at(fid) = fparam.at("kappa");

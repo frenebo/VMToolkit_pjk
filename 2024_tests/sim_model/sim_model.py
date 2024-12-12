@@ -102,22 +102,41 @@ class SimModel:
             self._sim_sys.log_debug_stats()
         # Set parameters for each cell type
 
-        lambda_val = P0_model * gamma # @TODO either the sim uses this, or it uses the P0... add a way to force P0 usage in set_params in cpp file?
+        # lambda_val = P0_model * gamma # @TODO either the sim uses this, or it uses the P0... add a way to force P0 usage in set_params in cpp file?
+        self._default_gamma = gamma
+        self._default_lambda_val = P0_model * gamma
+        self._default_kappa = kappa
 
-        for c_type in ['passive']:
-            self._sim_sys.add_cell_type(c_type)
-            self._forces.set_params('area', c_type, {'kappa' : kappa})
-            self._forces.set_params('perimeter', c_type,  {'gamma': gamma, "lambda": lambda_val})
+        # for c_type in ['passive']:
+        #     self._sim_sys.add_cell_type(c_type)
+        #     self._forces.set_params('area', c_type, {'kappa' : kappa})
+        #     self._forces.set_params('perimeter', c_type,  {'gamma': gamma, "lambda": lambda_val})
         
         self.forces_configured = True
     
-    def load_json(self, json_fp, verbose=False):
+    # def l
+    # read_input_from_jsonstring
+    
+    def load_json_obj(self, json_obj, verbose=False):
         if not self.forces_configured:
             raise Exception("need to configure forces before loading json")
         
         if verbose:
             print("Loading JSON")
-        self._sim_sys.read_input(json_fp)           # read input configuration
+        self._sim_sys.read_input_from_jsonstring( json.dumps(json_obj) )
+        # self._sim_sys.read_input(json_fp)           # read input configuration
+        
+        # @TODO do this better!
+        ## Setting area params
+        cpp_faces = json.loads(self.dump_cpp_json())["mesh"]["faces"]
+        all_face_ids = list(range(len(cpp_faces)))
+        self._forces.set_face_params_facewise(
+            "area", all_face_ids, [{'kappa': self._default_kappa} for i in range(len(all_face_ids))]
+        )
+        self._forces.set_face_params_facewise(
+            "perimeter", all_face_ids, [{'gamma': self._default_gamma, "lambda": self._default_lambda_val} for i in range(len(all_face_ids))]
+        )
+        
         if verbose:
             print("Done loading JSON")
         
