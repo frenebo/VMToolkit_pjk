@@ -59,8 +59,9 @@ namespace VMTutorial
 
 		// void dump_cells(const string &, bool = false, bool = false);
 		// void dump_junctions(const string &, bool = false);
-		void dump_mesh(const string &, bool = false);
-		void dump_json(const string &);
+		// void dump_mesh(const string &, bool = false);
+		// void dump_json(const string &);
+		std::string mesh_to_jsonstr();
 		// void dump_cell_directors(const string&, bool = false, bool = false);
 
 		void set_sfc(double sfc) { _sfc = sfc; }
@@ -71,16 +72,16 @@ namespace VMTutorial
 		double _sfc; // Scaling factor for junction output
 	};
 
-	void to_json(json &, const HalfEdge<Property> &);
-	void to_json(json &, const Edge<Property> &);
-	void to_json(json &, const Vertex<Property> &);
-	void to_json(json &, const Face<Property> &);
-	void to_json(json &, const Box &);
+	// void to_json(json &, const HalfEdge<Property> &);
+	// void to_json(json &, const Edge<Property> &);
+	// void to_json(json &, const Vertex<Property> &);
+	// void to_json(json &, const Face<Property> &);
+	// void to_json(json &, const Box &);
 
-	void from_json(const json &, HalfEdge<Property> &);
-	void from_json(const json &, Edge<Property> &);
-	void from_json(const json &, Vertex<Property> &);
-	void from_json(const json &, Face<Property> &);
+	// void from_json(const json &, HalfEdge<Property> &);
+	// void from_json(const json &, Edge<Property> &);
+	// void from_json(const json &, Vertex<Property> &);
+	// void from_json(const json &, Face<Property> &);
 
 	vector<string> split(const std::string &, char);
 

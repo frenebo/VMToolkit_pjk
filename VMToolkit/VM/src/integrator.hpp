@@ -45,10 +45,14 @@ namespace VMTutorial
       virtual ~Integrator() { }
       
       virtual void step(bool verbose=false) = 0;
+      
       virtual void set_params(const params_type&) = 0;
+      // virtual void set_params_for_vertices_elementwise(const vector<int>& vids, const vector<params_type>& params) = 0;
+      // virtual void set_params_for_faces_elementwise(const vector,int>& fids, const vector<params_type>& params) = 0;
+      
       virtual void set_type_params(const string&, const params_type&) = 0;
       virtual void set_string_params(const string_params_type& params) = 0;
-      virtual void set_external_force(const string&, const Vec&) = 0;
+      // virtual void set_external_force(const string&, const Vec&) = 0;
       virtual void set_external_forces_by_vertex(const vector<int>& vids, const vector<Vec>& forces) = 0;
       virtual void set_flag(const string&) = 0;
 

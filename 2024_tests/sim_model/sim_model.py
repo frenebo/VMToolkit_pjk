@@ -1,9 +1,6 @@
 import json
-from VMToolkit.VM import Tissue, System, Force, Integrate, Topology, Dump, Simulation, Vec
+from VMToolkit.VM import Tissue, System, ForceCompute, Integrate, Topology, Dump, Simulation, Vec
 
-class VMWrapper:
-    def __init__(self):
-        raise NotImplementedError()
 
 class SimModel:
     def __init__(self, verbose):
@@ -21,15 +18,15 @@ class SimModel:
         pass
     
     def configure_integrators(self,verbose=False):
-        if not self._tissue_loaded:
-            raise Exception("Cannot configure integrator before tissue has been loaded" +
-                " - currently c++ code relies on tissue types being there before brownian integrator")
+        # if not self._tissue_loaded:
+        #     raise Exception("Cannot configure integrator before tissue has been loaded" +
+        #         " - currently c++ code relies on tissue types being there before brownian integrator")
         if verbose:
             print("Adding brownian integrator")
         self._integrators.add('brownian')    
 
 
-        dt = 0.08
+        dt = 0.3
         friction_gam = 1.0
         if verbose:
             print("Setting dt={}, friction_gamma={}".format(dt, friction_gam))
@@ -38,8 +35,57 @@ class SimModel:
         if verbose:
             print("Done configuring integrators")
     
-    def dump_json(self, json_out_fp):
-        self._dumps.dump_mesh(json_out_fp)
+    def dump_cpp_json(self):
+        return self._dumps.mesh_to_jsonstr()
+    
+    def set_some_forces(self):
+        # Find vertices below three mark
+        # self.get_json_state()["vertices"]
+        vertices = json.loads(self.dump_cpp_json())["mesh"]["vertices"]
+        bot_indices = []
+        top_indices = []
+        for i, v in enumerate(vertices):
+            if v['r'][1] > 3:
+                top_indices.append(i)
+            elif v['r'][1] < -3:
+                bot_indices.append(i)
+        
+        self._integrators.set_external_forces_by_vertex("brownian", 
+            bot_indices,
+            [Vec(0.005,0.0) for i in range(len(bot_indices))],
+        ) 
+        self._integrators.set_external_forces_by_vertex("brownian", 
+            top_indices,
+            [Vec(-0.005,0.0) for i in range(len(top_indices))],
+        ) 
+        
+    def get_json_state(self):
+        vertices = {}
+        
+        cpp_json = json.loads(self.dump_cpp_json())
+        # print(cpp_json["mesh"])
+        # raise NotImplementedError()
+        for vtx_index, vtx in enumerate(cpp_json["mesh"]["vertices"]):
+            print(vtx)
+            vtx_id = str(vtx_index)
+            vertices[vtx_id] = {
+                "x": vtx['r'][0],
+                "y": vtx['r'][1],
+            }
+        
+        
+        # edges = {}
+        cells = {}
+        for cell_index, cpp_cell in enumerate(cpp_json["mesh"]["faces"]):
+            cell_id = str(cell_index)
+            cells[cell_id] = {
+                "vertices": [str(vidx) for vidx in cpp_cell["vertices"]]
+            }
+        
+        return {
+            "vertices": vertices,
+            "cells": cells,
+        }
 
     def configure_forces(self, P0_model, gamma, kappa, verbose=False):
         # if not self._cell_types_configured:
@@ -48,6 +94,7 @@ class SimModel:
         if verbose:
             print("CONFIGURING FORCES==================")
             self._sim_sys.log_debug_stats()
+        
         self._forces.add('area')         # add area force form term E = 0.5*kappa*(A-A0)^2
         self._forces.add('perimeter')    # add perimeter force term from E = 0.5*gamma*P^2 + lambda*P (maybe -?)
         if verbose:
@@ -84,7 +131,7 @@ class SimModel:
         if verbose:
             print("constructing force")
             sim_sys.log_debug_stats()
-        forces = Force(sim_sys)                                          # handles all types of forces
+        forces = ForceCompute(sim_sys)                                          # handles all types of forces
         if verbose:
             print("constructing integrators")
             sim_sys.log_debug_stats()
@@ -104,9 +151,10 @@ class SimModel:
         
         
         """
-        IMPORTANT! All these need to be held as CLASS variables python, otherwise data will be lost and bugs will appear.
+        IMPORTANT! All these need to be held as CLASS variables python, otherwise their memory will be freed,
+        and they'll try to talk to each other, and just read whatever is in that memory now. Will cause problems
         """
-        self._tissue = tissue # 
+        self._tissue = tissue
         self._sim_sys = sim_sys
         self._forces = forces
         self._integrators = integrators
@@ -118,10 +166,6 @@ class SimModel:
             print("Finished intializing cpp...")
             sim_sys.log_debug_stats()
         
-    def load_from_hexmesh(self):
-        # @TODO find out whether the order of loading force, etc., matters
-        raise NotImplementedError()
-    
     def run_steps(self, n_steps, verbose=False):
         if not self.forces_configured:
             raise Exception("Need to configure force before running")
@@ -130,3 +174,44 @@ class SimModel:
             print("About to run simulation for {} steps".format(n_steps))
         
         self._simulation.run(n_steps, topological_change=False,)
+        
+        
+
+default_config = {
+    "integrator": {
+        "type": "brownian",
+        "temp": 0,
+        "friction_gam": 1.0,
+        "dt": 0.3,
+    },
+    
+    "cell_types": {
+        "default": {
+            "forces": {
+                "area": {
+                    'kappa': 1.0,
+                },
+                "perimeter": {
+                    'gamma': 0.15,
+                    'lambda': 0.15 * 0.20 ,
+                },
+            },
+        },
+    }
+}
+
+class SimCell:
+    def __init__(self, ctype):
+        self.ctype = ctype
+    
+    
+
+class NewSimModel:
+    def __init__(self):
+        self._vm_wrapper = VMWrapper()
+    
+    
+    
+    
+        # self._vm_wrapper/
+        # raise NotImplementedError()

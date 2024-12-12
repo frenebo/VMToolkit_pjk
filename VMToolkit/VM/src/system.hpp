@@ -58,7 +58,7 @@ namespace VMTutorial
 
   typedef Mesh<Property> MyMesh;
   typedef map<string,int> type_data;
-  typedef map<int, string> type_name;
+  // typedef map<int, string> type_name;
   
 
   typedef map<string, double> params_type;         // Used when we set a numerical value to a parameter, e.g., kappa = 1.0
@@ -75,8 +75,8 @@ namespace VMTutorial
       System(MyMesh& mesh) : _mesh{mesh}, 
                              _time_step{0},
                              _simulation_time{0.0},
-                             _num_cell_types{0},
-                             _num_vert_types{0},
+                            //  _num_cell_types{0},
+                            //  _num_vert_types{0},
                              _num_junction_types{0},
                              _mesh_set{false},
                              _topology_changed{true}
@@ -88,33 +88,34 @@ namespace VMTutorial
       
       void read_input(const string&, bool verbose=false);
       void set_simulation_time_step(int time_step) { _time_step = time_step; }
-      const string get_cell_type_name(const int type_id) const { return _cell_types_map.at(type_id); }
-      const string get_vert_type_name(const int type_id) const { return _vert_types_map.at(type_id); }
-      void add_cell_type(const string& cell_type)
-      {
-        // cout << "Adding cell type " << cell_type << endl;
-        if (_cell_types.find(cell_type) == _cell_types.end())
-        {
-          _cell_types_map[_num_cell_types] = cell_type;
-          _cell_types[cell_type] = _num_cell_types++;
-        }
-        // cout << "finished adding cell type " << endl;
-        log_debug_stats();
-      }
-      void set_cell_type(int id, const string& type)
-      {
-        this->add_cell_type(type);
-        _mesh.get_face(id).data().face_type = this->_cell_types[type];
-        _mesh.get_face(id).data().type_name = type;
-      }
-      void add_vert_type(const string& vert_type)
-      {
-        if (_vert_types.find(vert_type) == _vert_types.end())
-        {
-          _vert_types_map[_num_vert_types] = vert_type;
-          _vert_types[vert_type] = _num_vert_types++;
-        }
-      }
+      // const string get_cell_type_name(const int type_id) const { return _cell_types_map.at(type_id); }
+      // const string get_vert_type_name(const int type_id) const { return _vert_types_map.at(type_id); }
+      // void add_cell_type(const string& cell_type)
+      // {
+      //   // cout << "Adding cell type " << cell_type << endl;
+      //   if (_cell_types.find(cell_type) == _cell_types.end())
+      //   {
+      //     _cell_types_map[_num_cell_types] = cell_type;
+      //     _cell_types[cell_type] = _num_cell_types++;
+      //   }
+      //   // cout << "finished adding cell type " << endl;
+      //   // if 
+      //   // log_debug_stats();
+      // }
+      // void set_cell_type(int id, const string& type)
+      // {
+      //   this->add_cell_type(type);
+      //   _mesh.get_face(id).data().face_type = this->_cell_types[type];
+      //   _mesh.get_face(id).data().type_name = type;
+      // }
+      // void add_vert_type(const string& vert_type)
+      // {
+      //   if (_vert_types.find(vert_type) == _vert_types.end())
+      //   {
+      //     _vert_types_map[_num_vert_types] = vert_type;
+      //     _vert_types[vert_type] = _num_vert_types++;
+      //   }
+      // }
       void log_debug_stats()
       {
         cout << "   CURRENT size of _halfedges: " << _mesh.halfedges().size() << endl; 
@@ -123,10 +124,10 @@ namespace VMTutorial
 
       // System info access 
       MyMesh& mesh()  { return _mesh; }
-      type_data& cell_types() { return _cell_types; }
-      type_data& vert_types() { return _vert_types; }
-      int get_num_cell_types() const { return _num_cell_types; }
-      int get_num_vert_types() const { return _num_vert_types; }
+      // type_data& cell_types() { return _cell_types; }
+      // type_data& vert_types() { return _vert_types; }
+      // int get_num_cell_types() const { return _num_cell_types; }
+      // int get_num_vert_types() const { return _num_vert_types; }
       const shared_ptr<Box> &box() const { return _mesh.box(); }
       int& time_step() { return _time_step; }
       bool periodic() { return (_mesh.box() != nullptr); }
@@ -135,14 +136,14 @@ namespace VMTutorial
       
     private:
       MyMesh &_mesh;
-      type_data _cell_types;
-      type_name _cell_types_map;
-      type_data _vert_types;
-      type_name _vert_types_map;
+      // type_data _cell_types;
+      // type_name _cell_types_map;
+      // type_data _vert_types;
+      // type_name _vert_types_map;
       int _time_step;
       double _simulation_time;
-      int _num_cell_types;
-      int _num_vert_types; 
+      // int _num_cell_types;
+      // int _num_vert_types; 
       int _num_junction_types; 
       bool _mesh_set;
       bool _topology_changed;  // If true, mesh topology has changed

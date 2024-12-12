@@ -19,8 +19,8 @@ namespace VMTutorial
 		double A0_1 = f.data().A0;
 		double A0_2 = fp.data().A0;
 
-		double kappa_1 = (f.outer) ? 0.0 : _kappa[f.data().face_type];
-		double kappa_2 = (fp.outer) ? 0.0 : _kappa[f.data().face_type];
+		double kappa_1 = (f.outer) ? 0.0 : _kappa.at(f.id);
+		double kappa_2 = (fp.outer) ? 0.0 : _kappa.at(f.id);
 
 		Vec farea_vec = 0.5 * (kappa_1 * (A1 - A0_1) - kappa_2 * (A2 - A0_2)) * l.ez_cross_v();
 
@@ -35,7 +35,7 @@ namespace VMTutorial
 		if (f.outer || f.erased)
 			return 0.0;
 
-		double kappa = _kappa[f.data().face_type];
+		double kappa = _kappa.at(f.id);
 
 		double dA = A - A0;
 		return 0.5 * kappa * dA * dA;

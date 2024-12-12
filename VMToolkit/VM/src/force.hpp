@@ -56,11 +56,16 @@ namespace VMTutorial
       // computed energy on of a given face
       virtual double energy(const Face<Property>&) = 0;
       
-      // set all parameters for a given type
-      virtual void set_params(const string&, const params_type&) = 0;
+      // // // set all parameters for a given type
+      // virtual void set_params(const string&, const params_type&) = 0;
+      
+      virtual void set_face_params_facewise(const vector<int>& fids, const vector<params_type>& params) = 0;
 
       // set all vector-valued parameters for a given type
-      virtual void set_vec_params(const string&, const vec_params_type&) = 0;
+      // virtual void set_vec_params(const string&, const vec_params_type&) = 0;
+      // virtual void set_vec_params_v
+      
+      // virtual void set_params_
 
       // set various compute flags
       virtual void set_flag(const string&) = 0;

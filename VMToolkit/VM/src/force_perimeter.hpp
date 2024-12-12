@@ -17,11 +17,12 @@ namespace VMTutorial
 	class ForcePerimeter : public Force
 	{
 	public:
-		ForcePerimeter(System &sys) : Force{sys},
-									  _lambda_P0{false}
+		ForcePerimeter(System &sys) : Force{sys}
 		{
-			_gamma.resize(_sys.cell_types().size(), 0.0);
-			_lambda.resize(_sys.cell_types().size(), 0.0);
+			// @TODO this should automatically resize when an index bigger that seen before is added
+			
+			// _gamma.resize(_sys.cell_types().size(), 0.0);
+			// _lambda.resize(_sys.cell_types().size(), 0.0);
 		}
 		virtual ~ForcePerimeter() {}
 
@@ -34,52 +35,67 @@ namespace VMTutorial
 		double energy(const Face<Property> &) override;
 
 		// set all parameters for a given type
-		void set_params(const string &cell_type, const params_type &params) override
-		{
-			for (auto p : params)
-				if (p.first != "gamma" && p.first != "lambda")
-					throw runtime_error("Unknown parameter " + p.first + ".");
+		// void set_params(const string &cell_type, const params_type &params) override
+		// {
+		// 	for (auto p : params)
+		// 		if (p.first != "gamma" && p.first != "lambda")
+		// 			throw runtime_error("Unknown parameter " + p.first + ".");
 
-			if (params.find("gamma") == params.end())
-				throw runtime_error("Perimeter force requires parameter gamma.");
-			if (params.find("lambda") == params.end())
-				throw runtime_error("Perimeter force requires parameter lambda.");
+		// 	if (params.find("gamma") == params.end())
+		// 		throw runtime_error("Perimeter force requires parameter gamma.");
+		// 	if (params.find("lambda") == params.end())
+		// 		throw runtime_error("Perimeter force requires parameter lambda.");
 
-			try
-			{
-				if (_sys.cell_types().find(cell_type) == _sys.cell_types().end())
-					throw runtime_error("Force perimeter: Cell type " + cell_type + " is not defined.");
-				if (_gamma.size() < _sys.get_num_cell_types())
-					_gamma.resize(_sys.get_num_cell_types(), 0.0);
-				if (_lambda.size() < _sys.get_num_cell_types())
-					_lambda.resize(_sys.get_num_cell_types(), 0.0);
-				int ct = _sys.cell_types()[cell_type];
-				_gamma[ct] = params.at("gamma");
-				_lambda[ct] = params.at("lambda");
+		// 	try
+		// 	{
+		// 		if (_sys.cell_types().find(cell_type) == _sys.cell_types().end())
+		// 			throw runtime_error("Force perimeter: Cell type " + cell_type + " is not defined.");
+		// 		if (_gamma.size() < _sys.get_num_cell_types())
+		// 			_gamma.resize(_sys.get_num_cell_types(), 0.0);
+		// 		if (_lambda.size() < _sys.get_num_cell_types())
+		// 			_lambda.resize(_sys.get_num_cell_types(), 0.0);
+		// 		int ct = _sys.cell_types()[cell_type];
+		// 		_gamma.at(ct) = params.at("gamma");
+		// 		_lambda.at(ct) = params.at("lambda");
+		// 	}
+		// 	catch (const exception &e)
+		// 	{
+		// 		cerr << "Problem with setting perimeter force parameters. Exception: " << e.what() << '\n';
+		// 		throw;
+		// 	}
+		// }
+
+		void set_face_params_facewise(const vector<int>& fids, const vector<params_type>& params) override {
+			// Expand the params if necessary
+			int max_fid = 0;
+			for (const auto& fid : fids) {
+			if (fid > max_fid) max_fid = fid;
 			}
-			catch (const exception &e)
-			{
-				cerr << "Problem with setting perimeter force parameters. Exception: " << e.what() << '\n';
-				throw;
+			
+			if (max_fid >= _gamma.size()) {
+				_gamma.resize(max_fid + 1, 0.0);
+			}
+			if (max_fid >= _lambda.size()) {
+				_lambda.resize(max_fid + 1, 0.0);
+			}
+			
+			// Set the param values in the vectors
+			for (size_t i = 0; i < fids.size(); ++i) {
+				int fid = fids[i];
+				const params_type& fparam = params.at(i);
+				_gamma.at(fid) = fparam.at("gamma");
+				_lambda.at(fid) = fparam.at("lambda");
 			}
 		}
 
-		// set all vector-valued parameters for a given type
-		void set_vec_params(const string &cell_type, const vec_params_type &params) override{};
 
-		void set_flag(const string &flag) override
-		{
-			if (flag == "use_P0")
-				_lambda_P0 = true;
-			else
-				throw runtime_error("Unknown flag : " + flag + ".");
-		}
-
+      void set_flag(const string& flag) override   {
+        throw runtime_error("No flags implemented for ForcePerimeter");
+      }
 		
 	private:
 		vector<double> _gamma;
 		vector<double> _lambda;
-		bool _lambda_P0; // If true, lambda will be computed as gamma*P0 where P0 is read from the input configuration
 	};
 
 }

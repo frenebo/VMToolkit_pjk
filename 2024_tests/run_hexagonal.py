@@ -2,7 +2,7 @@ import numpy as np
 import argparse
 import json
 import os
-from hexagonal_test.analytic_tools.find_hexagon_rest_area import HexagonalModel, find_hexagon_rest_area
+from analytic_tools.find_hexagon_rest_area import HexagonalModel, find_hexagon_rest_area
 
 from VMToolkit.config_builder.open.honeycomb_lattice import HoneycombLattice
 from VMToolkit.VM import Tissue, System, Force, Integrate, Topology, Dump, Simulation, Vec
@@ -15,8 +15,8 @@ from sim_model.sim_model import SimModel
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--fpull", default=-0.2,type=float, help="Force to squeeze/stretch")
-    parser.add_argument("--box_lx", default=25.0,type=float, help="X size of tissue")
-    parser.add_argument("--box_ly", default=25.0,type=float, help="Y size of tissue")
+    parser.add_argument("--box_lx", default=8.0,type=float, help="X size of tissue")
+    parser.add_argument("--box_ly", default=8.0,type=float, help="Y size of tissue")
     
     args = parser.parse_args()
     
@@ -41,7 +41,7 @@ if __name__ == "__main__":
         os.remove("scratch/example.json")
     
     cm = HexagonalCellMesh(
-        side_length=rest_side_length*1.05,
+        side_length=rest_side_length*0.8,
         box_lx=args.box_lx,
         box_ly=args.box_ly,
     )
@@ -77,19 +77,24 @@ if __name__ == "__main__":
     sim_model.configure_forces(P0_model, gamma, kappa, verbose=True)
 
     sim_model.load_json("scratch/example.json",verbose=True)           # read input configuration
+    with open("scratch/forgodot.json", "w") as f:
+        json.dump(sim_model.get_json_state(), f)
     
     sim_model.configure_integrators(verbose=True)
 
-    step_size = 1000      # Step counter in terms of time units
+    step_size = 500      # Step counter in terms of time units
     
     ext_forcing_on = []
     checkpoint_fps = []
     # Pulling on the passive system
     # for i in range(args.nrun):
-    N_checkpoints = 20
+    N_checkpoints = 40
     for i in range(N_checkpoints):
         ckpt_fp = "scratch/res{}.json".format(str(i).zfill(3))
-        sim_model.dump_json(ckpt_fp)
+        json_str = sim_model.dump_cpp_json()
+        with open(ckpt_fp, "w") as f:
+            f.write(json_str)
+        
         checkpoint_fps.append(ckpt_fp)
         
         # Will be reocrded next iteration
@@ -98,12 +103,11 @@ if __name__ == "__main__":
         #if False:
             pass
             print("Using external forces.. ")
+            sim_model.set_some_forces()
             # fpull=args.fpull
             # integrators.set_external_force('brownian', 'right', Vec(fpull,0.0))  # pulling on the right-most column of vertices
             # integrators.set_external_force('brownian', 'left', Vec(-fpull,0.0))  # pulling on the left-most column of vertices
             
-            # integrators.set_external_forces_by_vertex('brownian', [0], [Vec(0.1,0.0)])
-            # integrators.set_external_forces_by_vertex('brownian', [10], [Vec(-0.1,0.0)])
             ext_forcing_on.append(True)
         else:
             ext_forcing_on.append(False)

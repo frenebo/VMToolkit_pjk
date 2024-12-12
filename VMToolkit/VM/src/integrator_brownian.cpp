@@ -51,12 +51,22 @@ namespace VMTutorial
         // if (v)
         // add external force 
         if (verbose) {
-          cout << "vert type is " << v.data().vert_type << endl;
-          cout << "_constant_force size: " << _constant_force.size() << endl;
+          // cout << "vert type is " << v.data().vert_type << endl;
+          // cout << "_constant_force size: " << _constant_force.size() << endl;
         }
         
         // @TODO check that the _constant_force has been properly set up at this point.
-        Vec f = v.data().force + _constant_force[v.data().vert_type];
+        Vec f = v.data().force; //+ _constant_force[v.data().vert_type];
+        
+        // Add external force if present for this vertex id...
+        map<int,Vec>::iterator extf_it = _const_ext_forces_by_vid.find(v.id);
+        // Bar b3;
+        if(extf_it != _const_ext_forces_by_vid.end())
+        {
+          //element found;
+          Vec ext_force_on_vtx = extf_it->second;
+          f += ext_force_on_vtx;
+        }
         
         // apply constraint
         if (_constraint_enabled) {

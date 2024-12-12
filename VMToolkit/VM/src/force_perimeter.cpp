@@ -18,18 +18,11 @@ namespace VMTutorial
     double P2 = _sys.mesh().perim(fp);
     double lambda_1, lambda_2;
     
-    double  gamma_1 = (f.outer)    ? 0.0 : _gamma[f.data().face_type];
-    double  gamma_2 = (fp.outer)   ? 0.0 : _gamma[fp.data().face_type];
-    if (!_lambda_P0)
-    {
-      lambda_1 = (f.outer)   ? 0.0 : _lambda[f.data().face_type];
-      lambda_2 = (fp.outer)  ? 0.0 : _lambda[fp.data().face_type];
-    }
-    else 
-    {
-      lambda_1 = gamma_1*f.data().P0;
-      lambda_2 = gamma_2*fp.data().P0;
-    }
+    double  gamma_1 = (f.outer)    ? 0.0 : _gamma.at(f.id);
+    double  gamma_2 = (fp.outer)   ? 0.0 : _gamma.at(fp.id);
+    
+    lambda_1 = (f.outer)   ? 0.0 : _lambda.at(f.id);
+    lambda_2 = (fp.outer)  ? 0.0 : _lambda.at(fp.id);
 
     double lambda = lambda_1 + lambda_2;
     double fedges = gamma_1*P1 + gamma_2*P2 - lambda;
@@ -44,18 +37,12 @@ namespace VMTutorial
     
     double lambda_1, lambda_2;
     
-    double gamma_1 = (f.outer)    ? 0.0 : _gamma[f.data().face_type];
-    double gamma_2 = (fp.outer)   ? 0.0 : _gamma[fp.data().face_type];
-    if (!_lambda_P0)
-    {
-      lambda_1 = (f.outer)   ? 0.0 : _lambda[f.data().face_type];
-      lambda_2 = (fp.outer) ? 0.0 : _lambda[fp.data().face_type];
-    }
-    else
-    {
-      lambda_1 = gamma_1*f.data().P0;
-      lambda_2 = gamma_2*fp.data().P0;
-    }
+    double gamma_1 = (f.outer)    ? 0.0 : _gamma.at(f.id);
+    double gamma_2 = (fp.outer)   ? 0.0 : _gamma.at(fp.id);
+    
+    lambda_1 = (f.outer)   ? 0.0 : _lambda.at(f.id);
+    lambda_2 = (fp.outer) ? 0.0 : _lambda.at(fp.id);
+  
 
     double lambda = lambda_1 + lambda_2;
   
@@ -70,15 +57,13 @@ namespace VMTutorial
     double P = _sys.mesh().perim(f);
     
     double lambda = 0.0;
-    double gamma = _gamma[f.data().face_type];
-    if (!_lambda_P0)
-        lambda = _lambda[f.data().face_type];
+    double gamma = _gamma.at(f.id);
+    
+    lambda = _lambda.at(f.id);
     
     double P0;
-    if (_lambda_P0)
-      P0 = f.data().P0;
-    else
-      P0 = lambda/gamma;
+    
+    P0 = lambda/gamma;
     
     double dP = P - P0;
 

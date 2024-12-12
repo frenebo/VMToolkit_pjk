@@ -63,10 +63,10 @@ namespace VMTutorial
       bool boundary = j["mesh"]["vertices"][i]["boundary"];
       _mesh.add_vertex(Vertex<Property>(id, Vec(x, y, _mesh.box()), boundary, _mesh));
       Vertex<Property> &v = _mesh.vertices().back();
-      this->add_vert_type(j["mesh"]["vertices"][i]["type"]);
+      // this->add_vert_type(j["mesh"]["vertices"][i]["type"]);
       v.erased = j["mesh"]["vertices"][i]["erased"];
-      v.data().vert_type = _vert_types[j["mesh"]["vertices"][i]["type"]];
-      v.data().type_name = get_vert_type_name(v.data().vert_type);
+      // v.data().vert_type = _vert_types[j["mesh"]["vertices"][i]["type"]];
+      // v.data().type_name = get_vert_type_name(v.data().vert_type);
       v.data().constraint = j["mesh"]["vertices"][i]["constraint"];
       if (j["mesh"]["vertices"][i].find("velocity") != j["mesh"]["vertices"][i].end())
       {
@@ -112,9 +112,9 @@ namespace VMTutorial
       // cout << "ckpt 4" << endl;
       if (!erased_face)
       {
-        this->add_cell_type(j["mesh"]["faces"][i]["type"]);
-        f.data().face_type = _cell_types[j["mesh"]["faces"][i]["type"]];
-        f.data().type_name = get_cell_type_name(f.data().face_type);
+        // this->add_cell_type(j["mesh"]["faces"][i]["type"]);
+        // f.data().face_type = _cell_types[j["mesh"]["faces"][i]["type"]];
+        // f.data().type_name = get_cell_type_name(f.data().face_type);
         f.outer = j["mesh"]["faces"][i]["outer"];
         if (j["mesh"]["faces"][i].find("A0") != j["mesh"]["faces"][i].end())
           f.data().A0 = j["mesh"]["faces"][i]["A0"];
@@ -153,8 +153,8 @@ namespace VMTutorial
   void export_VertexProperty(py::module& m)
   {
     py::class_<Property::VertexProperty>(m, "VertexProperty")
-      .def_readonly("type", &Property::VertexProperty::vert_type)
-      .def_readonly("type_name", &Property::VertexProperty::type_name)
+      // .def_readonly("type", &Property::VertexProperty::vert_type)
+      // .def_readonly("type_name", &Property::VertexProperty::type_name)
       .def_readonly("vel", &Property::VertexProperty::vel)
       .def_readonly("force", &Property::VertexProperty::force);
   }
@@ -180,11 +180,11 @@ namespace VMTutorial
   {
     py::class_<Property::FaceProperty>(m, "CellProperty")
       .def_readonly("type", &Property::FaceProperty::face_type)
-      .def_readonly("type_name", &Property::FaceProperty::type_name)
+      // .def_readonly("type_name", &Property::FaceProperty::type_name)
       .def_readonly("unique_id", &Property::FaceProperty::unique_id)
       .def_readwrite("A0", &Property::FaceProperty::A0)
       .def_readwrite("P0", &Property::FaceProperty::P0)
-      .def_readwrite("cell_type", &Property::FaceProperty::face_type)
+      // .def_readwrite("cell_type", &Property::FaceProperty::face_type)
       .def_readwrite("n", &Property::FaceProperty::n);
   }
 
@@ -273,7 +273,7 @@ namespace VMTutorial
       .def("num_vert", &Mesh<Property>::num_vert)
       .def("num_cells", &Mesh<Property>::num_faces)
       .def("tidyup", &Mesh<Property>::tidyup)
-      .def("set_cell_type", [](Mesh<Property>& m, int i, int type) { m.get_face(i).data().face_type = type; })
+      // .def("set_cell_type", [](Mesh<Property>& m, int i, int type) { m.get_face(i).data().face_type = type; })
       .def("set_junction_type", [](Mesh<Property>& m, int i, int type) { m.get_edge(i).data().edge_type = type; })
       .def("set_cell_A0", [](Mesh<Property>& m, int i, double A0) { m.get_face(i).data().A0 = A0;  })
       .def("set_cell_P0", [](Mesh<Property>& m, int i, double P0) { m.get_face(i).data().P0 = P0;  })
@@ -296,15 +296,15 @@ namespace VMTutorial
     py::class_<System>(m, "System")
       .def(py::init<MyMesh&>())
       .def("read_input", &System::read_input, py::arg("input_file"), py::arg("verbose")=false)
-      .def("add_cell_type", &System::add_cell_type)
-      .def("set_cell_type", &System::set_cell_type)
+      // .def("add_cell_type", &System::add_cell_type)
+      // .def("set_cell_type", &System::set_cell_type)
       .def("mesh", &System::mesh)
-      .def("cell_types", &System::cell_types)
+      // .def("cell_types", &System::cell_types)
       .def("time_step", &System::time_step)
       .def("simulation_time", &System::simulation_time)
       .def("set_simulation_time_step", &System::set_simulation_time_step)
-      .def("get_cell_type_name", &System::get_cell_type_name)
-      .def("get_vert_type_name", &System::get_vert_type_name)
+      // .def("get_cell_type_name", &System::get_cell_type_name)
+      // .def("get_vert_type_name", &System::get_vert_type_name)
       .def("log_debug_stats", &System::log_debug_stats);
   }
 

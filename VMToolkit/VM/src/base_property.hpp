@@ -19,12 +19,11 @@ namespace VMTutorial
 		};
 		struct VertexProperty
 		{
-			int vert_type = -1;
 			VertexProperty &operator=(const VertexProperty &p)
 			{
 				if (this == &p)
 					return *this;
-				this->vert_type = p.vert_type;
+				
 				return *this;
 			}
 		};

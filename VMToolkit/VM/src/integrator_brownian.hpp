@@ -42,12 +42,9 @@ namespace VMTutorial
                                                                     _update_n{false}
                                                                     
       { 
-        map<string,int>& vert_types = _sys.vert_types();
-        map<string,int>& cell_types = _sys.cell_types();
-        for (int i = 0; i < vert_types.size(); i++) {
-          _constant_force.push_back(Vec(0.0,0.0));
-        }
-
+        // map<string,int>& vert_types = _sys.vert_types();
+        // map<string,int>& cell_types = _sys.cell_types();
+        
         _constrainer = make_unique<Constrainer>();
         _constrainer->add<ConstraintNone>("none");
         _constrainer->add<ConstraintFixed>("fixed");
@@ -68,32 +65,20 @@ namespace VMTutorial
       };
       void set_type_params(const string& type, const params_type& params) override { }
       void set_string_params(const string_params_type& params) override { }
-      void set_external_force(const string& vtype, const Vec& f) override 
-      { 
-        _constant_force[_sys.vert_types()[vtype]] = f;
-      }
+      
       void set_external_forces_by_vertex(const vector<int>& vids, const vector<Vec>& forces) override
       {
         if (vids.size() != forces.size()) {
           throw runtime_error("Number of vertex indices and forces do not match");
         }
-        throw runtime_error("This doesn't work the way I thought it did... this sets forces by type");
-        // if ()
         
-        // for (size_t i = 0; i < vids.size(); ++i)
-        // {
-        //   if (i >= vids.size()) {
-        //     throw runtime_error("there are not enough vids in here. Count is " + std::to_string(vids.size()));
-        //   }
-        //   if (i >= forces.size()) {
-        //     throw runtime_error("there are not enough forces in here. Count is " + std::to_string(forces.size()));
-        //   }
-        //   std::cout << "Setting force of vertex " << vids[i] << " to " << forces[i].x << ", " << forces[i].y << std::endl;
+        for (size_t i = 0; i < vids.size(); ++i)
+        {
+          int vid = vids[i];
+          Vec ext_f = forces[i];
           
-        //   _constant_force.at(vids[i]) = forces[i];
-        // }
-        // std::cout 
-        // throw runtime_error("Not implemented");
+          _const_ext_forces_by_vid[vid] = ext_f;
+        }
       }
       
       void set_flag(const string& flag) override 
@@ -110,7 +95,9 @@ namespace VMTutorial
       ConstrainerType _constrainer; // Apply various constraints
       double _T;                 // temperature
       double _gamma;             // friction 
-      vector<Vec> _constant_force;
+      map<int, Vec> _const_ext_forces_by_vid;
+      // vector<Vec> _constant_force;
+      // vector<Vec> 
       double _Dr;                // rotational diffusion constant
       bool _update_n;            // If true, update direction of the cell self-propulsion direction
       

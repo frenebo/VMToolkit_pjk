@@ -11,10 +11,10 @@ namespace VMTutorial
 {
 	void export_ForceCompute(py::module &m)
 	{
-		py::class_<ForceCompute>(m, "Force")
+		py::class_<ForceCompute>(m, "ForceCompute")
 			.def(py::init<System &>())
-			.def("set_params", &ForceCompute::set_params)
-			.def("set_vec_params", &ForceCompute::set_vec_params)
+			// .def("set_params", &ForceCompute::set_params)
+			// .def("set_vec_params", &ForceCompute::set_vec_params)
 			.def("set_flag", &ForceCompute::set_flag)
 			.def("add", &ForceCompute::add_force)
 			.def("compute", &ForceCompute::compute_forces)

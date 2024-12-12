@@ -37,14 +37,14 @@ namespace VMTutorial
 			Vec vel;
 			Vec force;
 			string constraint;		 // if "x" move only along x-axis, if "y" move only along y axis, if "radial", move along radius; otherwise ignore
-			map<string, Vec> f_type; // Force from a given interaction type (e.g., area term, perimeter term, etc)
-			string type_name;		 // String with the actual name of the the vertex type
+			// map<string, Vec> f_type; // Force from a given interaction type (e.g., area term, perimeter term, etc)
+			// string type_name;		 // String with the actual name of the the vertex type
 			VertexProperty &operator=(const VertexProperty &p)
 			{
 				if (this == &p)
 					return *this;
-				this->vert_type = p.vert_type;
-				this->type_name = p.type_name;
+				// this->vert_type = p.vert_type;
+				// this->type_name = p.type_name;
 				return *this;
 			}
 		};
@@ -65,7 +65,7 @@ namespace VMTutorial
 			Vec n;				// Self-propulsion direction
 			Vec rc;				// centre of the face
 			vector<int> neighs; // indices of neighbouring faces
-			string type_name;	// String with the actual name of the the cell type
+			// string type_name;	// String with the actual name of the the cell type
 			Vec v;				// Cell velocity (average velocity of its vertices)
 			FaceProperty &operator=(const FaceProperty &p)
 			{
@@ -74,7 +74,7 @@ namespace VMTutorial
 				this->face_type = p.face_type;
 				this->A0 = p.A0;
 				this->P0 = p.P0;
-				this->type_name = p.type_name;
+				// this->type_name = p.type_name;
 				return *this;
 			}
 		};
