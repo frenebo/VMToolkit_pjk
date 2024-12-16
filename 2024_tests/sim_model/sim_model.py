@@ -2,10 +2,8 @@ import json
 from VMToolkit.VM import Tissue, System, ForceCompute, Integrate, Topology, Dump, Simulation, Vec
 
 
-# @TODO the categories and forces should be totally abstracted out of the base vertex model and wrapper
-# the vertex model and the cass that controls it should only care about the forces for each individual vertex.
-class SimModel:
-    def __init__(self, verbose):
+class VMToolkitWrapper:
+    def __init__(self, verbose=False):
         self._sim_sys = None
         self._forces = None
         self._integrators = None
@@ -17,126 +15,6 @@ class SimModel:
         
         self.forces_configured = False
         self._tissue_loaded = False
-        pass
-    
-    def configure_integrators(self,verbose=False):
-        # if not self._tissue_loaded:
-        #     raise Exception("Cannot configure integrator before tissue has been loaded" +
-        #         " - currently c++ code relies on tissue types being there before brownian integrator")
-        if verbose:
-            print("Adding brownian integrator")
-        self._integrators.add('brownian')    
-
-
-        dt = 0.3
-        friction_gam = 1.0
-        if verbose:
-            print("Setting dt={}, friction_gamma={}".format(dt, friction_gam))
-        self._integrators.set_dt(dt) # set time step
-        self._integrators.set_params("brownian", {"gamma": friction_gam})
-        if verbose:
-            print("Done configuring integrators")
-    
-    def dump_cpp_json(self):
-        return self._dumps.mesh_to_jsonstr()
-    
-    def set_some_forces(self):
-        # Find vertices below three mark
-        # self.get_json_state()["vertices"]
-        vertices = json.loads(self.dump_cpp_json())["mesh"]["vertices"]
-        bot_indices = []
-        top_indices = []
-        for i, v in enumerate(vertices):
-            if v['r'][1] > 3:
-                top_indices.append(i)
-            elif v['r'][1] < -3:
-                bot_indices.append(i)
-        
-        self._integrators.set_external_forces_by_vertex("brownian", 
-            bot_indices,
-            [Vec(0.005,0.0) for i in range(len(bot_indices))],
-        ) 
-        self._integrators.set_external_forces_by_vertex("brownian", 
-            top_indices,
-            [Vec(-0.005,0.0) for i in range(len(top_indices))],
-        ) 
-        
-    def get_json_state(self):
-        vertices = {}
-        
-        cpp_json = json.loads(self.dump_cpp_json())
-        # print(cpp_json["mesh"])
-        # raise NotImplementedError()
-        for vtx_index, vtx in enumerate(cpp_json["mesh"]["vertices"]):
-            print(vtx)
-            vtx_id = str(vtx_index)
-            vertices[vtx_id] = {
-                "x": vtx['r'][0],
-                "y": vtx['r'][1],
-            }
-        
-        
-        # edges = {}
-        cells = {}
-        for cell_index, cpp_cell in enumerate(cpp_json["mesh"]["faces"]):
-            cell_id = str(cell_index)
-            cells[cell_id] = {
-                "vertices": [str(vidx) for vidx in cpp_cell["vertices"]]
-            }
-        
-        return {
-            "vertices": vertices,
-            "cells": cells,
-        }
-
-    def configure_forces(self, P0_model, gamma, kappa, verbose=False):
-        # if not self._cell_types_configured:
-        #     raise Exception("Cell type not configured - forces won't work without cell types preestablished")
-        # if not self._cell_types_
-        if verbose:
-            print("CONFIGURING FORCES==================")
-            self._sim_sys.log_debug_stats()
-        
-        self._forces.add('area')         # add area force form term E = 0.5*kappa*(A-A0)^2
-        self._forces.add('perimeter')    # add perimeter force term from E = 0.5*gamma*P^2 + lambda*P (maybe -?)
-        if verbose:
-            print("Added area and perimeter forces")
-            self._sim_sys.log_debug_stats()
-        # Set parameters for each cell type
-
-        # lambda_val = P0_model * gamma # @TODO either the sim uses this, or it uses the P0... add a way to force P0 usage in set_params in cpp file?
-        self._default_gamma = gamma
-        self._default_lambda_val = P0_model * gamma
-        self._default_kappa = kappa
-
-
-        self.forces_configured = True
-    
-    
-    def load_json_obj(self, json_obj, verbose=False):
-        if not self.forces_configured:
-            raise Exception("need to configure forces before loading json")
-        
-        if verbose:
-            print("Loading JSON")
-        self._sim_sys.read_input_from_jsonstring( json.dumps(json_obj) )
-        # self._sim_sys.read_input(json_fp)           # read input configuration
-        
-        # @TODO do this better!
-        ## Setting area params
-        cpp_faces = json.loads(self.dump_cpp_json())["mesh"]["faces"]
-        all_face_ids = list(range(len(cpp_faces)))
-        self._forces.set_face_params_facewise(
-            "area", all_face_ids, [{'kappa': self._default_kappa} for i in range(len(all_face_ids))]
-        )
-        self._forces.set_face_params_facewise(
-            "perimeter", all_face_ids, [{'gamma': self._default_gamma, "lambda": self._default_lambda_val} for i in range(len(all_face_ids))]
-        )
-        
-        if verbose:
-            print("Done loading JSON")
-        
-        self._tissue_loaded = True
 
     
     def _initialize_cpp(self, verbose=False):
@@ -181,7 +59,61 @@ class SimModel:
             print("Finished intializing cpp...")
             sim_sys.log_debug_stats()
         
-    def run_steps(self, n_steps, verbose=False):
+    def dump_cpp_json(self):
+        return self._dumps.mesh_to_jsonstr()
+
+    def configure_forces(
+        self,
+        P0_model,
+        gamma,
+        kappa,
+        verbose=False,
+        ):
+        # if not self._cell_types_configured:
+        #     raise Exception("Cell type not configured - forces won't work without cell types preestablished")
+        # if not self._cell_types_
+        if verbose:
+            print("CONFIGURING FORCES==================")
+            self._sim_sys.log_debug_stats()
+        
+        self._forces.add('area')         # add area force form term E = 0.5*kappa*(A-A0)^2
+        self._forces.add('perimeter')    # add perimeter force term from E = 0.5*gamma*P^2 + lambda*P (maybe -?)
+        if verbose:
+            print("Added area and perimeter forces")
+            self._sim_sys.log_debug_stats()
+        # Set parameters for each cell type
+
+        # lambda_val = P0_model * gamma # @TODO either the sim uses this, or it uses the P0... add a way to force P0 usage in set_params in cpp file?
+        self._default_gamma = gamma
+        self._default_lambda_val = P0_model * gamma
+        self._default_kappa = kappa
+
+
+        self.forces_configured = True
+
+    def configure_integrators(self, dt, friction_gam, verbose=False):
+        # if not self._tissue_loaded:
+        #     raise Exception("Cannot configure integrator before tissue has been loaded" +
+        #         " - currently c++ code relies on tissue types being there before brownian integrator")
+        if verbose:
+            print("Adding brownian integrator")
+        self._integrators.add('brownian')    
+
+
+        dt = 0.3
+        friction_gam = 1.0
+        if verbose:
+            print("Setting dt={}, friction_gamma={}".format(dt, friction_gam))
+        self._integrators.set_dt(dt) # set time step
+        self._integrators.set_params("brownian", {"gamma": friction_gam})
+        if verbose:
+            print("Done configuring integrators")
+    
+    def run_steps(
+        self,
+        n_steps,
+        verbose=False,
+    ):
         if not self.forces_configured:
             raise Exception("Need to configure force before running")
         
@@ -189,6 +121,60 @@ class SimModel:
             print("About to run simulation for {} steps".format(n_steps))
         
         self._simulation.run(n_steps, topological_change=False,)
+        
+
+
+# @TODO the categories and forces should be totally abstracted out of the base vertex model and wrapper
+# the vertex model and the cass that controls it should only care about the forces for each individual vertex.
+class SimModel:
+    def __init__(self, verbose):
+        self._vm_wrapper = VMToolkitWrapper(verbose=verbose)
+        pass
+    
+    def configure_integrators(self,verbose=False):
+        self._vm_wrapper.configure_integrators(verbose=verbose)
+    
+    def dump_cpp_json(self):
+        return self._vm_wrapper.dump_cpp_json()
+        
+    def get_json_state(self):
+        vertices = {}
+        
+        cpp_json = json.loads(self._vm_wrapper.dump_cpp_json())
+        # print(cpp_json["mesh"])
+        # raise NotImplementedError()
+        for vtx_index, vtx in enumerate(cpp_json["mesh"]["vertices"]):
+            print(vtx)
+            vtx_id = str(vtx_index)
+            vertices[vtx_id] = {
+                "x": vtx['r'][0],
+                "y": vtx['r'][1],
+            }
+        
+        
+        # edges = {}
+        cells = {}
+        for cell_index, cpp_cell in enumerate(cpp_json["mesh"]["faces"]):
+            cell_id = str(cell_index)
+            cells[cell_id] = {
+                "vertices": [str(vidx) for vidx in cpp_cell["vertices"]]
+            }
+        
+        return {
+            "vertices": vertices,
+            "cells": cells,
+        }
+
+    def configure_forces(self, P0_model, gamma, kappa, verbose=False):
+        self._vm_wrapper.configure_forces(P0_model, gamma, kappa, verbose=verbose)
+    
+    def load_json_obj(self, json_obj, verbose=False):
+        self._vm_wrapper.load_json_obj(json_obj, verbose=verbose)
+
+    
+        
+    def run_steps(self, n_steps, verbose=False):
+        self._vm_wrapper.run_steps(n_steps, verbose=verbose)
         
         
 
@@ -214,19 +200,3 @@ default_config = {
         },
     }
 }
-
-# class SimCell:
-#     def __init__(self, ctype):
-#         self.ctype = ctype
-    
-    
-
-# class NewSimModel:
-#     def __init__(self):
-#         self._vm_wrapper = VMWrapper()
-    
-    
-    
-    
-        # self._vm_wrapper/
-        # raise NotImplementedError()

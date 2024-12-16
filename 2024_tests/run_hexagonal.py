@@ -102,7 +102,7 @@ if __name__ == "__main__":
         if i/N_checkpoints>=0.25:
             pass
             print("Using external forces.. ")
-            sim_model.set_some_forces()
+            # sim_model.set_some_forces()
             
             ext_forcing_on.append(True)
         else:

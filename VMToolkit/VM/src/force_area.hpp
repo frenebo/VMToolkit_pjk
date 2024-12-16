@@ -95,10 +95,8 @@ namespace VMTutorial
           int fid = fids[i];
           const auto& fparam = params[i];
  
-          // _set_params_for_face(fid, fparam);
           _kappa.at(fid) = fparam.at("kappa");
         }
-        // throw runtime_error("unimplemented");
       }
 
 
@@ -108,7 +106,7 @@ namespace VMTutorial
     
     private:
 
-      vector<double> _kappa; 
+      vector<double> _kappa;
       
       
   };
