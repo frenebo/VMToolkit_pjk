@@ -13,7 +13,6 @@
 
 namespace VMTutorial
 {
-
   // Force on a vertex
   class ForceArea : public Force
   {
@@ -37,48 +36,6 @@ namespace VMTutorial
       // Energy calculation 
       double energy(const Face<Property>&) override;
       
-      // // set all parameters for a given type
-      // void set_params(const string& cell_type, const params_type& params) override
-      // {
-      //   for (auto p : params)
-      //     if (p.first != "kappa")
-      //       throw runtime_error("Unknown parameter "+p.first+".");
-            
-      //   if (params.find("kappa") == params.end())
-      //     throw runtime_error("Area force requires parameter kappa.");
-
-      //   try 
-      //   {
-      //     if (_sys.cell_types().find(cell_type) == _sys.cell_types().end()) {
-      //       cout << "Cell types are :";
-      //       for(auto iter = _sys.cell_types().begin(); iter != _sys.cell_types().end(); ++iter)
-      //       {
-      //         // asdfasdf;
-      //         auto k =  iter->first;
-      //         auto v = iter->second;
-      //         cout << v << " ";
-      //       //ignore value
-      //       //Value v = iter->second;
-      //       }
-      //       cout << endl;
-      //       throw runtime_error("Force area: Cell type " + cell_type + " is not defined.");
-      //     }
-      //     if (_kappa.size() < _sys.get_num_cell_types())
-      //       _kappa.resize(_sys.get_num_cell_types(), 0.0);
-      //     int ct = _sys.cell_types()[cell_type];
-      //     _kappa[ct] = params.at("kappa");
-      //   } 
-      //   catch(const exception& e)
-      //   {
-      //     cerr << "Problem with setting area force parameters. Exception: " << e.what() << '\n';
-      //     throw;
-      //   }
-      // }
-      
-      // void _set_params_for_face(int fid, params_type& params) {
-      //   // _kappa[]
-      //   // _kappa.at(fid)
-      // }
       
       void set_face_params_facewise(const vector<int>& fids, const vector<params_type>& params) override {
         // Resize the internal parameter arrays if needed...

@@ -55,8 +55,8 @@ namespace VMTutorial
 		};
 		struct FaceProperty : public BaseProperty::FaceProperty
 		{
-			double A0;
-			double P0;
+			// double A0;
+			// double P0;
 			int unique_id;
 			int original_face;	// one of the faces collapsed edge belonged to
 			double kappa;		// area modulus
@@ -72,8 +72,8 @@ namespace VMTutorial
 				if (this == &p)
 					return *this;
 				// this->face_type = p.face_type;
-				this->A0 = p.A0;
-				this->P0 = p.P0;
+				// this->A0 = p.A0;
+				// this->P0 = p.P0;
 				// this->type_name = p.type_name;
 				return *this;
 			}

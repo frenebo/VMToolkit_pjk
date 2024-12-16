@@ -443,16 +443,10 @@ class HexagonalCellMesh:
         
         
         return {
-            "A0": 0,
-            "P0": 0,
             "id": cell_id,
-            "nsides": len(boundary_vertices),
             "vertices": boundary_vertices,
-            "outer": True,
-            "type": "passive",
         }
     
-    # @classmethod 
         
     def __init__(
         self,
@@ -460,11 +454,6 @@ class HexagonalCellMesh:
         box_lx,
         box_ly,
     ):
-        # raise NotImplementedError()
-        
-        # center_cell = 
-        # cent
-        # centself.
         self.side_length = side_length
         self.box_lx = box_lx
         self.box_ly = box_ly
@@ -482,14 +471,6 @@ class HexagonalCellMesh:
             print(self.cells_map)
             print(self.vertices_map)
     
-    def set_all_A0(self, A0_value):
-        for cell_id in self.cells_map:
-            self.cells_map[cell_id]["A0"] = A0_value
-
-    def set_all_P0(self, P0_value):
-        for cell_id in self.cells_map:
-            self.cells_map[cell_id]["P0"] = P0_value
-        
         
     def build_vm_mesh_obj(self, verbose=False):
         """
@@ -498,11 +479,7 @@ class HexagonalCellMesh:
         
         if self.cells_map is None or self.vertices_map is None:
             raise Exception("Cannot build vm mesh until cells have been built.")
-        for cid, cell in self.cells_map.items():
-            if cell["A0"] == None:
-                raise ValueError("A0 not set for cell {}".format(cid))
-            if cell["P0"] == None:
-                raise ValueError("P0 not set for cell {}".format(cid))
+            
             
         #### Build faces
         vm_faces = []
@@ -510,27 +487,15 @@ class HexagonalCellMesh:
             cell = self.cells_map[cell_id]
             cell_vertices = list(cell["vertices"])
             
-            if "A0" not in cell:
-                print(cell)
-                raise Exception("Cannot build vm mesh without attribute 'A0' set. Cell id {} missing A0".format(cell_id))
-
-            if "P0" not in cell:
-                print(cell)
-                raise Exception("Cannot build vm mesh without attribute 'P0' set. Cell id {} missing P0".format(cell_id))
-            
             
             vm_faces.append({
-                "A0": cell["A0"],
-                "P0": cell["P0"],
-                "id": cell_id,
-                "nsides": len(cell_vertices),
+                "id": str(cell_id),
                 "vertices": cell_vertices,
                 "outer": False,
-                "type": "passive",
-                # "vertices": cell_ve
             })
-            
-        boundary_face = self._generate_boundary_face_export_obj(self.vertices_map, cell_id=len(self.cells_map), verbose=verbose)
+        
+        boundary_cell_id = "boundary_cell"
+        boundary_face = self._generate_boundary_face_export_obj(self.vertices_map, cell_id=boundary_cell_id, verbose=verbose)
         vm_faces.append(boundary_face)
         
         
@@ -547,63 +512,76 @@ class HexagonalCellMesh:
             
             vtx_is_boundary = vertex_id in boundary_face['vertices']
             
-            num_faces = 0
-            for face in vm_faces:
-                if vertex_id in face["vertices"]:
-                    num_faces += 1
             
             vm_vertices.append({
                 "boundary": vtx_is_boundary,
-                "constraint": "none",
-                "coordination": num_faces,
-                "erased": False,
                 "id": vertex_id,
-                "neighbours": vtx_neighbors,
                 "r": [vtx_x, vtx_y],
-                "type": vtx_type,
             })
-            
-        ##### Reindex faces
-        # reindex_vm_faces = []
-        for i, f in enumerate(vm_faces):
-            f["id"] = i
-            
         
-        old_to_new_vid_map = {}
-        ##### Reindex vertices
-        for i, v in enumerate(vm_vertices):
-            old_idx = v["id"]
-            v["id"] = i
-            old_to_new_vid_map[old_idx] = i
+            
+        vertex_topologies = {}
+        vertex_geometries = {}
+        cell_topologies = {}
+        
+        for v in vm_vertices:
+            vid = v["id"]
+            if isinstance(vid, int):
+                vid = str(vid)
+            
+            vertex_topologies[vid] = VertexTopology(
+                is_boundary=v["boundary"],
+            )
+            
+            vertex_geometries[vid] = VertexGeometry(
+                x=v["r"][0],
+                x=v["r"][1],
+            )
         
         for f in vm_faces:
-            f["vertices"] = [old_to_new_vid_map[old_i] for old_i in f["vertices"]]
+            fid = f['id']
+            if isintance(fid, int):
+                fid = str(fid)
+            
+            vertex_ids_in_face = []
+            for vid in f["vertex_ids"]:
+                if isinstance(vid, int):
+                    vid = str(vid)
+                
+                vertex_ids_in_face.append(vid)
+        
+            cell_topologies[fid] =CellTopology(vertices=vertex_ids_in_face)
+        
+        tiss_topology = TissueTopology(
+            cell_topologies=cell_topologies,
+            vertex_topologies=vertex_topologies,
+        )
+        
+        tiss_geometry = TissGeometry(vertex_geometries=vertex_geometries)
+        
+        tiss_state = TissueState(
+            geometry=tiss_geometry,
+            vertex_groups={},
+            cell_groups={
+                "regular": CellGroup([cid for cid in cell_topologies if cid != boundary_cell_id]),
+                "boundary": CellGroup([boundary_cell_id]),
+            },
+        )
+        
+        return tiss_topology, tiss_state
         
         
         
-        # return res
-        data = {
-            "mesh": {
-                "box": {
-                    "lx": self.box_lx,
-                    "ly": self.box_ly,
-                    "periodic": False,
-                },
-                "faces": vm_faces,
-                "vertices": vm_vertices,
-            }
-        }
+        # if verbose:
+        #     print("Box:")
+        #     print("  " + str(data["mesh"]["box"]))
+        #     print("Faces:")
+        #     for f in data["mesh"]["faces"]:
+        #         print(f)
+        #     print("Vertices:")
+        #     for v in data["mesh"]["vertices"]:
+        #         print(v)
+        #     print("Old to new vertex id map: {}".format(old_to_new_vid_map))
+        #     # print(json.dumps(data, indent=4))
         
-        if verbose:
-            print("Box:")
-            print("  " + str(data["mesh"]["box"]))
-            print("Faces:")
-            for f in data["mesh"]["faces"]:
-                print(f)
-            print("Vertices:")
-            for v in data["mesh"]["vertices"]:
-                print(v)
-            print("Old to new vertex id map: {}".format(old_to_new_vid_map))
-            # print(json.dumps(data, indent=4))
-        
-        return data
+        # return data

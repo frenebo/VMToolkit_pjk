@@ -114,8 +114,8 @@ namespace VMTutorial
 			pt::ptree nsides;
 			// pt::ptree type;
 			pt::ptree erased;
-			pt::ptree A0;
-			pt::ptree P0;
+			// pt::ptree A0;
+			// pt::ptree P0;
 			pt::ptree fverts;
 			pt::ptree rc;
 			pt::ptree rc_x, rc_y;
@@ -125,8 +125,8 @@ namespace VMTutorial
 			nsides.put("", f.nsides);
 			// type.put("", f.data().type_name);
 			erased.put("", f.erased);
-			A0.put("", f.data().A0);
-			P0.put("", f.data().P0);
+			// A0.put("", f.data().A0);
+			// P0.put("", f.data().P0);
 			for (int vid : verts)
 			{
 				pt::ptree pvid;
@@ -138,8 +138,8 @@ namespace VMTutorial
 			face.add_child("outer", outer);
 			// face.add_child("type", type);
 			face.add_child("erased", erased);
-			face.add_child("A0", A0);
-			face.add_child("P0", P0);
+			// face.add_child("A0", A0);
+			// face.add_child("P0", P0);
 			face.add_child("vertices", fverts);
 			faces.push_back(std::make_pair("", face));
 			//}

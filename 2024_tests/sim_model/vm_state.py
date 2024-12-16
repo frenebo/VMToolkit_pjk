@@ -10,14 +10,23 @@ class CellTopology:
         vertex_ids = jobj["vertex_ids"]
         return CellTopology(
             vertices=vertex_ids,
+            # is_boundary=jobj["is_boundary"]
         )
         
-    def __init__(self, vertices):
+    def __init__(self, vertices):#, is_boundary):
         self._vertex_ids=vertices
+        # self._is_boundary = is_boundary
+    
+    def vertex_ids(self):
+        return self._vertex_ids
+    
+    def is_boundary(self):
+        return self._is_boundary
     
     def to_json(self):
         return {
             "vertex_ids": self._vertex_ids,
+            # "is_boundary": self._is_boundary,
         }
 
 class VertexTopology:
@@ -59,6 +68,12 @@ class TissueTopology:
             cell_topologies=cell_topologies_parsed,
             vertex_topologies=vertex_topologies_parsed
         )
+    
+    def cells(self):
+        return self._cell_topologies
+    
+    def vertices(self):
+        return self._vertex_topologies
         
     def __init__(self, cell_topologies, vertex_topologies):
         self._cell_topologies = cell_topologies
@@ -77,28 +92,119 @@ class TissueTopology:
             "cells": json_cell_tops,
             "vertex_ids": json_vtx_tops,
         }
+        
+
+class VertexGeometry:
+    @staticmethod
+    def from_json(jobj):
+        return VertexGeometry(
+            x=jobj["x"],
+            y=jobj["y"],
+        )
+    
+    def __init__(self, x, y):
+        self._x = x
+        self._y = y
+    
+    def x(self):
+        return self._x
+    
+    def y(self):
+        return self._y
+    
+    def to_json(self):
+        return {
+            "x": self._x,
+            "y": self._y,
+        }
 
 
+class TissGeometry:
+    @staticmethod
+    def from_json(jobj):
+        vtx_geoms = {}
+        
+        for vtx_id, vtx_geo_jobj in jobj["vertices"]:
+            vtx_geoms[vtx_id] = VertexGeometry.from_json(vtx_geo_jobj)
+        
+        
+        return TissGeometry(
+            vertex_geometries=vtx_geoms
+        )
+    
+    def __init__(self, vertex_geometries):
+        self._vertex_geometries = vertex_geometries
+    
+    def vertices(self):
+        return self._vertex_geometries
+    
+    def to_json(self):
+        vertices_jobjdict = {}
+        for vtx_id, vtx_geo in self._vertex_geometries:
+            # self.
+            vertices_jobjdict[vtx_id] = vtx_geom.to_json()
+            # self.vtx
+        return {
+            "vertices": vertices_jobjdict,
+        }
+
+class CellGroup:
+    @staticmethod
+    def from_json(jobj):
+        return CellGroup(
+            member_cells=jobj["cellids"]
+        )
+    
+    def __init__(self, member_cells):
+        self._cell_ids = member_cells
+    
+    def cell_ids(self):
+        return self._cell_ids
+    
+    def to_json(self):
+        return {
+            "cellids": self._cell_ids
+        }
+
+class VertexGroup:
+    @staticmethod
+    def from_json(jobj):
+        return VertexGroup(
+            vertex_ids=jobj["vtxids"],
+        )
+    
+    def __init__(self, vertex_ids):
+        self._vertex_ids = vertex_ids
+    
+    def to_json(self):
+        return {
+            "vtxids": self._vertex_ids
+        }
 
 
 class TissueState:
     @staticmethod
     def from_json(jobj):
+        # vertex_geoms = {}
+        
+        # for vid, vertex_geometry_jobj in jobj["geometry"]["vertices"]:
         return TissueState(
-            vertex_geometries=jobj["geometry"]["vertices"],
+            geometry=TissGeometry.from_json(jobj["geometry"]),
             vertex_groups=jobj["vertexgroups"],
             cell_groups=jobj["cellgroups"],
         )
         
-    def __init__(self, vertex_geometries, vertex_groups, cell_groups):
-        self._vertex_geometries = vertex_geometries
+    def __init__(self, geometry, vertex_groups, cell_groups):
+        self._geometry = geometry
         self._vertex_groups = vertex_groups
         self._cell_groups = cell_groups
     
-    def _geometry_to_json(self):
-        return {
-            "vertices": self._vertex_geometries,
-        }
+    def geometry(self):
+        return self._geometry
+    # def vertex_geometries(self):
+    #     return self._vertex_geometries
+    
+    # def _geometry_to_json(self):?
     
     def _vertex_groups_to_json(self):
         return self._vertex_groups
@@ -132,7 +238,7 @@ class TissueState:
         """
         
         return {
-            "geometry": self._geometry_to_json(),
+            "geometry": self._geometry.to_json(),
             "vertexgroups": self._vertex_groups_to_json(),
             "cellgroups": self._cell_groups_to_json(),
         }
@@ -347,6 +453,12 @@ class VMState:
         self._tissue_topology = tiss_topology
         self._current_state = current_state
         self._simulation_settings = sim_settings
+    
+    def topology(self):
+        return self._tissue_topology
+    
+    def current_state(self):
+        return self._current_state
     
     def to_json(self):
         return {

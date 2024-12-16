@@ -71,6 +71,7 @@ namespace VMTutorial
     }
     for (int i = 0; i < j["mesh"]["faces"].size(); i++)
     {
+      int face_id = j["mesh"]["faces"][i]["id"];
       // cout << "Reading face index " << i << endl;
       
       // cout 
@@ -79,14 +80,14 @@ namespace VMTutorial
         // cout << "ckpt 1" << endl;
         erased_face = j["mesh"]["faces"][i]["erased"];
         if (erased_face)
-          _mesh.add_face(vector<int>(),  true, verbose);
+          _mesh.add_face(face_id, vector<int>(),  true, verbose);
         else
-          _mesh.add_face(j["mesh"]["faces"][i]["vertices"], false, verbose);
+          _mesh.add_face(face_id, j["mesh"]["faces"][i]["vertices"], false, verbose);
       }
       else 
       {
         // cout << "ckpt 2" << endl;
-        _mesh.add_face(j["mesh"]["faces"][i]["vertices"], false, verbose);
+        _mesh.add_face(face_id, j["mesh"]["faces"][i]["vertices"], false, verbose);
       }
       
       // cout << "ckpt 3" << endl;
@@ -100,10 +101,10 @@ namespace VMTutorial
         // f.data().face_type = _cell_types[j["mesh"]["faces"][i]["type"]];
         // f.data().type_name = get_cell_type_name(f.data().face_type);
         f.outer = j["mesh"]["faces"][i]["outer"];
-        if (j["mesh"]["faces"][i].find("A0") != j["mesh"]["faces"][i].end())
-          f.data().A0 = j["mesh"]["faces"][i]["A0"];
-        if (j["mesh"]["faces"][i].find("P0") != j["mesh"]["faces"][i].end())
-          f.data().P0 = j["mesh"]["faces"][i]["P0"];
+        // if (j["mesh"]["faces"][i].find("A0") != j["mesh"]["faces"][i].end())
+        //   f.data().A0 = j["mesh"]["faces"][i]["A0"];
+        // if (j["mesh"]["faces"][i].find("P0") != j["mesh"]["faces"][i].end())
+          // f.data().P0 = j["mesh"]["faces"][i]["P0"];
         if (j["mesh"]["faces"][i].find("n") != j["mesh"]["faces"][i].end())
         {
           double nx = j["mesh"]["faces"][i]["n"][0];

@@ -40,7 +40,7 @@ namespace VMTutorial
 	{
 
 	public:
-		Mesh() : _n_faces(0), _box(nullptr) {}
+		Mesh() :   _box(nullptr) {}
 
 		//! Mesh setup functions
 		void add_vertex(const Vertex<Property> &v)
@@ -64,7 +64,7 @@ namespace VMTutorial
 			_erased_edges.clear();
 			_erased_halfedges.clear();
 			_erased_vertices.clear();
-			_n_faces = 0;
+			// _n_faces = 0;
 			_box = nullptr;
 		}
 
@@ -119,7 +119,7 @@ namespace VMTutorial
 		list<int> _erased_halfedges;
 		list<int> _erased_faces;
 
-		int _n_faces;		  // number of faces;
+		// int _n_faces;		  // number of faces;
 		shared_ptr<Box> _box; // simulation box
 	};
 
@@ -216,10 +216,10 @@ namespace VMTutorial
 
 	// mesh setup functions
 	template <typename Property>
-	void Mesh<Property>::add_face(const vector<int> &vert_ids, bool erased, bool verbose)
+	void Mesh<Property>::add_face(int face_id, const vector<int> &vert_ids, bool erased, bool verbose)
 	{
 		if (verbose) { cout << "Adding face" << endl; }
-		_faces.push_back(Face<Property>(_n_faces++, erased, *this));
+		_faces.push_back(Face<Property>(face_id, erased, *this));
 		if (!erased)
 		{
 			FaceHandle<Property> fh = prev(_faces.end());
@@ -288,7 +288,7 @@ namespace VMTutorial
 			fh->nsides = this->face_sides(*fh);
 		}
 		else
-			_erased_faces.push_back(_n_faces - 1);
+			_erased_faces.push_back(face_id);
 	}
 
 	// Mesh manipulation functions

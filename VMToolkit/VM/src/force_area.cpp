@@ -16,11 +16,13 @@ namespace VMTutorial
 		const Face<Property> &fp = *(he.pair()->face()); // pair cell (opposite side of the same junction)
 		double A1 = _sys.mesh().area(f);
 		double A2 = _sys.mesh().area(fp);
-		double A0_1 = f.data().A0;
-		double A0_2 = fp.data().A0;
+		// double A0_1 = f.data().A0;
+		double A0_1 = _A0.at(f.id);
+		double A0_2 = _A0.at(fp.id);
+		// double A0_2 = fp.data().A0;
 
 		double kappa_1 = (f.outer) ? 0.0 : _kappa.at(f.id);
-		double kappa_2 = (fp.outer) ? 0.0 : _kappa.at(f.id);
+		double kappa_2 = (fp.outer) ? 0.0 : _kappa.at(fp.id);
 
 		Vec farea_vec = 0.5 * (kappa_1 * (A1 - A0_1) - kappa_2 * (A2 - A0_2)) * l.ez_cross_v();
 
@@ -30,7 +32,8 @@ namespace VMTutorial
 	double ForceArea::energy(const Face<Property> &f)
 	{
 		double A = _sys.mesh().area(f);
-		double A0 = f.data().A0;
+		// double A0 = f.data().A0;
+		double _A0  = _kappa.at(f.id);s
 		
 		if (f.outer || f.erased)
 			return 0.0;
