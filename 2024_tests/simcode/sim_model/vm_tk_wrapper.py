@@ -1,6 +1,10 @@
 import json
-from VMToolkit.VM import Tissue, System, ForceCompute, Integrate, Topology, Dump, Simulation, Vec
-from .vm_state import CellAreaForce, CellPerimeterForce
+from VMToolkit.VM import Tissue
+from VMToolkit.VM import System
+from VMToolkit.VM import ForceCompute, Integrate
+from VMToolkit.VM import Topology, Dump, Simulation, Vec
+
+from .vm_state import CellAreaForce, CellPerimeterForce, ConstantVertexForce
 # class 
 # class CppJson
 class CppJsonTissueBuilder:
@@ -208,10 +212,27 @@ class VMToolkitWrapper:
                             "lambda": c_force.lam(),
                             # "A0": c_force.A0
                         }
-                    pass
                 else:
                     print(c_force)
                     raise Exception("Unkonwo cell force type... {}".format(c_force))
+        
+        constant_vtx_forces_by_vertex = {}
+        for vtx_grp_name, vtx_forces in force_sets.vertex_group_forces().force_lists_by_group().items():
+            # print("")
+            vtx_ids_within_group = vertex_groups[vtx_grp_name].vertex_ids()
+            for v_force in vtx_forces:
+                if isinstance(v_force, ConstantVertexForce):
+                    for vtx_id in vtx_ids_within_group:
+                        if vtx_id in constant_vtx_forces_by_vertex:
+                            raise ValueError("Conflicting constant vertex force for cell id {}".format(vtx_id))
+                        constant_vtx_forces_by_vertex[vtx_id] = {
+                            "f_x": v_force.f_x(),
+                            "f_y": v_force.f_y(),
+                        }
+                else:
+                    print(v_force)
+                    raise Exception("Unknown vertex force type... {}".format(v_force))
+            
         
         ##### Set up these parameters in the model
         self._forces.add('area')         # add area force form term E = 0.5*kappa*(A-A0)^2
@@ -242,6 +263,21 @@ class VMToolkitWrapper:
         self._forces.set_face_params_facewise(
             "perimeter", perim_force_cell_indices, perim_force_configs, verbose
         )
+        
+        self._forces.add("const_vertex_propulsion")
+        # constant_vtx_forces_by_vertex = {}
+        const_vtx_prop_force_vertex_indices = []
+        const_vtx_prop_force_configs = []
+        for vtx_id, const_force_conf_dict in constant_vtx_forces_by_vertex.items():
+            vtx_idx = self._ids_to_cpp_index_maps["vtx_ids_to_idx"][vtx_id]
+            const_vtx_prop_force_vertex_indices.append(vtx_idx)
+            const_vtx_prop_force_configs.append(const_force_conf_dict)
+        
+        self._forces.set_vertex_params_vertexwise(
+            "const_vertex_propulsion", const_vtx_prop_force_vertex_indices, const_vtx_prop_force_configs, verbose
+        )
+            
+            
         # self._forces.set_face_params_facewise(
         #     "perimeter", all_face_ids, [{'gamma': self._default_gamma, "lambda": self._default_lambda_val} for i in range(len(all_face_ids))]
         # )

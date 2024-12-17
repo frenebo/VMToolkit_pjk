@@ -18,6 +18,7 @@
 #include "force.hpp"
 #include "force_area.hpp"
 #include "force_perimeter.hpp"
+#include "force_const_vertex_propulsion.hpp"
 // #include "force_self_propulsion.hpp"
 
  
@@ -90,21 +91,21 @@ namespace VMTutorial
         return T;
       }
 
-      double energy(const Face<Property>& face)
-      {
-        double E = 0.0;
-        for (auto& f : this->factory_map)
-          E += f.second->energy(face);
-        return E;
-      }
+      // double energy(const Face<Property>& face)
+      // {
+      //   double E = 0.0;
+      //   for (auto& f : this->factory_map)
+      //     E += f.second->energy(face);
+      //   return E;
+      // }
 
-      double total_energy()
-      {
-        double E = 0.0;
-        for (auto f : _sys.mesh().faces())  
-          E += this->energy(f);
-        return E;
-      }
+      // double total_energy()
+      // {
+      //   double E = 0.0;
+      //   for (auto f : _sys.mesh().faces())  
+      //     E += this->energy(f);
+      //   return E;
+      // }
 
       // void set_params(const string& fname, const string& type, const params_type& params)
       // {
@@ -118,7 +119,8 @@ namespace VMTutorial
       {
         if (!(fids.size() == params.size())) {
           throw runtime_error(
-            "ForceCompute::set_face_params_facewise: For setting face parameters elementwise, number of fids and fparams should be identical.");
+            "ForceCompute::set_face_params_facewise: For setting face parameters elementwise, number of fids and fparams should be identical."
+          );
         }
         
         if (this->factory_map.find(fname) != this->factory_map.end()) {
@@ -128,21 +130,20 @@ namespace VMTutorial
           throw runtime_error("ForceCompute::set_params_facewise: Force type " + fname + " is not used in this simulation.");
         }
       }
-
-      // void set_vec_params(const string& fname, const string& type, const vec_params_type& params)
-      // {
-      //   if (this->factory_map.find(fname) != this->factory_map.end())
-      //     this->factory_map[fname]->set_vec_params(type, params);
-      //   else
-      //     throw runtime_error("set_vec_params: Force type " + fname + " is not used in this simulation.");
-      // }
-
-      void set_flag(const string& fname, const string& flag)
+      
+      void set_vertex_params_vertexwise(const string& fname, const vector<int>& vids, const vector<params_type>& params, bool verbose)
       {
-        if (this->factory_map.find(fname) != this->factory_map.end())
-          this->factory_map[fname]->set_flag(flag);
-        else
-          throw runtime_error("set_flag: Force type " + fname + " is not used in this simulation.");
+        if (!(vids.size() == params.size())) {
+          throw runtime_error(
+            "ForceCompute::set_vertex_params_vertexwisee: For setting vertex parameters elementwise, number of vids and fparams should by identical."
+          );
+        }
+        
+        if (this->factory_map.find(fname) != this->factory_map.end()) {
+          this->factory_map[fname]->set_vertex_params_vertexwise(vids, params, verbose);
+        } else {
+          throw runtime_error("ForceCompute::set_vertex_params_vertexwises: Force type " + fname + " has not been setup in this simulation.");
+        }
       }
 
       void add_force(const string& fname)
@@ -156,8 +157,8 @@ namespace VMTutorial
           this->add<ForceArea,System&>(fname, _sys);
         } else if (fname == "perimeter") {
           this->add<ForcePerimeter,System&>(fname, _sys);
-        // else if (fname == "self-propulsion")
-          // this->add<ForceSelfPropulsion,System&>(fname, _sys);
+        } else if (fname == "const_vertex_propulsion") {
+          this->add<ForceConstVertexPropulsion,System&>(fname, _sys);
         } else  {
           throw runtime_error("Unknown force name : " + fname + ".");
         }

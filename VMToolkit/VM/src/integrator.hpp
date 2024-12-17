@@ -44,16 +44,31 @@ namespace VMTutorial
       }
       virtual ~Integrator() { }
       
-      virtual void step(bool verbose=false) = 0;
+      virtual void step(bool verbose=false)
+      {
+        throw runtime_error("Child has not implemented Integrator::step");
+      }
       
-      virtual void set_params(const params_type&) = 0;
+      virtual void set_params(const params_type&)
+      {
+        throw runtime_error("Child has not implemented Integrator::set_params");
+      }
       // virtual void set_params_for_vertices_elementwise(const vector<int>& vids, const vector<params_type>& params) = 0;
       // virtual void set_params_for_faces_elementwise(const vector,int>& fids, const vector<params_type>& params) = 0;
       
-      virtual void set_string_params(const string_params_type& params) = 0;
+      virtual void set_string_params(const string_params_type& params)
+      {
+        throw runtime_error("Child has not implemented Integrator::set_string_params");
+      }
       // virtual void set_external_force(const string&, const Vec&) = 0;
-      virtual void set_external_forces_by_vertex(const vector<int>& vids, const vector<Vec>& forces) = 0;
-      virtual void set_flag(const string&) = 0;
+      virtual void set_external_forces_by_vertex(const vector<int>& vids, const vector<Vec>& forces)
+      {
+        throw runtime_error("Child has not implemented Integrator::set_external_forces_by_vertex");
+      }
+      virtual void set_flag(const string&)
+      {
+        throw runtime_error("Child has not implemented Integrator::set_flag");
+      }
 
       void set_dt(double dt) { _dt = dt; }
       void enable() { _enabled = true; }

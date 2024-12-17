@@ -33,8 +33,8 @@ namespace VMTutorial
       }
 
 
-      // Energy calculation 
-      double energy(const Face<Property>&) override;
+      // // Energy calculation 
+      // double energy(const Face<Property>&) override;
       
       
       void set_face_params_facewise(const vector<int>& fids, const vector<params_type>& params, bool verbose) override {
@@ -65,9 +65,9 @@ namespace VMTutorial
       }
 
 
-      void set_flag(const string& flag) override   {
-        throw runtime_error("No flags implemented for ForceArea");
-      }
+      // void set_flag(const string& flag) override   {
+      //   throw runtime_error("No flags implemented for ForceArea");
+      // }
       
       bool enabled_for_faceidx(int fid, bool verbose=false) {
         // return 

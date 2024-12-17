@@ -410,6 +410,13 @@ class ConstantVertexForce:
         self._f_x = f_x
         self._f_y = f_y
     
+    def f_x(self):
+        return self._f_x
+    
+    def f_y(self):
+        return self._f_y
+        
+    
     def to_json(self):
         return {
             "type": "constant_force",
@@ -429,7 +436,7 @@ class VertexGroupForces:
     def from_json(jobj):
         
         parsed_groups = {}
-        for vtx_group_name, force_list in jobj.items():
+        for vtx_group_name, forces_list in jobj.items():
             
             parsed_forces = []
             for force_obj in forces_list:
@@ -441,12 +448,15 @@ class VertexGroupForces:
         return VertexGroupForces(vertex_group_forces=parsed_groups)
     
     def __init__(self, vertex_group_forces):
-        self._forces_lists_by_groupname = vertex_group_forces
+        self._force_lists_by_groupname = vertex_group_forces
+    
+    def force_lists_by_group(self):
+        return self._force_lists_by_groupname
     
     def to_json(self):
         groups_dict = {}
         
-        for grp_name, forces_for_group in self._forces_lists_by_groupname.items():
+        for grp_name, forces_for_group in self._force_lists_by_groupname.items():
             groups_dict[grp_name] = [vtx_force.to_json() for vtx_force in forces_for_group]
         
         return groups_dict
@@ -474,7 +484,7 @@ class AllForces:
         return self._cell_forces
     
     def vertex_group_forces(self):
-        return self._vertex_group_forces
+        return self._vertex_forces
 
 class SimulationSettings:
     @staticmethod

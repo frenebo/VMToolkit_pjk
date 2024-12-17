@@ -1,6 +1,9 @@
 import math
 import numpy as np
-from ..sim_model.vm_state import VertexTopology, VertexGeometry, CellTopology, TissueTopology, TissGeometry, TissueState, CellGroup
+from ..sim_model.vm_state import (
+    VertexTopology, VertexGeometry, CellTopology, TissueTopology,
+    TissGeometry, TissueState, CellGroup, VertexGroup,
+)
 import json
 
 class HexagonalMeshBoxBuilder:
@@ -88,8 +91,12 @@ class HexagonalMeshBoxBuilder:
         vertex_x_positions = []
         
         # vertices_close_to_cells = not ( (len(cell_indices_to_build_vtxs_from) % 2 == 1) ^ row_is_odd)
+        print("NUM cells wide: {}".format(num_cells_wide))
+        print("SIDE length: {}".format(side_length))
         for cell_idx in cell_indices_to_build_vtxs_from:
-            cell_xpos = (cell_idx - (num_cells_wide // 2 + 1)) * side_length * 1.5
+            cell_xpos = (cell_idx - (num_cells_wide // 2)) * side_length * 1.5
+            print("Cell index: {} Cell xpos: {}".format(cell_idx, cell_xpos))
+            # print("")
             # print()
             if build_cell_vertices_wide:
                 left_vtx_x = cell_xpos - side_length
@@ -111,17 +118,20 @@ class HexagonalMeshBoxBuilder:
         """ Finding number of hexagon columns that will fit in box. Note: each row will either have 'even' or 'odd' columns.
             Columns are counted by vertical series of hexagons, not zig-zags.
             Number is rounded down to the largest possible odd # of columns.
-         The first cell has width hex_w. Each additional hexagon adds width 1.5*hex_w.
-         So for n_cells, total width is = hex_w + (n_cells - 1)*1.5*hex_w
-                              width_tot = hex_w*((3/2)*n_cells - 1/2)
-                              width_tot / (hex_w*3/2) +1/2 = n_cells
+         The first cell has width hex_w=2*side_length. Each additional hexagon adds width 1.5*side_length.
+         So for n_cells, total width is = 2*side_length + (n_cells - 1)*1.5*side_length
+                              width_tot = (1.5*n_cells - 1.5 + 2.0)*side_length
+                              width_tot / side_length = 1.5*n_cells + 0.5
+                              n_cells = (2/3)*(width_tot / side_length - 0.5)
          So finding n_cells:
         """
         hex_w = side_length*2
-        num_cell_columns = math.floor((box_lx / (hex_w*(3/2))) + (1/2))
+        num_cell_columns = math.floor( (2/3)* ( box_lx / side_length - 1/2 )  )
         
         # Round down to odd number
         num_cell_columns_odd = ( (num_cell_columns - 1)//2 )*2 + 1
+        
+        # print("Num cell columns: {}".format(num_cell_columns))
         
         return num_cell_columns_odd
     
@@ -165,9 +175,18 @@ class HexagonalMeshBoxBuilder:
     
     @classmethod
     def _calculate_vtx_row_y_positions(cls, side_length, n_cell_rows):
+        assert n_cell_rows % 2 == 1, "number of cell rows should be odd"
+        
         hex_h = side_length*math.sqrt(3)
         
-        return (np.arange(n_cell_rows + 2) - (n_cell_rows/2)) * (hex_h/2)
+        vtx_row_indices = np.arange(n_cell_rows + 2)
+        
+        center_vtx_row_idx = n_cell_rows // 2 + 1
+        
+        vtx_row_y_positions = (vtx_row_indices - center_vtx_row_idx) * (hex_h / 2)
+        
+        return vtx_row_y_positions
+        
     
     
     @classmethod
@@ -185,8 +204,10 @@ class HexagonalMeshBoxBuilder:
             print("Number of cell columns: {}".format(num_cell_columns))
             print("Number of cell rows: {}".format(num_cell_rows))
         
-        cell_row_ypositions = cls._calculate_hexagon_row_y_positions(num_cell_rows, hex_h)
         vtx_row_ypositions = cls._calculate_vtx_row_y_positions(side_length=side_length, n_cell_rows=num_cell_rows)
+        if verbose:
+            print("Vertex row y positions: ", vtx_row_ypositions)
+        # exit()
         
         vtx_rows = []
         for vtx_row_idx in range(num_cell_rows + 2):
@@ -211,8 +232,8 @@ class HexagonalMeshBoxBuilder:
         
         
         if verbose:
-            print("N cells in odd rows: {}".format(n_cells_in_ODD_rows))
-            print("N cells in even rows: {}".format(n_cells_in_EVEN_rows))
+            # print("N cells in odd rows: {}".format(n_cells_in_ODD_rows))
+            # print("N cells in even rows: {}".format(n_cells_in_EVEN_rows))
             print("BUILDING CELL ROWS")
         
         cells_map = {}
@@ -223,7 +244,7 @@ class HexagonalMeshBoxBuilder:
         # Assign cells to their corresponding vertices
         
         for c_row_idx in range(num_cell_rows):
-            cell_centers_x, cell_column_indices= cls._generate_cell_row_xpositions(
+            _, cell_column_indices= cls._generate_cell_row_xpositions(
                 side_length=side_length,
                 cell_row_idx=c_row_idx,
                 num_cell_rows=num_cell_rows,
@@ -231,12 +252,7 @@ class HexagonalMeshBoxBuilder:
                 verbose=verbose,
             )
             
-            if len(cell_centers_x) != len(cell_column_indices):
-                print("Cell center x values: {}".format(cell_centers_x))
-                print("Cell column indices: {}".format(cell_column_indices))
-                raise ValueError("Expected number of cell centers to match number of cell column indices")
-            
-            for cell_x_pos, c_col_idx in zip(cell_centers_x, cell_column_indices):
+            for c_col_idx in cell_column_indices:
                 # Ordered list of vertices that correspond to cell at this index
                 cell_vertices = [
                     vtx_rows[c_row_idx][c_col_idx],
@@ -279,8 +295,8 @@ class HexagonalMeshBoxBuilder:
                 
                 cells_map[cell_id] = {
                     "vertices": matching_vertex_ids,
-                    "center_x": cell_x_pos,
-                    "center_y": cell_row_ypositions[c_row_idx],
+                    # "center_x": cell_x_pos,
+                    # "center_y": cell_row_ypositions[c_row_idx],
                 }
                 if verbose:
                     print("    Adding cell '{cell_id}'... column index={cell_colidx}".format(
@@ -342,12 +358,13 @@ class HexagonalCellMesh:
     
     
     @classmethod
-    def _vtx_angle_to(cls, vtx1, vtx2):
+    def _vtx_angle_to(cls, vtx1, vtx2, verbose=False):
         x1, y1 = vtx1["x"], vtx1["y"]
         x2, y2 = vtx2["x"], vtx2["y"]
         
         if x2-x1 == 0 and y1-y2 == 0:
-            print("x1,y1:{},{}     x2,y2:{},{}".format(x1,y1,x2,y2))
+            if verbose:
+                print("x1,y1:{},{}     x2,y2:{},{}".format(x1,y1,x2,y2))
             raise Exception("Coincident vertices")
         r1 = x1 + 1j*y1
         r2 = x2 + 1j*y2
@@ -396,7 +413,7 @@ class HexagonalCellMesh:
             next_candidates = current_vtx["neighbours"]
             next_candidates = [vid for vid in next_candidates if vid != prev_vtx_id]
             try:
-                neighbor_angles = [cls._vtx_angle_to(current_vtx, vertices_map[neigh_id]) for neigh_id in next_candidates]
+                neighbor_angles = [cls._vtx_angle_to(current_vtx, vertices_map[neigh_id],verbose=verbose) for neigh_id in next_candidates]
             except:
                 print("All vertices: ")
                 for vtx_id, vtx in vertices_map.items():
@@ -452,6 +469,7 @@ class HexagonalCellMesh:
         side_length,
         box_lx,
         box_ly,
+        verbose=False,
     ):
         self.side_length = side_length
         self.box_lx = box_lx
@@ -459,10 +477,10 @@ class HexagonalCellMesh:
         self.cells_map = None
         self.vertices_map = None
         
-        self._build_cells()
+        self._build_cells(verbose=verbose)
     
     def _build_cells(self,verbose=False):
-        tissue_box = HexagonalMeshBoxBuilder.build_hex_tissue(self.side_length, self.box_lx, self.box_ly)    
+        tissue_box = HexagonalMeshBoxBuilder.build_hex_tissue(self.side_length, self.box_lx, self.box_ly, verbose=verbose)    
         self.cells_map, self.vertices_map = tissue_box["cells_map"], tissue_box["vertices_map"]
         
         if verbose:
@@ -565,9 +583,11 @@ class HexagonalCellMesh:
         
         tiss_state = TissueState(
             geometry=tiss_geometry,
-            vertex_groups={},
+            vertex_groups={
+                "all": VertexGroup([vid for vid in vertex_topologies]),
+            },
             cell_groups={
-                "regular": CellGroup([cid for cid in cell_topologies if cid != boundary_cell_id]),
+                "all": CellGroup([cid for cid in cell_topologies]),
                 "boundary": CellGroup([boundary_cell_id]),
             },
         )

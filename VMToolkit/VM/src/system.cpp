@@ -238,7 +238,7 @@ namespace VMTutorial
       .def_readonly("id", &Vertex<Property>::id)
       .def_readonly("erased", &Vertex<Property>::erased)
       .def_readwrite("boundary", &Vertex<Property>::boundary)
-      // .def_readonly("coordination", &Vertex<Property>::coordination)
+      .def_readonly("coordination", &Vertex<Property>::coordination)
       .def("he", [](Vertex<Property>& v) { return *(v.he()); })
       .def("force", [](Vertex<Property>& v) { return v.data().force; })
       .def("vel", [](Vertex<Property>& v) { return v.data().vel; })

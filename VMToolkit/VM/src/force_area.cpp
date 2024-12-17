@@ -50,21 +50,21 @@ namespace VMTutorial
 		return farea_vec;
 	}
 
-	double ForceArea::energy(const Face<Property> &f)
-	{
-		double A = _sys.mesh().area(f);
+	// double ForceArea::energy(const Face<Property> &f)
+	// {
+	// 	double A = _sys.mesh().area(f);
 		
-		if (f.outer || f.erased)
-			return 0.0;
+	// 	if (f.outer || f.erased)
+	// 		return 0.0;
 
-		double A0;
-		double kappa = 0.0;
-		if (enabled_for_faceidx(f.id)) {
-			A0  = _A0.at(f.id);
-			kappa = _kappa.at(f.id);
-		}
+	// 	double A0;
+	// 	double kappa = 0.0;
+	// 	if (enabled_for_faceidx(f.id)) {
+	// 		A0  = _A0.at(f.id);
+	// 		kappa = _kappa.at(f.id);
+	// 	}
 
-		double dA = A - A0;
-		return 0.5 * kappa * dA * dA;
-	}
+	// 	double dA = A - A0;
+	// 	return 0.5 * kappa * dA * dA;
+	// }
 }

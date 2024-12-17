@@ -12,7 +12,8 @@ from simcode.tissue_builder.hexagonal import HexagonalCellMesh
 from simcode.sim_model.sim_model import SimModel
 from simcode.sim_model.vm_state import (
     VMState, SimulationSettings, IntegratorSettings, AllForces, CellGroupForces,
-    VertexGroupForces,CellAreaForce,CellPerimeterForce,
+    VertexGroupForces, CellAreaForce, CellPerimeterForce, ConstantVertexForce, 
+    # VertexGroup,
 )
 
 
@@ -24,12 +25,10 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
     
-    p0_shapefac = 3.6
     A0_model = 5
     P0_model = 6.0
-    # kappa = 1.0     # area stiffness
     gamma = 0.1
-    kappa = 0.1    # perimeter stiffness
+    kappa = 0.1  
     
     analytical_predictions = HexagonalModel().find_rest_size_of_hexagon(
         A_0=A0_model,
@@ -47,6 +46,7 @@ if __name__ == "__main__":
         side_length=rest_side_length*1.1,
         box_lx=args.box_lx,
         box_ly=args.box_ly,
+        verbose=True,
     )
     tiss_topology, tiss_init_state = cm.build_vm_state()#verbose=True)
     
@@ -60,22 +60,22 @@ if __name__ == "__main__":
             ),
             force_settings=AllForces(
                 cell_forces=CellGroupForces(group_forces={
-                    "regular": [
+                    "all": [
                         CellAreaForce(A0=A0_model, kappa=kappa),
                         CellPerimeterForce(gamma=gamma, lam=P0_model*gamma),
                     ]
                 }),
-                vertex_forces=VertexGroupForces(vertex_group_forces={}),
+                vertex_forces=VertexGroupForces(vertex_group_forces={
+                    "all": [
+                        ConstantVertexForce(f_x=0.1,f_y=0)
+                    ]
+            # const_vtx_prop_force_configs.append(const_force_conf_dict)
+                    
+                }),
             )
         )
     )
-    # print(tiss_topology.to_json())
-    # print(tiss_state.to_json())
-    # print
-    # exit()
     
-    # cm.set_all_A0(A0_model)
-    # cm.set_all_P0(P0_model)
     
     
     print("MODEL PARAMS")
@@ -115,13 +115,21 @@ if __name__ == "__main__":
     
     # sim_model.configure_integrators(verbose=True)
 
-    step_size = 30      # Step counter in terms of time units
+    step_size =100      # Step counter in terms of time units
     
     ext_forcing_on = []
     checkpoint_fps = []
     # Pulling on the passive system
     
-    N_checkpoints = 60
+    ckpt_dir = "scratch"
+    if not os.path.exists(ckpt_dir):
+        raise Exception("could not find {}".format(ckpt_dir))
+    
+    for fn in os.listdir(ckpt_dir):
+        if fn.startswith("res") and fn.endswith(".json"):
+            os.remove(os.path.join(ckpt_dir, fn))
+    
+    N_checkpoints =20
     for i in range(N_checkpoints):
         ckpt_fp = "scratch/res{}.json".format(str(i).zfill(3))
         json_str = sim_model.dump_cpp_json()

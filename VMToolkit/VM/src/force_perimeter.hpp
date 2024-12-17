@@ -31,8 +31,8 @@ namespace VMTutorial
 
 		double tension(const HalfEdge<Property> &) override;
 
-		// Energy calculation
-		double energy(const Face<Property> &) override;
+		// // Energy calculation
+		// double energy(const Face<Property> &) override;
 
 		// set all parameters for a given type
 		// void set_params(const string &cell_type, const params_type &params) override
@@ -82,31 +82,27 @@ namespace VMTutorial
 			for (size_t i = 0; i < fids.size(); ++i) {
 				int fid = fids[i];
 				const params_type& fparam = params.at(i);
-				_force_enabled_mask_by_cell_index.at(i) = true;
+				
+				_force_enabled_mask_by_cell_index.at(fid) = true;
 				_gamma.at(fid) = fparam.at("gamma");
 				_lambda.at(fid) = fparam.at("lambda");
 			}
 		}
-
-
-      void set_flag(const string& flag) override   {
-        throw runtime_error("No flags implemented for ForcePerimeter");
-      }
       
-      bool enabled_for_faceidx(int fid, bool verbose) {
-        if (fid >= _force_enabled_mask_by_cell_index.size()) return false;
-        
-        bool is_enabled = _force_enabled_mask_by_cell_index[fid];
-		
-		if (verbose)
-		{
-			if (is_enabled) {
-				cout << "Confirmed that perimeter force is on for fid=" << fid << endl;
+		bool enabled_for_faceidx(int fid, bool verbose) {
+			if (fid >= _force_enabled_mask_by_cell_index.size()) return false;
+			
+			bool is_enabled = _force_enabled_mask_by_cell_index[fid];
+			
+			if (verbose)
+			{
+				if (is_enabled) {
+					cout << "Confirmed that perimeter force is on for fid=" << fid << endl;
+				}
 			}
+			
+			return is_enabled;
 		}
-		
-		return is_enabled;
-      }
     
     private:
 		vector<bool> _force_enabled_mask_by_cell_index;
