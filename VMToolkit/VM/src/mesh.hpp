@@ -52,7 +52,7 @@ namespace VMTutorial
 		void add_edge(const Edge<Property> &e) { _edges.push_back(e); }
 		void add_halfedge(const HalfEdge<Property> &he) { _halfedges.push_back(he); }
 		void set_box(const shared_ptr<Box> &box) { _box = box; }
-		void add_face(const vector<int> &vert_ids, bool erased = false, bool verbose=false);
+		void add_face(int face_id, const vector<int> &vert_ids, bool erased = false, bool verbose=false);
 
 
 		void wipe()
@@ -96,7 +96,7 @@ namespace VMTutorial
 		double area(const Face<Property> &) const;
 		double perim(const Face<Property> &) const;
 		double len(const Edge<Property> &);
-		int coordination(const Vertex<Property> &);
+		// int coordination(const Vertex<Property> &);
 		int face_sides(const Face<Property> &);
 		bool is_boundary_face(const Face<Property> &);
 
@@ -358,9 +358,9 @@ namespace VMTutorial
 	template <typename Property>
 	void Mesh<Property>::tidyup()
 	{
-		for (auto& v : _vertices)
-			if (!v.erased)
-				v.coordination = this->coordination(v);
+		// for (auto& v : _vertices)
+		// 	if (!v.erased)
+		// 		v.coordination = this->coordination(v);
 
 		for (auto& e : _edges)
 		{
@@ -407,17 +407,17 @@ namespace VMTutorial
 		return (e.he()->to()->r - e.he()->from()->r).len();
 	}
 
-	template <typename Property>
-	int Mesh<Property>::coordination(const Vertex<Property> &v)
-	{
-		if (v.erased)
-			return -1;
-		int i = 0;
-		for (auto he : v.circulator())
-			i++;
+	// template <typename Property>
+	// int Mesh<Property>::coordination(const Vertex<Property> &v)
+	// {
+	// 	if (v.erased)
+	// 		return -1;
+	// 	int i = 0;
+	// 	for (auto he : v.circulator())
+	// 		i++;
 
-		return i;
-	}
+	// 	return i;
+	// }
 
 	template <typename Property>
 	int Mesh<Property>::face_sides(const Face<Property> &f)

@@ -43,25 +43,42 @@ namespace VMTutorial
 
       ForceCompute(const ForceCompute&) = delete;
 
-      void compute_forces()
-      {
-        for (auto v : _sys.mesh().vertices())
-          if (!v.erased)
-            this->compute(v);
-      }
+      // void compute_forces()
+      // {
+      //   for (auto v : _sys.mesh().vertices())
+      //     if (!v.erased)
+      //       this->compute(v);
+      // }
       
-      void compute(Vertex<Property> &v)
+      // @TODO remove this from stuff - does compute change the force value or not?
+      // i might accidentally use the wrong one and change it twice at some point...
+      void compute(Vertex<Property> &v, bool verbose=false)
       {
+        if (verbose)
+        {
+          cout << "ForceCompute::compute(vertex) - Computing force on vector... " << v.id << endl;
+        }
         v.data().force = Vec(0.0,0.0);
-        for (auto he : v.circulator())
-          v.data().force += this->compute(v, he);
+        for (auto he : v.circulator()) {
+          v.data().force += this->compute(v, he, verbose);
+        }
+        if (verbose)
+        {
+          cout << "  TOTAL force on vector " << v.id << ": " << v.data().force.x << ", " << v.data().force.y << endl;
+        }
       }
 
-      Vec compute(Vertex<Property> &v, const HalfEdge<Property> &he)
+      Vec compute(Vertex<Property> &v, const HalfEdge<Property> &he, bool verbose=false)
       {
+        
+        if (verbose)
+        {
+          cout << "ForceCompute::compute(vertex, he) - computing force for vertex " << v.id << " half edge " << he.idx() << endl;
+        }
         Vec ftot(0,0);
-        for (auto& f : this->factory_map)
-          ftot += f.second->compute(v, he);
+        for (auto& f : this->factory_map) {
+          ftot += f.second->compute(v, he, verbose);
+        }
         return ftot;
       }
 
@@ -97,7 +114,7 @@ namespace VMTutorial
       //     throw runtime_error("set_params: Force type " + fname + " is not used in this simulation.");
       // }
       
-      void set_face_params_facewise(const string& fname, const vector<int>& fids, const vector<params_type>& params)
+      void set_face_params_facewise(const string& fname, const vector<int>& fids, const vector<params_type>& params, bool verbose)
       {
         if (!(fids.size() == params.size())) {
           throw runtime_error(
@@ -105,7 +122,7 @@ namespace VMTutorial
         }
         
         if (this->factory_map.find(fname) != this->factory_map.end()) {
-            this->factory_map[fname]->set_face_params_facewise(fids, params);
+            this->factory_map[fname]->set_face_params_facewise(fids, params, verbose);
         }
         else {
           throw runtime_error("ForceCompute::set_params_facewise: Force type " + fname + " is not used in this simulation.");

@@ -47,7 +47,7 @@ namespace VMTutorial
       virtual ~Force() { }
         
       // computes force on vertex by a given edge
-      virtual Vec compute(const Vertex<Property>&, const HalfEdge<Property>&) = 0;  
+      virtual Vec compute(const Vertex<Property>&, const HalfEdge<Property>&, bool verbose=false) = 0;  
       
       // compute edge tension for handling 4-vertices (and moves that computation out of integrator)
       // takes care of correct type of force law that way
@@ -59,7 +59,7 @@ namespace VMTutorial
       // // // set all parameters for a given type
       // virtual void set_params(const string&, const params_type&) = 0;
       
-      virtual void set_face_params_facewise(const vector<int>& fids, const vector<params_type>& params) = 0;
+      virtual void set_face_params_facewise(const vector<int>& fids, const vector<params_type>& params, bool verbose) = 0;
 
       // set all vector-valued parameters for a given type
       // virtual void set_vec_params(const string&, const vec_params_type&) = 0;

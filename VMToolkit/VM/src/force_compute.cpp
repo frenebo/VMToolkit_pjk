@@ -18,7 +18,7 @@ namespace VMTutorial
 			.def("set_face_params_facewise", &ForceCompute::set_face_params_facewise)
 			.def("set_flag", &ForceCompute::set_flag)
 			.def("add", &ForceCompute::add_force)
-			.def("compute", &ForceCompute::compute_forces)
+			// .def("compute", &ForceCompute::compute_forces)
 			.def("energy", &ForceCompute::total_energy);
 	}
 }

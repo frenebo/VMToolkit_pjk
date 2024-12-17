@@ -13,7 +13,7 @@ class Face:
         self.idx = idx
         self.he = None
         self.outer = False
-        self.type = None
+        # self.type = None
         self.erased = False
         self.n = None
         self.A0 = None

@@ -1,5 +1,6 @@
 import math
 import numpy as np
+from ..sim_model.vm_state import VertexTopology, VertexGeometry, CellTopology, TissueTopology, TissGeometry, TissueState, CellGroup
 import json
 
 class HexagonalMeshBoxBuilder:
@@ -424,9 +425,6 @@ class HexagonalCellMesh:
             next_vtx_id = next_candidates[selected_cand_idx]
             next_angle = neighbor_angles[selected_cand_idx]
             
-            # if next_vtx_id == 5:
-            #     print(neigh)
-                # print(next_candidates)
             if next_vtx_id in boundary_vertices:
                 if next_vtx_id == boundary_vertices[0]:
                     # Then we're circled back
@@ -444,6 +442,7 @@ class HexagonalCellMesh:
         
         return {
             "id": cell_id,
+            "outer": True,
             "vertices": boundary_vertices,
         }
     
@@ -472,9 +471,9 @@ class HexagonalCellMesh:
             print(self.vertices_map)
     
         
-    def build_vm_mesh_obj(self, verbose=False):
+    def build_vm_state(self, verbose=False):
         """
-        Generates a tissue mesh in a JSON format that VMTutorial code will understand.
+        Generates a vertex model state object
         """
         
         if self.cells_map is None or self.vertices_map is None:
@@ -515,6 +514,7 @@ class HexagonalCellMesh:
             
             vm_vertices.append({
                 "boundary": vtx_is_boundary,
+                # "num_face": 
                 "id": vertex_id,
                 "r": [vtx_x, vtx_y],
             })
@@ -531,26 +531,30 @@ class HexagonalCellMesh:
             
             vertex_topologies[vid] = VertexTopology(
                 is_boundary=v["boundary"],
+                # num_faces=v["num_faces"],/
             )
             
             vertex_geometries[vid] = VertexGeometry(
                 x=v["r"][0],
-                x=v["r"][1],
+                y=v["r"][1],
             )
         
         for f in vm_faces:
             fid = f['id']
-            if isintance(fid, int):
+            if isinstance(fid, int):
                 fid = str(fid)
             
             vertex_ids_in_face = []
-            for vid in f["vertex_ids"]:
+            for vid in f["vertices"]:
                 if isinstance(vid, int):
                     vid = str(vid)
                 
                 vertex_ids_in_face.append(vid)
         
-            cell_topologies[fid] =CellTopology(vertices=vertex_ids_in_face)
+            cell_topologies[fid] =CellTopology(
+                vertices=vertex_ids_in_face,
+                is_outer=f["outer"],
+                )
         
         tiss_topology = TissueTopology(
             cell_topologies=cell_topologies,
@@ -571,17 +575,3 @@ class HexagonalCellMesh:
         return tiss_topology, tiss_state
         
         
-        
-        # if verbose:
-        #     print("Box:")
-        #     print("  " + str(data["mesh"]["box"]))
-        #     print("Faces:")
-        #     for f in data["mesh"]["faces"]:
-        #         print(f)
-        #     print("Vertices:")
-        #     for v in data["mesh"]["vertices"]:
-        #         print(v)
-        #     print("Old to new vertex id map: {}".format(old_to_new_vid_map))
-        #     # print(json.dumps(data, indent=4))
-        
-        # return data

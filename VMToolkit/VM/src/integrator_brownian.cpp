@@ -21,6 +21,9 @@ namespace VMTutorial
     double sqrt_dt = sqrt(_dt);
     // Compute force on each vertex
     size_t logvi = 0;
+    if (verbose) {
+      cout << "Total number of vertices in system - " << _sys.mesh().vertices().size() << endl;
+    }
     for (auto& v : _sys.mesh().vertices())
     {
       if (!v.erased)
@@ -29,7 +32,7 @@ namespace VMTutorial
           cout << "  first round Computing force on vertex " << logvi << endl;
         }
         logvi++;
-        _force_compute.compute(v);
+        _force_compute.compute(v, verbose);
       }
     }
     if (verbose) {

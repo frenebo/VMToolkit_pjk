@@ -119,7 +119,7 @@ class Mesh:
                 vid = int(sp_line[0])
                 r = [float(sp_line[1]), float(sp_line[2])]
                 self.__add_vertex(vid, Vec(r, self.box))
-                self.vertices[-1].type = 'regular'
+                # self.vertices[-1].type = 'regular'
                 self.vertices[-1].boundary = False
                 self.vertices[-1].constraint = 'none'
                 if len(sp_line) > 3:
@@ -137,7 +137,7 @@ class Mesh:
                 self.__add_face(fid, verts) 
                 self.faces[-1].A0 = A0
                 self.faces[-1].n = n
-                self.faces[-1].type = "passive"
+                # self.faces[-1].type = "passive"
                 self.faces[-1].property = prop
         self.num_inner_faces = list(map(lambda x: not x.outer, self.faces)).count(True)
     
@@ -172,7 +172,7 @@ class Mesh:
                 vidmap[v["id"]] = vid
                 if include_erased or not v["erased"]:
                     self.__add_vertex(vid, Vec(v["r"],self.box))
-                    self.vertices[-1].type = v["type"]
+                    # self.vertices[-1].type = v["type"]
                     self.vertices[-1].boundary = v["boundary"]
                     self.vertices[-1].constraint = v["constraint"]
                     self.vertices[-1].erased = v["erased"]
@@ -185,8 +185,8 @@ class Mesh:
                         self.__add_face(f["id"], fverts, f["erased"])
                     else:
                         self.__add_face(f["id"], fverts)
-                    if "type" in f:
-                        self.faces[-1].type = f["type"]
+                    # if "type" in f:
+                    #     self.faces[-1].type = f[
                     if ("myo" in f or "tension" in f) and not f["erased"]:           # Read in myosin and tension if they exist
                         face = self.faces[-1]
                         he = face.he 
@@ -326,7 +326,7 @@ class Mesh:
             vd = {}
             vd["id"] = v.idx 
             vd["r"] = v.r.to_list()
-            vd["type"] = v.type
+            # vd["type"] = v.type
             vd["erased"] = False 
             vd["boundary"] = v.boundary 
             vd["constraint"] = v.constraint
@@ -336,7 +336,7 @@ class Mesh:
             face = {}
             face["id"] = f.idx 
             face["outer"] = f.outer
-            face["type"] = f.type
+            # face["type"] = f.type
             if f.property:
                 face["property"] = f.property 
             verts = []

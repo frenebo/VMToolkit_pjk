@@ -83,7 +83,7 @@ namespace VMTutorial
 		}
 
 		// Member functions
-		int idx() { return _idx; }
+		int idx() const { return _idx; }
 		void set_idx(int idx) { _idx = idx; }
 
 		typename Property::HEProperty &data() { return _property; }
@@ -182,7 +182,7 @@ namespace VMTutorial
 		int id;			  // unique id
 		bool erased;	  // marks vertices that are not connected to the rest of the mesh, but are still in memory
 		bool boundary;	  // if true, vertex is on boundary
-		int coordination; // number of neighbours this vertex has
+		// int coordination; // number of neighbours this vertex has
 
 		friend class Mesh<Property>; // This is used to we can read in the mesh without too much boilerplate code
 

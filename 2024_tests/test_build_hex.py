@@ -16,4 +16,4 @@ if __name__ == "__main__":
     )
     cm.set_all_A0(4)
     cm.set_all_P0(7.2)
-    print(cm.build_vm_mesh())
+    print(cm.build_vm_state())

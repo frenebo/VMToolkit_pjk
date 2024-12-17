@@ -2,29 +2,34 @@ import numpy as np
 import argparse
 import json
 import os
-from analytic_tools.find_hexagon_rest_area import HexagonalModel, find_hexagon_rest_area
+from simcode.analytic_tools.find_hexagon_rest_area import HexagonalModel, find_hexagon_rest_area
 
 from VMToolkit.config_builder.open.honeycomb_lattice import HoneycombLattice
 # from VMToolkit.VM import Tissue, System, ForceCompute, Integrate, Topology, Dump, Simulation, Vec
 from VMToolkit.VMAnalysis.utils.HalfEdge import Mesh
 
-from tissue_builder.hexagonal import HexagonalCellMesh
-from sim_model.sim_model import SimModel
+from simcode.tissue_builder.hexagonal import HexagonalCellMesh
+from simcode.sim_model.sim_model import SimModel
+from simcode.sim_model.vm_state import (
+    VMState, SimulationSettings, IntegratorSettings, AllForces, CellGroupForces,
+    VertexGroupForces,CellAreaForce,CellPerimeterForce,
+)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--fpull", default=-0.2,type=float, help="Force to squeeze/stretch")
-    parser.add_argument("--box_lx", default=8.0,type=float, help="X size of tissue")
-    parser.add_argument("--box_ly", default=8.0,type=float, help="Y size of tissue")
+    parser.add_argument("--box_lx", default=1.0,type=float, help="X size of tissue")
+    parser.add_argument("--box_ly", default=1.0,type=float, help="Y size of tissue")
     
     args = parser.parse_args()
     
     p0_shapefac = 3.6
-    A0_model = 1
-    P0_model = 0.2
-    kappa = 1.0     # area stiffness
-    gamma = 0.15    # perimeter stiffness
+    A0_model = 5
+    P0_model = 6.0
+    # kappa = 1.0     # area stiffness
+    gamma = 0.1
+    kappa = 0.1    # perimeter stiffness
     
     analytical_predictions = HexagonalModel().find_rest_size_of_hexagon(
         A_0=A0_model,
@@ -39,13 +44,38 @@ if __name__ == "__main__":
     
     
     cm = HexagonalCellMesh(
-        side_length=rest_side_length*0.8,
+        side_length=rest_side_length*1.1,
         box_lx=args.box_lx,
         box_ly=args.box_ly,
     )
+    tiss_topology, tiss_init_state = cm.build_vm_state()#verbose=True)
     
-    cm.set_all_A0(A0_model)
-    cm.set_all_P0(P0_model)
+    vm_initial_state = VMState(
+        tiss_topology=tiss_topology,
+        current_state=tiss_init_state,
+        sim_settings=SimulationSettings(
+            integrator_settings=IntegratorSettings(
+                vertex_friction_gamma=0.1,
+                step_dt=0.1,
+            ),
+            force_settings=AllForces(
+                cell_forces=CellGroupForces(group_forces={
+                    "regular": [
+                        CellAreaForce(A0=A0_model, kappa=kappa),
+                        CellPerimeterForce(gamma=gamma, lam=P0_model*gamma),
+                    ]
+                }),
+                vertex_forces=VertexGroupForces(vertex_group_forces={}),
+            )
+        )
+    )
+    # print(tiss_topology.to_json())
+    # print(tiss_state.to_json())
+    # print
+    # exit()
+    
+    # cm.set_all_A0(A0_model)
+    # cm.set_all_P0(P0_model)
     
     
     print("MODEL PARAMS")
@@ -68,27 +98,30 @@ if __name__ == "__main__":
     # # Create the initial configuration and read it
     # #
     # # #################################################################
-    sim_model = SimModel(verbose=True)
+    sim_model = SimModel(verbose=False)
     
-    sim_model.configure_forces(P0_model, gamma, kappa, verbose=True)
+    sim_model.load_from_json_state(vm_initial_state.to_json())#, verbose=True)
+    # exit()s
     
-    sim_model.load_json_obj(
-        cm.build_vm_mesh_obj(verbose=True),
-    )
+    # sim_model.configure_forces(P0_model, gamma, kappa, verbose=True)
+    
+    # sim_model.load_json_obj(
+    #     cm.build_vm_state(verbose=True),
+    # )
     
     
     # with open("scratch/forgodot.json", "w") as f:
     #     json.dump(sim_model.get_json_state(), f)
     
-    sim_model.configure_integrators(verbose=True)
+    # sim_model.configure_integrators(verbose=True)
 
-    step_size = 500      # Step counter in terms of time units
+    step_size = 30      # Step counter in terms of time units
     
     ext_forcing_on = []
     checkpoint_fps = []
     # Pulling on the passive system
     
-    N_checkpoints = 40
+    N_checkpoints = 60
     for i in range(N_checkpoints):
         ckpt_fp = "scratch/res{}.json".format(str(i).zfill(3))
         json_str = sim_model.dump_cpp_json()
@@ -108,7 +141,9 @@ if __name__ == "__main__":
         else:
             ext_forcing_on.append(False)
         
-        sim_model.run_steps(step_size, verbose=True)
+        sim_model.run_steps(step_size)#, verbose=True)
+        
+        # exit()
     
     print("Running analysis on simulation results")
     for ckpt_idx, ckpt_fp in enumerate(checkpoint_fps):
@@ -122,7 +157,7 @@ if __name__ == "__main__":
         cell_heights = []
         passive_real_cells= []
         for f in mesh.faces:
-            if f.type=='passive' and f.outer == False:
+            if f.outer == False:
                 
                 cell_vertices = np.array([v.to_list() for v in f.vertex_coords()],dtype=float)
                 
@@ -134,7 +169,7 @@ if __name__ == "__main__":
                 
                 passive_real_cells.append(f)
         
-        print(mesh.faces[len(mesh.faces)//3].vertex_coords())
+        # print(mesh.faces[len(mesh.faces)//3].vertex_coords())
         areas = [face.area() for face in passive_real_cells]
         areas = np.array(areas)
 
@@ -155,5 +190,9 @@ if __name__ == "__main__":
             print("    strain_x={} strain_y={}, poisson_r={}".format(strain_x, strain_y, -strain_y/strain_x))
         else:
             pass
+        
+        if ckpt_idx == len(checkpoint_fps) - 1:
+            print([v.to_list() for v in passive_real_cells[0].vertex_coords()])
+    # print()
     
 

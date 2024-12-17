@@ -11,7 +11,7 @@ class Vertex:
     def __init__(self, idx, r):
         self.idx = idx
         self.r = r
-        self.type = None
+        # self.type = None
         self.boundary = False
         self.constraint = None
         self.erased = False

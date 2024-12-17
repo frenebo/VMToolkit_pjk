@@ -6,50 +6,67 @@
 
 class CellTopology:
     @staticmethod
-    def from_json(self, jobj):
+    def from_json(jobj):
         vertex_ids = jobj["vertex_ids"]
         return CellTopology(
             vertices=vertex_ids,
-            # is_boundary=jobj["is_boundary"]
+            is_outer=jobj["is_outer"]
         )
         
-    def __init__(self, vertices):#, is_boundary):
+    def __init__(self, vertices, is_outer):#, is_boundary):
         self._vertex_ids=vertices
+        self._is_outer=is_outer
         # self._is_boundary = is_boundary
     
     def vertex_ids(self):
         return self._vertex_ids
     
-    def is_boundary(self):
-        return self._is_boundary
+    def is_outer(self):
+        return self._is_outer
+    
     
     def to_json(self):
         return {
             "vertex_ids": self._vertex_ids,
+            "is_outer": self._is_outer,
             # "is_boundary": self._is_boundary,
         }
 
 class VertexTopology:
     @staticmethod
-    def from_json(self, jobj):
-        return VertexTopology()
+    def from_json(jobj):
+        return VertexTopology(
+            is_boundary=jobj["is_boundary"],
+            # num_faces=jobj["num_faces"],
+        )
     
-    def __init__(self):
-        pass
+    def __init__(self, is_boundary):
+        self._is_boundary = is_boundary
+        # pass
+    
+    def is_boundary(self):
+        return self._is_boundary
+    
+    # def num_faces(self):
+    #     return self._num_faces
     
     def to_json(self):
-        return {}
+        return {
+            "is_boundary": self._is_boundary,
+            # "num_faces": self._num_faces
+        }
 
 class TissueTopology:
     @staticmethod
-    def from_json(self, jobj):
+    def from_json(jobj):
         cell_topologies_parsed = {}
         
-        for cell_id, cell_top_json in jobj["cells"]:
+        for cell_id, cell_top_json in jobj["cells"].items():
             cell_topologies_parsed[cell_id] = CellTopology.from_json(cell_top_json)
         
         vertex_topologies_parsed = {}
-        for vtx_id, vtx_top_json in jobj["vertices"]:
+        # if "vertices": not in Tissue
+        for vtx_id, vtx_top_json in jobj["vertices"].items():
             vertex_topologies_parsed[vtx_id] = VertexTopology.from_json(vtx_top_json)
         
         # @TODO turn these assertions into checks that give useful exception types and messages that can be handled in a meaningful way
@@ -82,15 +99,15 @@ class TissueTopology:
     
     def to_json(self):
         json_cell_tops = {}
-        for cell_id, cell_top in self._cell_topologies:
+        for cell_id, cell_top in self._cell_topologies.items():
             json_cell_tops[cell_id] = cell_top.to_json()
         
         json_vtx_tops = {}
-        for vtx_id, vtx_top in self._vertex_topologies:
+        for vtx_id, vtx_top in self._vertex_topologies.items():
             json_vtx_tops[vtx_id] = vtx_top.to_json()
         return {
             "cells": json_cell_tops,
-            "vertex_ids": json_vtx_tops,
+            "vertices": json_vtx_tops,
         }
         
 
@@ -124,7 +141,7 @@ class TissGeometry:
     def from_json(jobj):
         vtx_geoms = {}
         
-        for vtx_id, vtx_geo_jobj in jobj["vertices"]:
+        for vtx_id, vtx_geo_jobj in jobj["vertices"].items():
             vtx_geoms[vtx_id] = VertexGeometry.from_json(vtx_geo_jobj)
         
         
@@ -140,7 +157,7 @@ class TissGeometry:
     
     def to_json(self):
         vertices_jobjdict = {}
-        for vtx_id, vtx_geo in self._vertex_geometries:
+        for vtx_id, vtx_geom in self._vertex_geometries.items():
             # self.
             vertices_jobjdict[vtx_id] = vtx_geom.to_json()
             # self.vtx
@@ -176,6 +193,9 @@ class VertexGroup:
     def __init__(self, vertex_ids):
         self._vertex_ids = vertex_ids
     
+    def vertex_ids(self):
+        return self._vertex_ids
+    
     def to_json(self):
         return {
             "vtxids": self._vertex_ids
@@ -188,10 +208,18 @@ class TissueState:
         # vertex_geoms = {}
         
         # for vid, vertex_geometry_jobj in jobj["geometry"]["vertices"]:
+        
+        vertex_groups = {}
+        for grpid, vtx_group_jobj in jobj["vertexgroups"].items():
+            vertex_groups[grpid] = VertexGroup.from_json(vtx_group_jobj)
+        
+        cell_groups = {}
+        for grpid, cell_group_jobj in jobj["cellgroups"].items():
+            cell_groups[grpid] = CellGroup.from_json(cell_group_jobj)
         return TissueState(
             geometry=TissGeometry.from_json(jobj["geometry"]),
-            vertex_groups=jobj["vertexgroups"],
-            cell_groups=jobj["cellgroups"],
+            vertex_groups=vertex_groups,
+            cell_groups=cell_groups,
         )
         
     def __init__(self, geometry, vertex_groups, cell_groups):
@@ -199,18 +227,15 @@ class TissueState:
         self._vertex_groups = vertex_groups
         self._cell_groups = cell_groups
     
+    def vertex_groups(self):
+        return self._vertex_groups
+        
+    
+    def cell_groups(self):
+        return self._cell_groups
+    
     def geometry(self):
         return self._geometry
-    # def vertex_geometries(self):
-    #     return self._vertex_geometries
-    
-    # def _geometry_to_json(self):?
-    
-    def _vertex_groups_to_json(self):
-        return self._vertex_groups
-    
-    def _cell_groups_to_json(self):
-        return self._cell_groups
     
     def to_json(self):
         """ Will return something like this:
@@ -237,10 +262,18 @@ class TissueState:
             }
         """
         
+        vtx_groups_json = {}
+        for grpid, vtx_grp in self._vertex_groups.items():
+            vtx_groups_json[grpid] = vtx_grp.to_json()
+        
+        cell_groups_json = {}
+        for grpid, cell_grp in self._cell_groups.items():
+            cell_groups_json[grpid] = cell_grp.to_json()
+        
         return {
             "geometry": self._geometry.to_json(),
-            "vertexgroups": self._vertex_groups_to_json(),
-            "cellgroups": self._cell_groups_to_json(),
+            "vertexgroups": vtx_groups_json,
+            "cellgroups": cell_groups_json,
         }
 
 class IntegratorSettings:
@@ -254,6 +287,12 @@ class IntegratorSettings:
     def __init__(self, vertex_friction_gamma, step_dt):
         self._vertex_friction_gamma = vertex_friction_gamma
         self._step_dt = step_dt
+    
+    def step_dt(self):
+        return self._step_dt
+    
+    def vtx_friction_gamma(self):
+        return self._vertex_friction_gamma
     
     def to_json(self):
         return {
@@ -276,6 +315,12 @@ class CellAreaForce:
         self._A0 = A0
         self._kappa = kappa
     
+    def A0(self):
+        return self._A0
+    
+    def kappa(self):
+        return self._kappa
+    
     def to_json(self):
         return {
             "type": "area",
@@ -294,6 +339,12 @@ class CellPerimeterForce:
     def __init__(self, gamma, lam):
         self._gamma = gamma
         self._lambda = lam
+    
+    def gamma(self):
+        return self._gamma
+    
+    def lam(self):
+        return self._lambda
     
     def to_json(self):
         return {
@@ -315,11 +366,11 @@ class CellForce:
 class CellGroupForces:
     @staticmethod
     def from_json(jobj):
-        c_groups_dict = jobj["cellgroups"]
+        # c_groups_dict = jobj["cellgroups"]
         
         # cell_groups
         parsed_groups = {}
-        for cell_group_name, forces_list in c_groups_dict.items():
+        for cell_group_name, forces_list in jobj.items():
             # forces_list = c_groups[cell_group_name]
             
             parsed_forces = []
@@ -333,6 +384,9 @@ class CellGroupForces:
     
     def __init__(self, group_forces):
         self._force_lists_by_groupname = group_forces
+
+    def force_lists_by_group(self):
+        return self._force_lists_by_groupname
     
     def to_json(self):
         
@@ -341,9 +395,7 @@ class CellGroupForces:
         for grp_name, forces_for_group in self._force_lists_by_groupname.items():
             groups_dict[grp_name] = [cell_force.to_json() for cell_force in forces_for_group]
         
-        return {
-            'cellgroups': groups_dict,
-        }
+        return groups_dict
         
         
 class ConstantVertexForce:
@@ -375,10 +427,9 @@ class VertexForce:
 
 class VertexGroupForces:
     def from_json(jobj):
-        v_groups_dict = jobj["vertexgroups"]
         
         parsed_groups = {}
-        for vtx_group_name, force_list in v_groups_dict.items():
+        for vtx_group_name, force_list in jobj.items():
             
             parsed_forces = []
             for force_obj in forces_list:
@@ -387,7 +438,7 @@ class VertexGroupForces:
             
             parsed_groups[vtx_group_name] = parsed_forces
         
-        return VertexGroupForces(vertex_forces=parsed_groups)
+        return VertexGroupForces(vertex_group_forces=parsed_groups)
     
     def __init__(self, vertex_group_forces):
         self._forces_lists_by_groupname = vertex_group_forces
@@ -398,9 +449,7 @@ class VertexGroupForces:
         for grp_name, forces_for_group in self._forces_lists_by_groupname.items():
             groups_dict[grp_name] = [vtx_force.to_json() for vtx_force in forces_for_group]
         
-        return {
-            "vertexgroups"; groups_dict,
-        }
+        return groups_dict
             
 
 class AllForces:
@@ -420,6 +469,12 @@ class AllForces:
             "cell_forces": self._cell_forces.to_json(),
             "vertex_forces": self._vertex_forces.to_json(),
         }
+    
+    def cell_group_forces(self):
+        return self._cell_forces
+    
+    def vertex_group_forces(self):
+        return self._vertex_group_forces
 
 class SimulationSettings:
     @staticmethod
@@ -433,10 +488,17 @@ class SimulationSettings:
         self._integrator_settings = integrator_settings
         self._force_settings = force_settings
     
+    def integrator_settings(self):
+        return self._integrator_settings
+    
+    def force_settings(self):
+        return self._force_settings
+        
+        
     def to_json(self):
         return {
-            "integrator_settings": self._integrator_settings.to_json(self),
-            "forces": self._force_settings.to_json(self),
+            "integrator": self._integrator_settings.to_json(),
+            "forces": self._force_settings.to_json(),
         }
 
 
@@ -444,9 +506,9 @@ class VMState:
     @staticmethod
     def from_json(jobj):
         return VMState(
-            tiss_topology=TissueTopology.from_json(jobj["topology"])
+            tiss_topology=TissueTopology.from_json(jobj["topology"]),
             current_state=TissueState.from_json(jobj["current_state"]),
-            sim_settings=SimulationSettings.from_json(jobj["simsettings"])
+            sim_settings=SimulationSettings.from_json(jobj["simsettings"]),
         )
         
     def __init__(self, tiss_topology, current_state, sim_settings):
@@ -459,6 +521,9 @@ class VMState:
     
     def current_state(self):
         return self._current_state
+    
+    def sim_settings(self):
+        return self._simulation_settings
     
     def to_json(self):
         return {

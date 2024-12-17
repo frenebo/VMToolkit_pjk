@@ -27,7 +27,7 @@ namespace VMTutorial
 		virtual ~ForcePerimeter() {}
 
 		// computes force on vertex by a given edge
-		Vec compute(const Vertex<Property> &, const HalfEdge<Property> &) override;
+		Vec compute(const Vertex<Property> &, const HalfEdge<Property> &, bool verbose=false) override;
 
 		double tension(const HalfEdge<Property> &) override;
 
@@ -65,17 +65,16 @@ namespace VMTutorial
 		// 	}
 		// }
 
-		void set_face_params_facewise(const vector<int>& fids, const vector<params_type>& params) override {
+		void set_face_params_facewise(const vector<int>& fids, const vector<params_type>& params, bool verbose) override {
 			// Expand the params if necessary
 			int max_fid = 0;
 			for (const auto& fid : fids) {
 			if (fid > max_fid) max_fid = fid;
 			}
 			
-			if (max_fid >= _gamma.size()) {
+			if (max_fid >= _force_enabled_mask_by_cell_index.size()) {
+				_force_enabled_mask_by_cell_index.resize(max_fid + 1, false);
 				_gamma.resize(max_fid + 1, 0.0);
-			}
-			if (max_fid >= _lambda.size()) {
 				_lambda.resize(max_fid + 1, 0.0);
 			}
 			
@@ -83,6 +82,7 @@ namespace VMTutorial
 			for (size_t i = 0; i < fids.size(); ++i) {
 				int fid = fids[i];
 				const params_type& fparam = params.at(i);
+				_force_enabled_mask_by_cell_index.at(i) = true;
 				_gamma.at(fid) = fparam.at("gamma");
 				_lambda.at(fid) = fparam.at("lambda");
 			}
@@ -92,8 +92,24 @@ namespace VMTutorial
       void set_flag(const string& flag) override   {
         throw runtime_error("No flags implemented for ForcePerimeter");
       }
+      
+      bool enabled_for_faceidx(int fid, bool verbose) {
+        if (fid >= _force_enabled_mask_by_cell_index.size()) return false;
+        
+        bool is_enabled = _force_enabled_mask_by_cell_index[fid];
 		
-	private:
+		if (verbose)
+		{
+			if (is_enabled) {
+				cout << "Confirmed that perimeter force is on for fid=" << fid << endl;
+			}
+		}
+		
+		return is_enabled;
+      }
+    
+    private:
+		vector<bool> _force_enabled_mask_by_cell_index;
 		vector<double> _gamma;
 		vector<double> _lambda;
 	};
