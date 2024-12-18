@@ -397,7 +397,9 @@ class CellGroupForces:
         
         return groups_dict
         
-        
+
+
+
 class ConstantVertexForce:
     @staticmethod
     def from_json(jobj):
@@ -423,7 +425,10 @@ class ConstantVertexForce:
             "f_x": self._f_x,
             "f_y": self._f_y,
         }
-    
+
+# class VertexForceDiff:
+#     @classmethod
+#     def between
 class VertexForce:
     @staticmethod
     def from_json(jobj):
@@ -431,6 +436,17 @@ class VertexForce:
             return ConstantVertexForce.from_json(jobj)
         else:
             raise ValueError("Unknown vertex force type '{}'".format(jobj["type"]))
+
+
+class VertexGroupForcesDiff:
+    @classmethod
+    def between(cls, vtx_gfs_init, vtx_gfs_final):
+        raise NotImplementedError()
+    
+    # @TODO - group forces should have identifiers, and be stored in dict, not list. this will
+    # affect the way that diff are taken...
+    # def __init__(self, )
+
 
 class VertexGroupForces:
     def from_json(jobj):
@@ -461,6 +477,40 @@ class VertexGroupForces:
         
         return groups_dict
             
+class AllForcesDiff:
+    @classmethod
+    def between(cls, allf_init, allf_final):
+        cell_group_forces_diff = CellGroupForces.diff(
+            allf_init.cell_group_forces(),
+            allf_final.cell_group_forces(),
+        )
+        
+        vertex_group_forces_diff = VertexGroupForces.diff(
+            allf_init.vertex_group_forces(),
+            allf_final.vertex_group_forces(),
+        )
+        
+        identical== (
+            cell_group_forces_diff.identical and
+            vertex_group_forces_diff.identical
+        )
+        
+        return AllForcesDiff(
+            cell_group_forces_diff,
+            vertex_group_forces_diff,
+            identical=identical,
+        )
+    
+    def __init__(
+        cell_group_forces_diff,
+        vertex_group_forces_diff,
+        identical
+        ):
+        
+        self.cell_group_forces_diff = cell_group_forces_diff
+        self.vertex_group_forces_diff = vertex_group_forces_diff
+        self.identical = identical
+    
 
 class AllForces:
     @staticmethod
@@ -486,6 +536,34 @@ class AllForces:
     def vertex_group_forces(self):
         return self._vertex_forces
 
+class SimulationSettingsDiff:
+    @classmethod
+    def between(cls, ss_init, ss_final):
+        integrator_settings_diff = IntegratorSettingsDiff.between(
+                ss_init.integrator_settings(),
+                ss_final.integrator_settings(),
+        )
+        force_settings_diff = ForceSettingsDiff.between(
+            ss_init.force_settings(),
+            ss_final.force_settings(),
+        )
+        
+        identical = (
+            integrator_settings_diff.identical and
+            force_settings_diff.identical
+        )
+        
+        return SimulationSettingsDiff(
+            integrator_settings_diff,
+            force_settings_diff,
+            identical=identical,
+        )
+    
+    def __init__(integrator_settings_diff, force_settings_diff, identical):
+        self.integrator_settings_diff = integrator_settings_diff
+        self.force_settings_diff = force_settings_diff
+        self.identical = identical
+
 class SimulationSettings:
     @staticmethod
     def from_json(jobj):
@@ -510,6 +588,38 @@ class SimulationSettings:
             "integrator": self._integrator_settings.to_json(),
             "forces": self._force_settings.to_json(),
         }
+    
+
+
+class VMStateDiff:
+    @classmethod
+    def between(cls, vms_init, vm_state_final):
+        tp_diff = TissueTopologyDiff.between(vms_init.topology(), vms_final.topology())
+        currs_diff = CurrentStateDiff.between(vms_init.current_state(), vms_final.current_state())
+        sset_diff = SimSettingsDiff.between(vms_init.sim_settings(), vms_final.sim_settings())
+        
+        identical = (
+            tp_diff.identical and
+            currs_diff.identical and
+            sset_diff.identical
+        )
+        
+        return VMStateDiff(
+            tp_diff,
+            currs_diff,
+            sset_diff,
+            identical=identical,
+        )
+        
+    def __init__(self, tiss_topology_diff, current_state_diff, sim_settings_diff,identical):
+        # return 
+        self.tissue_topology_diff = tiss_topology_diff
+        self.current_state_diff = current_state_diff
+        self.sim_settings_diff = sim_settings_diff
+        self.identical = identical
+    
+    
+        # raise NotImplementedError()
 
 
 class VMState:
@@ -520,6 +630,10 @@ class VMState:
             current_state=TissueState.from_json(jobj["current_state"]),
             sim_settings=SimulationSettings.from_json(jobj["simsettings"]),
         )
+    
+    # @classmethod
+    # def diff(init, final):
+        
         
     def __init__(self, tiss_topology, current_state, sim_settings):
         self._tissue_topology = tiss_topology

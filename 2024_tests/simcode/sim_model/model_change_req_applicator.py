@@ -68,6 +68,18 @@ class ModelChangeReqApplicator:
         
         return new_state
     
+    def _applyreq_remove_cells_from_cell_group(cls, vm_state, creq):
+        raise NotImplementedError()
+    
+    def _applyreq_remove_vertices_from_vertex_group(cls, vm_state, creq):
+        raise NotImplementedError()
+    
+    def _applyreq_add_force_to_group(cls, vm_state, creq):
+        raise NotImplementedError()
+    
+    def _applyreq_remove_force_from_group(cls, cm_state, creq):
+        raise NotImplementedError()
+    
     # @classmetho
     
     @classmethod

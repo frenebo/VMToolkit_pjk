@@ -4,7 +4,8 @@ from VMToolkit.VM import System
 from VMToolkit.VM import ForceCompute, Integrate
 from VMToolkit.VM import Topology, Dump, Simulation, Vec
 
-from .vm_state import CellAreaForce, CellPerimeterForce, ConstantVertexForce
+from ..vm_state import CellAreaForce, CellPerimeterForce, ConstantVertexForce
+# from .
 # class 
 # class CppJson
 class CppJsonTissueBuilder:
