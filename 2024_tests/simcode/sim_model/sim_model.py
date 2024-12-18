@@ -2,6 +2,8 @@ import json
 # from .vm_state import 
 from .vm_tk_wrapper import VMToolkitWrapper
 from .vm_state import VMState
+from .model_change_requests import ModelChangeRequest
+from .model_change_req_applicator import ModelChangeReqApplicator
 
 
 
@@ -26,7 +28,17 @@ class SimModel:
     def run_steps(self, n_steps, verbose=False):
         self._vm_wrapper.run_steps(n_steps, verbose=verbose)
     
-    # def select_g
+    def process_model_change_req(self, model_change_req):
+        assert isinstance(model_change_req, ModelChangeRequest)
+        
+        try:
+            ModelChangeReqApplicator.apply_request_to_vm_state(self._last_vm_state, model_change_req)
+        except:
+            print("Failed to apply model change rquest to current vm state.")
+            print("Model change req: {}".format(model_change_req))
+            print("Model change req to json: {}".format(model_change_req.to_json()))
+            raise
+        )
         
         
 

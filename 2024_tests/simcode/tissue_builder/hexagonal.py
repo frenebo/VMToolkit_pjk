@@ -91,11 +91,13 @@ class HexagonalMeshBoxBuilder:
         vertex_x_positions = []
         
         # vertices_close_to_cells = not ( (len(cell_indices_to_build_vtxs_from) % 2 == 1) ^ row_is_odd)
-        print("NUM cells wide: {}".format(num_cells_wide))
-        print("SIDE length: {}".format(side_length))
+        if verbose:
+            print("NUM cells wide: {}".format(num_cells_wide))
+            print("SIDE length: {}".format(side_length))
         for cell_idx in cell_indices_to_build_vtxs_from:
             cell_xpos = (cell_idx - (num_cells_wide // 2)) * side_length * 1.5
-            print("Cell index: {} Cell xpos: {}".format(cell_idx, cell_xpos))
+            if verbose:
+                print("Cell index: {} Cell xpos: {}".format(cell_idx, cell_xpos))
             # print("")
             # print()
             if build_cell_vertices_wide:

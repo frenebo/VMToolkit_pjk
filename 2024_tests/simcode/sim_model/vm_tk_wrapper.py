@@ -118,7 +118,7 @@ class VMToolkitWrapper:
             vertex_id_to_cpp_idx=self._ids_to_cpp_index_maps["vtx_ids_to_idx"],
             cell_id_to_cpp_face_idx=self._ids_to_cpp_index_maps["cell_ids_to_idx"],
         ))
-        print(cpp_state_json_str)
+        # print(cpp_state_json_str)
         self._sim_sys.read_input_from_jsonstring(cpp_state_json_str, verbose=verbose)
         
         self._configure_integrators(

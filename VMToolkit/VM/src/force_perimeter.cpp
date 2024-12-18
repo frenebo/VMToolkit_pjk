@@ -73,31 +73,5 @@ namespace VMTutorial
     return gamma_1*_sys.mesh().perim(f) + gamma_2*_sys.mesh().perim(fp) - lambda;
   }
 
-  // double ForcePerimeter::energy(const Face<Property>& f)
-  // {
-  //   if (f.outer || f.erased)
-  //     return 0.0;
-
-  //   double P = _sys.mesh().perim(f);
-    
-    
-  //   double gamma = 0.0;
-  //   double lambda = 0.0;
-    
-  //   if (enabled_for_faceidx(f.id, false)) {
-  //     gamma = _gamma.at(f.id);
-  //     lambda = _lambda.at(f.id);
-  //   }
-    
-    
-  //   double P0;
-    
-  //   P0 = lambda/gamma;
-    
-  //   double dP = P - P0;
-
-  //   return 0.5*gamma*dP*dP;
-    
-  // }
 
 }

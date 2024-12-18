@@ -12,10 +12,9 @@ from simcode.tissue_builder.hexagonal import HexagonalCellMesh
 from simcode.sim_model.sim_model import SimModel
 from simcode.sim_model.vm_state import (
     VMState, SimulationSettings, IntegratorSettings, AllForces, CellGroupForces,
-    VertexGroupForces, CellAreaForce, CellPerimeterForce, ConstantVertexForce, 
-    # VertexGroup,
+    VertexGroupForces, CellAreaForce, CellPerimeterForce, ConstantVertexForce,  CellGroup, VertexGroup,
 )
-
+from simcode.sim_model.box_selector import BoxSelector
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -46,7 +45,7 @@ if __name__ == "__main__":
         side_length=rest_side_length*1.1,
         box_lx=args.box_lx,
         box_ly=args.box_ly,
-        verbose=True,
+        # verbose=True,
     )
     tiss_topology, tiss_init_state = cm.build_vm_state()#verbose=True)
     
@@ -63,16 +62,43 @@ if __name__ == "__main__":
                     "all": [
                         CellAreaForce(A0=A0_model, kappa=kappa),
                         CellPerimeterForce(gamma=gamma, lam=P0_model*gamma),
-                    ]
+                    ],
                 }),
                 vertex_forces=VertexGroupForces(vertex_group_forces={
-                    "all": [
-                        ConstantVertexForce(f_x=0.1,f_y=0)
-                    ]
-            # const_vtx_prop_force_configs.append(const_force_conf_dict)
-                    
+                    "top": [
+                        ConstantVertexForce(f_x=0.1,f_y=0.0),
+                    ],
+                    "bot": [
+                        ConstantVertexForce(f_x=-0.1,f_y=-0.0),
+                    ],
                 }),
             )
+        )
+    )
+    
+    ## Add sellections
+    
+    vertex_ymin = min([vgeom.y() for vid, vgeom in vm_initial_state.current_state().geometry().vertices().items()])
+    vertex_ymax = max([vgeom.y() for vid, vgeom in vm_initial_state.current_state().geometry().vertices().items()])
+    
+    vm_initial_state.current_state().vertex_groups()["bot"] = VertexGroup(
+        vertex_ids=BoxSelector.get_vertices_in_box(
+            vm_initial_state,
+            x1= -1*args.box_lx,
+            x2=    args.box_lx,
+            y1 = -args.box_ly,
+            y2 = vertex_ymin + rest_side_length*2,
+            verbose=True,
+        )
+    )
+    vm_initial_state.current_state().vertex_groups()["top"] = VertexGroup(
+        vertex_ids=BoxSelector.get_vertices_in_box(
+            vm_initial_state,
+            x1= -1*args.box_lx,
+            x2=    args.box_lx,
+            y1 = vertex_ymax - rest_side_length*2,
+            y2 = args.box_ly,
+            verbose=True,
         )
     )
     
@@ -98,8 +124,9 @@ if __name__ == "__main__":
     # # Create the initial configuration and read it
     # #
     # # #################################################################
+    print("Instantiating SimModel")
     sim_model = SimModel(verbose=False)
-    
+    print("Running sim_model.load_from_json_state")
     sim_model.load_from_json_state(vm_initial_state.to_json())#, verbose=True)
     # exit()s
     
