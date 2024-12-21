@@ -27,7 +27,7 @@ namespace VMTutorial
 		virtual ~ForcePerimeter() {}
 
 		// computes force on vertex by a given edge
-		Vec compute(const Vertex<Property> &, const HalfEdge<Property> &, bool verbose=false) override;
+		Vec compute_he_force(const Vertex<Property> &, const HalfEdge<Property> &, bool verbose=false) override;
 
 		double tension(const HalfEdge<Property> &) override;
 
@@ -97,7 +97,7 @@ namespace VMTutorial
 			if (verbose)
 			{
 				if (is_enabled) {
-					cout << "Confirmed that perimeter force is on for fid=" << fid << endl;
+					cout << "            Confirmed that perimeter force is on for fid=" << fid << endl;
 				}
 			}
 			

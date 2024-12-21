@@ -32,7 +32,7 @@ namespace VMTutorial
           cout << "  first round Computing force on vertex " << logvi << endl;
         }
         logvi++;
-        _force_compute.compute(v, verbose);
+        v.data().force = _force_compute.compute_v_force(v, verbose);
       }
     }
     if (verbose) {
@@ -43,33 +43,33 @@ namespace VMTutorial
     logvi = 0;
     for (auto& v : _sys.mesh().vertices())
     {
-      if (verbose) {
-        cout << "   second round " << logvi++ << endl;
-      }
+      // if (verbose) {
+      //   cout << "   second round " << logvi++ << endl;
+      // }
       if (!v.erased)
       {
-        if (verbose) {
-          cout << "     adding force to constant force" << endl;
-        }
+        // if (verbose) {
+        //   cout << "     adding force to constant force" << endl;
+        // }
         // if (v)
         // add external force 
-        if (verbose) {
-          // cout << "vert type is " << v.data().vert_type << endl;
-          // cout << "_constant_force size: " << _constant_force.size() << endl;
-        }
+        // if (verbose) {
+        //   // cout << "vert type is " << v.data().vert_type << endl;
+        //   // cout << "_constant_force size: " << _constant_force.size() << endl;
+        // }
         
         // @TODO check that the _constant_force has been properly set up at this point.
         Vec f = v.data().force;
         
-        // Add external force if present for this vertex id...
-        map<int,Vec>::iterator extf_it = _const_ext_forces_by_vid.find(v.id);
-        // Bar b3;
-        if(extf_it != _const_ext_forces_by_vid.end())
-        {
-          //element found;
-          Vec ext_force_on_vtx = extf_it->second;
-          f += ext_force_on_vtx;
-        }
+        // // Add external force if present for this vertex id...
+        // map<int,Vec>::iterator extf_it = _const_ext_forces_by_vid.find(v.id);
+        // // Bar b3;
+        // if(extf_it != _const_ext_forces_by_vid.end())
+        // {
+        //   //element found;
+        //   Vec ext_force_on_vtx = extf_it->second;
+        //   f += ext_force_on_vtx;
+        // }
         
         // apply constraint
         if (_constraint_enabled) {

@@ -15,7 +15,7 @@ namespace VMTutorial
       .def(py::init<System&, ForceCompute&, int>())
       .def("set_params", &Integrate::set_params)
       .def("set_string_params", &Integrate::set_string_params)
-      .def("set_external_forces_by_vertex", &Integrate::set_external_forces_by_vertex)
+      // .def("set_external_forces_by_vertex", &Integrate::set_external_forces_by_vertex)
       .def("set_flag", &Integrate::set_flag)
       .def("enable", &Integrate::enable)
       .def("disable", &Integrate::disable)

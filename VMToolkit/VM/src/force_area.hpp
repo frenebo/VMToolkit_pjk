@@ -24,7 +24,7 @@ namespace VMTutorial
       virtual ~ForceArea() { }
         
       // computes force on vertex by a given edge
-      Vec compute(const Vertex<Property>&, const HalfEdge<Property>&, bool verbose=false) override;  
+      Vec compute_he_force(const Vertex<Property>&, const HalfEdge<Property>&, bool verbose=false) override;  
       
       // Are term does not generate tension
       double tension(const HalfEdge<Property>& he) override
@@ -79,11 +79,11 @@ namespace VMTutorial
         {
           if (is_enabled)
           {
-            cout << "  - Confirmed that area force is enabled for fid=" << fid << endl;
+            cout << "          - Confirmed that area force is enabled for fid=" << fid << endl;
           }
           else
           {
-            cout << "  - Area force NOT enabled for fid=" << fid << endl;
+            cout << "          - Area force NOT enabled for fid=" << fid << endl;
           }
         }
       

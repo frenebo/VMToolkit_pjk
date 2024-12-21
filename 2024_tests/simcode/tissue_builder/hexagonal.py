@@ -388,6 +388,8 @@ class HexagonalCellMesh:
     def _generate_boundary_face_export_obj(cls, vertices_map, cell_id, verbose=False):
         # @NOTE this assuems there is only one boundary, around the perimeter
         
+        if len(vertices_map) == 0:
+            raise Exception("No vertices to generate boundary for")
         # Start at the leftmost vertex - should be on the boundary
         # starting_vertex_id = list(vertices_map.keys())[0]
         starting_vertex_id = None
@@ -395,7 +397,7 @@ class HexagonalCellMesh:
             
             if starting_vertex_id is None or (vtx["x"] < vertices_map[starting_vertex_id]["x"]):
                 starting_vertex_id = vtx_id
-                
+        
         if verbose:
             print("Starting vertex id: ", starting_vertex_id)
             print(vertices_map[starting_vertex_id])
@@ -586,12 +588,21 @@ class HexagonalCellMesh:
         tiss_state = TissueState(
             geometry=tiss_geometry,
             vertex_groups={
-                "all": VertexGroup([vid for vid in vertex_topologies]),
+                "all": VertexGroup(
+                    [vid for vid in vertex_topologies],
+                    force_ids=[],
+                    # force_ids=all_vertex_force_ids,
+                ),
             },
             cell_groups={
-                "all": CellGroup([cid for cid in cell_topologies]),
-                "boundary": CellGroup([boundary_cell_id]),
+                "all": CellGroup(
+                    [cid for cid in cell_topologies if cid != boundary_cell_id],
+                    force_ids=[],
+                    # force_ids=all_cells_force_ids,
+                ),
+                "boundary": CellGroup([boundary_cell_id], force_ids=[]),
             },
+            forces={},
         )
         
         return tiss_topology, tiss_state

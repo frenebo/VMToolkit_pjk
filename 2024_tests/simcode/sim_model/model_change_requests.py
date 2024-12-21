@@ -48,15 +48,15 @@ class GenericModReq:
 
 
 class ModReqCreateCellGroup:
-    typename = "create_cell_group"
+    typename = "create_cell_groupf"
     string_properties_names = ["group_name"]
 
 class ModReqCreateVertexGroup(GenericModReq):
-    typename == "create_vertex_group"
+    typename = "create_vertex_group"
     string_properties_names = ["group_name"]
 
 class ModReqAddCellsToCellGroup:
-    typename = "add_cells_to_cell_group
+    typename = "add_cells_to_cell_group"
     string_properties_names = ["group_name"]
     str_list_properties_names = ["cell_ids"]
     
@@ -76,14 +76,20 @@ class ModReqRemoveVerticesFromVertexGroup:
     string_properties_names = ["group_name"]
     str_list_properties_names = ["vertex_ids"]
 
-class ModReqAddForceToGroup:
-    typename = "add_force_to_group"
-    string_properties_names = ["force_type", "force_id", "target_type", "group_name"]
+# class ModReqCreatePerim
 
-class ModReqRemoveForceFromGroup:
-    typename = "remove_force_from_group"
-    # @TODO create force ids
-    string_properties_names = ["force_id", "target_type", "group_name"]
+# class ModReqCreateForce:
+#     typename = "create_force"
+    
+
+# class ModReqAddForceToGroup:
+#     typename = "add_force_to_group"
+#     string_properties_names = ["force_type", "force_id", "target_type", "group_name"]
+
+# class ModReqRemoveForceFromGroup:
+#     typename = "remove_force_from_group"
+#     # @TODO create force ids
+#     string_properties_names = ["force_id", "target_type", "group_name"]
 
 # @TODO add framework for a request parser to branch out in differnt directions...
 # class ModReqChangeSimulationIntegratorSetting:
@@ -94,7 +100,7 @@ class ModReqRemoveForceFromGroup:
 class ModelChangeRequest:
     @staticmethod
     def from_json(jobj):
-        all_changereq_classe = =[
+        all_changereq_classe = [
             ModReqCreateCellGroup,
             ModReqCreateVertexGroup,
             ModReqAddCellsToCellGroup,
@@ -120,4 +126,5 @@ class ModelChangeRequest:
         if jobj["type"] == ModReqCreateCellGroup.typename:
             raise NotImplementedError()
         elif jobj["type"] == ModReqCreateVertexGroup.typename:
+            raise NotImplementedError()
 

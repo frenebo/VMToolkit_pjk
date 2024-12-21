@@ -11,16 +11,44 @@ from VMToolkit.VMAnalysis.utils.HalfEdge import Mesh
 from simcode.tissue_builder.hexagonal import HexagonalCellMesh
 from simcode.sim_model.sim_model import SimModel
 from simcode.sim_model.vm_state import (
-    VMState, SimulationSettings, IntegratorSettings, AllForces, CellGroupForces,
-    VertexGroupForces, CellAreaForce, CellPerimeterForce, ConstantVertexForce,  CellGroup, VertexGroup,
+    VMState, SimulationSettings, IntegratorSettings, 
+    CellAreaForce, CellPerimeterForce, ConstantVertexForce,  CellGroup, VertexGroup,
+    ElectricForceOnCellBoundary, EFieldSpecConstantPolygonRegion, PolygonSpec,
+    
 )
 from simcode.sim_model.box_selector import BoxSelector
+
+
+def make_forcing_field_rectangular(
+    xmin,
+    xmax,
+    ymin,
+    ymax,
+    field_x,
+    field_y,
+    ):
+    return ElectricForceOnCellBoundary(electric_field_spec=(
+        EFieldSpecConstantPolygonRegion(
+            E_x=field_x,
+            E_y=field_y,
+            zone_bounds=PolygonSpec(
+                polygon_vertices=[
+                    (xmin,ymin),
+                    (xmax,ymin),
+                    (xmax,ymax),
+                    (xmin,ymax),
+                ]
+            )
+        )
+    ))
+
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--fpull", default=-0.2,type=float, help="Force to squeeze/stretch")
-    parser.add_argument("--box_lx", default=1.0,type=float, help="X size of tissue")
-    parser.add_argument("--box_ly", default=1.0,type=float, help="Y size of tissue")
+    parser.add_argument("--box_lx", default=20.0,type=float, help="X size of tissue")
+    parser.add_argument("--box_ly", default=20.0,type=float, help="Y size of tissue")
     
     args = parser.parse_args()
     
@@ -40,6 +68,8 @@ if __name__ == "__main__":
     theoretical_rest_width = rest_side_length*2
     theoretical_rest_height = rest_side_length*2*np.sqrt(3)/2
     
+    print("Theoretical rest width, height: {}, {}".format(theoretical_rest_width, theoretical_rest_height))
+    
     
     cm = HexagonalCellMesh(
         side_length=rest_side_length*1.1,
@@ -49,37 +79,41 @@ if __name__ == "__main__":
     )
     tiss_topology, tiss_init_state = cm.build_vm_state()#verbose=True)
     
+    tiss_init_state.forces()["perim_f_all"] = CellPerimeterForce(gamma=gamma, lam=P0_model*gamma)
+    tiss_init_state.forces()["area_f_all"] = CellAreaForce(A0=A0_model, kappa=kappa)
+    tiss_init_state.forces()["left_forcing_field"] = make_forcing_field_rectangular(
+        xmin=-args.box_lx,
+        xmax=0,
+        ymin=-args.box_ly,
+        ymax=args.box_ly,
+        field_x=0.0,
+        field_y=0.1,
+    )
+    
+    tiss_init_state.cell_groups()["all"].force_ids().extend([
+        "perim_f_all",
+        "area_f_all",
+        "left_forcing_field",
+    ])
+    
     vm_initial_state = VMState(
         tiss_topology=tiss_topology,
         current_state=tiss_init_state,
         sim_settings=SimulationSettings(
             integrator_settings=IntegratorSettings(
                 vertex_friction_gamma=0.1,
-                step_dt=0.1,
+                step_dt=0.02,
             ),
-            force_settings=AllForces(
-                cell_forces=CellGroupForces(group_forces={
-                    "all": [
-                        CellAreaForce(A0=A0_model, kappa=kappa),
-                        CellPerimeterForce(gamma=gamma, lam=P0_model*gamma),
-                    ],
-                }),
-                vertex_forces=VertexGroupForces(vertex_group_forces={
-                    "top": [
-                        ConstantVertexForce(f_x=0.1,f_y=0.0),
-                    ],
-                    "bot": [
-                        ConstantVertexForce(f_x=-0.1,f_y=-0.0),
-                    ],
-                }),
-            )
         )
     )
     
-    ## Add sellections
+    ## Add forces to top and bottom
     
     vertex_ymin = min([vgeom.y() for vid, vgeom in vm_initial_state.current_state().geometry().vertices().items()])
     vertex_ymax = max([vgeom.y() for vid, vgeom in vm_initial_state.current_state().geometry().vertices().items()])
+    
+    vm_initial_state.current_state().forces()["top_const_f"] = ConstantVertexForce(f_x=0.05,f_y=0.0)
+    vm_initial_state.current_state().forces()["bot_const_f"] = ConstantVertexForce(f_x=-0.05,f_y=-0.0)
     
     vm_initial_state.current_state().vertex_groups()["bot"] = VertexGroup(
         vertex_ids=BoxSelector.get_vertices_in_box(
@@ -89,7 +123,8 @@ if __name__ == "__main__":
             y1 = -args.box_ly,
             y2 = vertex_ymin + rest_side_length*2,
             verbose=True,
-        )
+        ),
+        force_ids=["top_const_f"],
     )
     vm_initial_state.current_state().vertex_groups()["top"] = VertexGroup(
         vertex_ids=BoxSelector.get_vertices_in_box(
@@ -99,7 +134,8 @@ if __name__ == "__main__":
             y1 = vertex_ymax - rest_side_length*2,
             y2 = args.box_ly,
             verbose=True,
-        )
+        ),
+        force_ids=["bot_const_f"]
     )
     
     
@@ -127,7 +163,8 @@ if __name__ == "__main__":
     print("Instantiating SimModel")
     sim_model = SimModel(verbose=False)
     print("Running sim_model.load_from_json_state")
-    sim_model.load_from_json_state(vm_initial_state.to_json())#, verbose=True)
+    sim_model.load_from_json_state(vm_initial_state.to_json(), verbose=True)
+    print("Finished sim_mode.load_from_json_state")
     # exit()s
     
     # sim_model.configure_forces(P0_model, gamma, kappa, verbose=True)
@@ -142,7 +179,7 @@ if __name__ == "__main__":
     
     # sim_model.configure_integrators(verbose=True)
 
-    step_size =100      # Step counter in terms of time units
+    step_size = 500      # Step counter in terms of time units
     
     ext_forcing_on = []
     checkpoint_fps = []
@@ -176,7 +213,8 @@ if __name__ == "__main__":
         else:
             ext_forcing_on.append(False)
         
-        sim_model.run_steps(step_size)#, verbose=True)
+        sim_model.run_steps(step_size - 1)#, verbose=True)
+        sim_model.run_steps(1)#, verbose=True)
         
         # exit()
     

@@ -44,41 +44,42 @@ namespace VMTutorial
 
       ForceCompute(const ForceCompute&) = delete;
 
-      // void compute_forces()
-      // {
-      //   for (auto v : _sys.mesh().vertices())
-      //     if (!v.erased)
-      //       this->compute(v);
-      // }
       
       // @TODO remove this from stuff - does compute change the force value or not?
-      // i might accidentally use the wrong one and change it twice at some point...
-      void compute(Vertex<Property> &v, bool verbose=false)
+      // might accidentally use the wrong one and change it twice at some point...
+      Vec compute_v_force(Vertex<Property> &v, bool verbose=false)
       {
         if (verbose)
         {
-          cout << "ForceCompute::compute(vertex) - Computing force on vector... " << v.id << endl;
+          cout << "ForceCompute::compute_v_force(vertex) - Computing force on vector... " << v.id << endl;
         }
-        v.data().force = Vec(0.0,0.0);
+        Vec tot_force = Vec(0.0,0.0);
+        // v.data().force = Vec(0.0,0.0);
         for (auto he : v.circulator()) {
-          v.data().force += this->compute(v, he, verbose);
+          tot_force += this->compute_he_force(v, he, verbose);
+          // v.data().force += this->compute(v, he, verbose);
         }
         if (verbose)
         {
-          cout << "  TOTAL force on vector " << v.id << ": " << v.data().force.x << ", " << v.data().force.y << endl;
+          cout << " TOTAL force on vector " << v.id << ": " << v.data().force.x << ", " << v.data().force.y << endl;
         }
+        return tot_force;
       }
 
-      Vec compute(Vertex<Property> &v, const HalfEdge<Property> &he, bool verbose=false)
+      Vec compute_he_force(Vertex<Property> &v, const HalfEdge<Property> &he, bool verbose=false)
       {
         
         if (verbose)
         {
-          cout << "ForceCompute::compute(vertex, he) - computing force for vertex " << v.id << " half edge " << he.idx() << endl;
+          cout << "  ForceCompute::compute_he_force(vertex, he) - computing force for vertex " << v.id << " half edge " << he.idx() << endl;
         }
         Vec ftot(0,0);
         for (auto& f : this->factory_map) {
-          ftot += f.second->compute(v, he, verbose);
+          ftot += f.second->compute_he_force(v, he, verbose);
+        }
+        if (verbose)
+        {
+          cout << "    TOT force: "<<ftot.x<<","<<ftot.y<<" for vertex " << v.id << " half edge " << he.idx() << endl;
         }
         return ftot;
       }
@@ -90,32 +91,20 @@ namespace VMTutorial
           T += f.second->tension(he);
         return T;
       }
-
-      // double energy(const Face<Property>& face)
-      // {
-      //   double E = 0.0;
-      //   for (auto& f : this->factory_map)
-      //     E += f.second->energy(face);
-      //   return E;
-      // }
-
-      // double total_energy()
-      // {
-      //   double E = 0.0;
-      //   for (auto f : _sys.mesh().faces())  
-      //     E += this->energy(f);
-      //   return E;
-      // }
-
-      // void set_params(const string& fname, const string& type, const params_type& params)
-      // {
-      //   if (this->factory_map.find(fname) != this->factory_map.end())
-      //     this->factory_map[fname]->set_params(type, params);
-      //   else
-      //     throw runtime_error("set_params: Force type " + fname + " is not used in this simulation.");
-      // }
       
-      void set_face_params_facewise(const string& fname, const vector<int>& fids, const vector<params_type>& params, bool verbose)
+      void set_global_params(const string& force_id, const vector<params_type>&params, bool verbose)
+      {
+        // throw runtime_error("Unimplemented ForceCompute::set_global_params");
+        
+        if (this->factory_map.find(force_id) != this->factory_map.end()) {
+          this->factory_map[force_id]->set_global_params(params, verbose);
+        } else {
+          throw runtime_error("ForceCompute::set_global_params: Force id " + force_id + " has not been added yet, could not set its params");
+        }
+      }
+
+      
+      void set_face_params_facewise(const string& force_id, const vector<int>& fids, const vector<params_type>& params, bool verbose)
       {
         if (!(fids.size() == params.size())) {
           throw runtime_error(
@@ -123,15 +112,15 @@ namespace VMTutorial
           );
         }
         
-        if (this->factory_map.find(fname) != this->factory_map.end()) {
-            this->factory_map[fname]->set_face_params_facewise(fids, params, verbose);
+        if (this->factory_map.find(force_id) != this->factory_map.end()) {
+            this->factory_map[force_id]->set_face_params_facewise(fids, params, verbose);
         }
         else {
-          throw runtime_error("ForceCompute::set_params_facewise: Force type " + fname + " is not used in this simulation.");
+          throw runtime_error("ForceCompute::set_params_facewise: Force id " + force_id + " has not been added.");
         }
       }
       
-      void set_vertex_params_vertexwise(const string& fname, const vector<int>& vids, const vector<params_type>& params, bool verbose)
+      void set_vertex_params_vertexwise(const string& force_id, const vector<int>& vids, const vector<params_type>& params, bool verbose)
       {
         if (!(vids.size() == params.size())) {
           throw runtime_error(
@@ -139,28 +128,33 @@ namespace VMTutorial
           );
         }
         
-        if (this->factory_map.find(fname) != this->factory_map.end()) {
-          this->factory_map[fname]->set_vertex_params_vertexwise(vids, params, verbose);
+        if (this->factory_map.find(force_id) != this->factory_map.end()) {
+          this->factory_map[force_id]->set_vertex_params_vertexwise(vids, params, verbose);
         } else {
-          throw runtime_error("ForceCompute::set_vertex_params_vertexwises: Force type " + fname + " has not been setup in this simulation.");
+          throw runtime_error("ForceCompute::set_vertex_params_vertexwises: Force type " + force_id + " has not been setup in this simulation.");
         }
       }
 
-      void add_force(const string& fname)
+      void add_force(const string& force_id, const string& force_type, bool verbose)
       {
+        if (verbose) {
+          cout << "ForceCompute::add_force - Adding force with id '" << force_id << "' and force type '" << force_type << "'" << endl;
+        }
         // Check if this force has already been added.
-        if (this->factory_map.find(fname) != this->factory_map.end()) {
-          throw runtime_error("ForceCompute::add_force - Cannot add force '" + fname + "' - already has been added to ForceCompute class.");
+        if (this->factory_map.find(force_id) != this->factory_map.end()) {
+          throw runtime_error("ForceCompute::add_force - Cannot add force with id '" + force_id + "' - already has been added to ForceCompute class.");
         }
         
-        if (fname == "area") {
-          this->add<ForceArea,System&>(fname, _sys);
-        } else if (fname == "perimeter") {
-          this->add<ForcePerimeter,System&>(fname, _sys);
-        } else if (fname == "const_vertex_propulsion") {
-          this->add<ForceConstVertexPropulsion,System&>(fname, _sys);
+        // if (verbo)
+        
+        if (force_type == "area") {
+          this->add<ForceArea,System&>(force_id, _sys);
+        } else if (force_type == "perimeter") {
+          this->add<ForcePerimeter,System&>(force_id, _sys);
+        } else if (force_type == "const_vertex_propulsion") {
+          this->add<ForceConstVertexPropulsion,System&>(force_id, _sys);
         } else  {
-          throw runtime_error("Unknown force name : " + fname + ".");
+          throw runtime_error("Unknown force name : " + force_id + ".");
         }
       }
 

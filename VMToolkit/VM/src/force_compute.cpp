@@ -15,10 +15,11 @@ namespace VMTutorial
 			.def(py::init<System &>())
 			// .def("set_params", &ForceCompute::set_params)
 			// .def("set_vec_params", &ForceCompute::set_vec_params)
+			.def("set_global_params", &ForceCompute::set_global_params, py::arg("force_id"), py::arg("params"), py::arg("verbose")=false)
 			.def("set_face_params_facewise", &ForceCompute::set_face_params_facewise)
 			.def("set_vertex_params_vertexwise", &ForceCompute::set_vertex_params_vertexwise)
 			// .def("set_flag", &ForceCompute::set_flag)
-			.def("add", &ForceCompute::add_force);
+			.def("add_force", &ForceCompute::add_force, py::arg("force_id"), py::arg("force_type"), py::arg("verbose")=false);
 			// .def("compute", &ForceCompute::compute_forces)
 			// .def("energy", &ForceCompute::total_energy);
 	}

@@ -9,11 +9,11 @@
 
 namespace VMTutorial
 {
-  Vec ForcePerimeter::compute(const Vertex<Property>& v, const HalfEdge<Property>& he, bool verbose)
+  Vec ForcePerimeter::compute_he_force(const Vertex<Property>& v, const HalfEdge<Property>& he, bool verbose)
   {
     if (verbose)
     {
-      cout << "ForcePerimeter::compute - computing force for vertex " << v.id << ", halfedge idx " << he.idx()  << endl;
+      cout << "        ForcePerimeter::compute - computing force for vertex " << v.id << ", halfedge idx " << he.idx()  << endl;
     }
     
     Vec l = he.to()->r - v.r;                    // vector along the junction pointing away from the vertex
@@ -41,7 +41,7 @@ namespace VMTutorial
     Vec  perim_force = fedges*l.unit();
 		if (verbose)
 		{
-			cout << "    perim force is (" << perim_force.x << ", " << perim_force.y << ")" << endl;
+			cout << "            perim force is (" << perim_force.x << ", " << perim_force.y << ")" << endl;
 		}
 
     return perim_force;

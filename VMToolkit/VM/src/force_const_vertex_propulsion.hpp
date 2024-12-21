@@ -23,7 +23,7 @@ namespace VMTutorial
 		virtual ~ForceConstVertexPropulsion() {}
 
 		// computes force on vertex by a given edge
-		Vec compute(const Vertex<Property> &, const HalfEdge<Property> &, bool verbose=false) override;
+		Vec compute_he_force(const Vertex<Property> &, const HalfEdge<Property> &, bool verbose=false) override;
 
 		// double tension(const HalfEdge<Property> &) override;
 
@@ -65,7 +65,7 @@ namespace VMTutorial
             bool is_enabled = _force_enabled_mask_by_vertex_index[vid];
             
             if (verbose && is_enabled) {
-                cout << "Confirmed that constant propulsion force is on for vid=" << vid << endl;
+                cout << "            Confirmed that constant propulsion force is on for vid=" << vid << endl;
             }
             
             return is_enabled;

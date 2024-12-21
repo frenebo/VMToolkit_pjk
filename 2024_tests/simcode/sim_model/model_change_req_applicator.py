@@ -14,7 +14,7 @@ class ModelChangeFailedException(Exception):
 
 class ModelChangeReqApplicator:
     @classmethod
-    def _clonestate(cls, vm_state);
+    def _clonestate(cls, vm_state):
         # @TODO replace? - this is slow
         return VMState.from_json(vm_state.to_json())
     
@@ -86,7 +86,7 @@ class ModelChangeReqApplicator:
     def apply_request_to_vm_state(cls, vm_state, model_change_req):
         """ Should return a new VMState, appropriately changed
         """
-        reqs_supported = =[
+        reqs_supported = [
             (ModReqCreateCellGroup,   cls._applyreq_create_cell_group),
             (ModReqCreateVertexGroup, cls._applyreq_create_vertex_group),
         ]

@@ -77,13 +77,13 @@ namespace VMTutorial
           throw runtime_error("set_string_params: Integrator type " + iname + " is not used in this simulation.");
       }
       
-      void set_external_forces_by_vertex(const string& iname, const vector<int>& vids, const vector<Vec>& forces)
-      {
-        if (this->factory_map.find(iname) != this->factory_map.end())
-          this->factory_map[iname]->set_external_forces_by_vertex(vids, forces);
-        else
-          throw runtime_error("set_external_force: Integrator type " + iname + " is not used in this simulation.");
-      }
+      // void set_external_forces_by_vertex(const string& iname, const vector<int>& vids, const vector<Vec>& forces)
+      // {
+      //   if (this->factory_map.find(iname) != this->factory_map.end())
+      //     this->factory_map[iname]->set_external_forces_by_vertex(vids, forces);
+      //   else
+      //     throw runtime_error("set_external_force: Integrator type " + iname + " is not used in this simulation.");
+      // }
 
 
       void set_flag(const string& iname, const string& flag)

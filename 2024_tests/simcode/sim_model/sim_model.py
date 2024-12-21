@@ -38,7 +38,7 @@ class SimModel:
             print("Model change req: {}".format(model_change_req))
             print("Model change req to json: {}".format(model_change_req.to_json()))
             raise
-        )
+        
         
         
 

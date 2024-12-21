@@ -9,11 +9,11 @@
 
 namespace VMTutorial
 {
-	Vec ForceArea::compute(const Vertex<Property> &v, const HalfEdge<Property> &he, bool verbose)
+	Vec ForceArea::compute_he_force(const Vertex<Property> &v, const HalfEdge<Property> &he, bool verbose)
 	{
 		if (verbose)
 		{
-			cout << "ForceArea::compute - computing force for vertex " << v.id << ", halfedge idx " << he.idx()  << endl;
+			cout << "        ForceArea::compute - computing force for vertex " << v.id << ", halfedge idx " << he.idx()  << endl;
 		}
 		
 		
@@ -43,8 +43,8 @@ namespace VMTutorial
 		
 		if (verbose)
 		{
-			cout << "    A1=" << A1 <<", A2=" << A2 << ", A0_1=" << A0_1 << ", A0_2=" << A0_2 << endl;
-			cout << "    area force is (" << farea_vec.x << ", " << farea_vec.y << ")" << endl;
+			cout << "            A1=" << A1 <<", A2=" << A2 << ", A0_1=" << A0_1 << ", A0_2=" << A0_2 << endl;
+			cout << "            area force is (" << farea_vec.x << ", " << farea_vec.y << ")" << endl;
 		}
 
 		return farea_vec;
