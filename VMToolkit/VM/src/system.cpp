@@ -67,7 +67,7 @@ namespace VMTutorial
       v.erased = j["mesh"]["vertices"][i]["erased"];
       // v.data().vert_type = _vert_types[j["mesh"]["vertices"][i]["type"]];
       // v.data().type_name = get_vert_type_name(v.data().vert_type);
-      v.data().constraint = j["mesh"]["vertices"][i]["constraint"];
+      // v.data().constraint = j["mesh"]["vertices"][i]["constraint"];
       if (j["mesh"]["vertices"][i].find("velocity") != j["mesh"]["vertices"][i].end())
       {
         v.data().vel.x = j["mesh"]["vertices"][i]["velocity"][0];
@@ -240,7 +240,7 @@ namespace VMTutorial
       .def_readwrite("boundary", &Vertex<Property>::boundary)
       .def_readonly("coordination", &Vertex<Property>::coordination)
       .def("he", [](Vertex<Property>& v) { return *(v.he()); })
-      .def("force", [](Vertex<Property>& v) { return v.data().force; })
+      // .def("force", [](Vertex<Property>& v) { return v.data().force; })
       .def("vel", [](Vertex<Property>& v) { return v.data().vel; })
       .def("property", (Property::VertexProperty& (Vertex<Property>::*)()) &Vertex<Property>::data, py::return_value_policy::reference);
   }

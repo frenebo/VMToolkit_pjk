@@ -34,7 +34,7 @@ namespace VMTutorial
       IntegratorRungeKutta(
         System& sys,
         ForceCompute& fc,
-        int seed,
+        int seed
       ) : Integrator{sys, fc, seed},
           _gamma{1.0}
       {

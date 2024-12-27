@@ -35,8 +35,8 @@ namespace VMTutorial
 		struct VertexProperty : public BaseProperty::VertexProperty
 		{
 			Vec vel;
-			Vec force;
-			string constraint;		 // if "x" move only along x-axis, if "y" move only along y axis, if "radial", move along radius; otherwise ignore
+			// Vec force;
+			// string constraint;		 // if "x" move only along x-axis, if "y" move only along y axis, if "radial", move along radius; otherwise ignore
 			// map<string, Vec> f_type; // Force from a given interaction type (e.g., area term, perimeter term, etc)
 			// string type_name;		 // String with the actual name of the the vertex type
 			VertexProperty &operator=(const VertexProperty &p)

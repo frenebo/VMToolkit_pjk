@@ -57,7 +57,7 @@ namespace VMTutorial
       
       map<string, double> get_force_compute_timers_millis(bool verbose);
       
-      void compute_and_set_all_vertex_forces(bool verbose=false);
+      std::vector<Vec> compute_all_vertex_forces(bool verbose=false);
       
       double tension(HalfEdge<Property>& he);
       

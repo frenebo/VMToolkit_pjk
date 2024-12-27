@@ -27,18 +27,20 @@ namespace VMTutorial
 
 		Vec apply_vertex(Vertex<Property> &v, const Vec &fc)
 		{
-			if (this->factory_map.find(v.data().constraint) != this->factory_map.end())
-				return this->factory_map[v.data().constraint]->apply(v, fc);
-			else
-				return Vec(fc);
+			throw runtime_error("Constrainer::apply_vertex - unimplemented");
+			// if (this->factory_map.find(v.data().constraint) != this->factory_map.end())
+			// 	return this->factory_map[v.data().constraint]->apply(v, fc);
+			// else
+			// 	return Vec(fc);
 		}
 
 		Vec apply_vector(Vertex<Property> &v, const Vec &fc)
 		{
-			if (this->factory_map.find(v.data().constraint) != this->factory_map.end())
-				return this->factory_map[v.data().constraint]->apply(fc);
-			else
-				return Vec(fc);
+			throw runtime_error("Constrainer::apply_vector - unimplemented");
+			// if (this->factory_map.find(v.data().constraint) != this->factory_map.end())
+			// 	return this->factory_map[v.data().constraint]->apply(fc);
+			// else
+			// 	return Vec(fc);
 		}
 	};
 

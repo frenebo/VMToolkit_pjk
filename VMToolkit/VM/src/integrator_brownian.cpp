@@ -20,24 +20,24 @@ namespace VMTutorial
     double sqrt_dt = sqrt(_dt);
     
     // Compute force on each vertex
-    size_t logvi = 0;
     if (verbose) {
       cout << "Total number of vertices in system - " << _sys.mesh().vertices().size() << endl;
     }
     
-    _force_compute.compute_and_set_all_vertex_forces(verbose);
+    std::vector<Vec> vertex_forces = _force_compute.compute_all_vertex_forces(verbose);
     
     if (verbose) {
       cout << "Done computing vertex forces" << endl;
     }
     
     // This is actual integrator 
-    logvi = 0;
-    for (auto& v : _sys.mesh().vertices())
+    for (size_t vid = 0; vid < _sys.mesh().vertices().size(); vid++)
     {
+      Vertex& v = _sys.mesh().vertices()[vid];
+      
       if (!v.erased)
       {
-        Vec f = v.data().force;
+        const Vec& f = vertex_forces.at(vid);
       
         // apply constraint
         if (_constraint_enabled) {

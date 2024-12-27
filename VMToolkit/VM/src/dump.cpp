@@ -76,7 +76,7 @@ namespace VMTutorial
 			vy.put("", v.data().vel.y);
 			velocity.push_back(std::make_pair("", vx));
 			velocity.push_back(std::make_pair("", vy));
-			constraint.put("", v.data().constraint);
+			// constraint.put("", v.data().constraint);
 			erased.put("", v.erased);
 			vertex.add_child("id", id);
 			vertex.add_child("boundary", boundary);

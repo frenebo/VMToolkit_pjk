@@ -47,13 +47,12 @@ namespace VMTutorial
 	}
 	
 	// void compute_and_ap
-	void ForceCompute::compute_and_set_all_vertex_forces(bool verbose)
+	std::vector<Vec> ForceCompute::compute_all_vertex_forces(bool verbose)
 	{
 		if (verbose) {
 			cout << "ForceCompute::compute_and_apply_vertex_force - computing all forces" << endl;
 		}
 		
-			
 		std::vector<Vec> v_forces(_sys.mesh().vertices().size(), Vec(0.0,0.0));
 		
 		bool do_time_computations = (_force_timers.size() > 1);
@@ -102,12 +101,9 @@ namespace VMTutorial
 			}
 		}
 		
-		size_t vid = 0;
-		for (const Vec& vforce : v_forces) {
-			_sys.mesh().vertices().at(vid).data().force = vforce;
-			
-			vid++;
-		}
+		// @TOOD should this keep a vector inside it allocated and just return a reference, instead of allocating a new vector of forces
+		// every time the function is run?
+		return v_forces;
 	}
 	
 	
