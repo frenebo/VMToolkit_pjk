@@ -2,8 +2,9 @@ import numpy as np
 import argparse
 import json
 import os
-from simcode.analytic_tools.find_hexagon_rest_area import HexagonalModel, find_hexagon_rest_area
+from line_profiler import profile
 
+from simcode.analytic_tools.find_hexagon_rest_area import HexagonalModel, find_hexagon_rest_area
 from VMToolkit.config_builder.open.honeycomb_lattice import HoneycombLattice
 # from VMToolkit.VM import Tissue, System, ForceCompute, Integrate, Topology, Dump, Simulation, Vec
 from VMToolkit.VMAnalysis.utils.HalfEdge import Mesh
@@ -42,13 +43,12 @@ def make_forcing_field_rectangular(
         )
     ))
 
-
-
-if __name__ == "__main__":
+@profile
+def do_stuff():
     parser = argparse.ArgumentParser()
     parser.add_argument("--fpull", default=-0.2,type=float, help="Force to squeeze/stretch")
-    parser.add_argument("--box_lx", default=20.0,type=float, help="X size of tissue")
-    parser.add_argument("--box_ly", default=20.0,type=float, help="Y size of tissue")
+    parser.add_argument("--box_lx", default=30.0,type=float, help="X size of tissue")
+    parser.add_argument("--box_ly", default=30.0,type=float, help="Y size of tissue")
     
     args = parser.parse_args()
     
@@ -81,19 +81,30 @@ if __name__ == "__main__":
     
     tiss_init_state.forces()["perim_f_all"] = CellPerimeterForce(gamma=gamma, lam=P0_model*gamma)
     tiss_init_state.forces()["area_f_all"] = CellAreaForce(A0=A0_model, kappa=kappa)
+    
+    field_size_multiplier = 0.5
     tiss_init_state.forces()["left_forcing_field"] = make_forcing_field_rectangular(
-        xmin=-args.box_lx,
+        xmin=field_size_multiplier*(-args.box_lx/2),
         xmax=0,
-        ymin=-args.box_ly,
-        ymax=args.box_ly,
+        ymin=field_size_multiplier*(-args.box_ly/2),
+        ymax=field_size_multiplier*(args.box_ly/2),
         field_x=0.0,
-        field_y=0.1,
+        field_y=0.02,
+    )
+    tiss_init_state.forces()["right_forcing_field"] = make_forcing_field_rectangular(
+        xmin=0,
+        xmax=field_size_multiplier*(args.box_lx/2),
+        ymin=field_size_multiplier*(-args.box_ly/2),
+        ymax=field_size_multiplier*(args.box_ly/2),
+        field_x=0.0,
+        field_y=-0.02,
     )
     
     tiss_init_state.cell_groups()["all"].force_ids().extend([
         "perim_f_all",
         "area_f_all",
         "left_forcing_field",
+        "right_forcing_field",
     ])
     
     vm_initial_state = VMState(
@@ -112,31 +123,31 @@ if __name__ == "__main__":
     vertex_ymin = min([vgeom.y() for vid, vgeom in vm_initial_state.current_state().geometry().vertices().items()])
     vertex_ymax = max([vgeom.y() for vid, vgeom in vm_initial_state.current_state().geometry().vertices().items()])
     
-    vm_initial_state.current_state().forces()["top_const_f"] = ConstantVertexForce(f_x=0.05,f_y=0.0)
-    vm_initial_state.current_state().forces()["bot_const_f"] = ConstantVertexForce(f_x=-0.05,f_y=-0.0)
+    # vm_initial_state.current_state().forces()["top_const_f"] = ConstantVertexForce(f_x=0.05,f_y=0.0)
+    # vm_initial_state.current_state().forces()["bot_const_f"] = ConstantVertexForce(f_x=-0.05,f_y=-0.0)
     
-    vm_initial_state.current_state().vertex_groups()["bot"] = VertexGroup(
-        vertex_ids=BoxSelector.get_vertices_in_box(
-            vm_initial_state,
-            x1= -1*args.box_lx,
-            x2=    args.box_lx,
-            y1 = -args.box_ly,
-            y2 = vertex_ymin + rest_side_length*2,
-            verbose=True,
-        ),
-        force_ids=["top_const_f"],
-    )
-    vm_initial_state.current_state().vertex_groups()["top"] = VertexGroup(
-        vertex_ids=BoxSelector.get_vertices_in_box(
-            vm_initial_state,
-            x1= -1*args.box_lx,
-            x2=    args.box_lx,
-            y1 = vertex_ymax - rest_side_length*2,
-            y2 = args.box_ly,
-            verbose=True,
-        ),
-        force_ids=["bot_const_f"]
-    )
+    # vm_initial_state.current_state().vertex_groups()["bot"] = VertexGroup(
+    #     vertex_ids=BoxSelector.get_vertices_in_box(
+    #         vm_initial_state,
+    #         x1= -1*args.box_lx,
+    #         x2=    args.box_lx,
+    #         y1 = -args.box_ly,
+    #         y2 = vertex_ymin + rest_side_length*2,
+    #         verbose=True,
+    #     ),
+    #     force_ids=["top_const_f"],
+    # )
+    # vm_initial_state.current_state().vertex_groups()["top"] = VertexGroup(
+    #     vertex_ids=BoxSelector.get_vertices_in_box(
+    #         vm_initial_state,
+    #         x1= -1*args.box_lx,
+    #         x2=    args.box_lx,
+    #         y1 = vertex_ymax - rest_side_length*2,
+    #         y2 = args.box_ly,
+    #         verbose=True,
+    #     ),
+    #     force_ids=["bot_const_f"]
+    # )
     
     
     
@@ -163,7 +174,9 @@ if __name__ == "__main__":
     print("Instantiating SimModel")
     sim_model = SimModel(verbose=False)
     print("Running sim_model.load_from_json_state")
-    sim_model.load_from_json_state(vm_initial_state.to_json(), verbose=True)
+    with open("scratch/initial_vm_state.json", "w") as f:
+        f.write(json.dumps(vm_initial_state.to_json()))
+    sim_model.load_from_json_state(vm_initial_state.to_json())#, verbose=True)
     print("Finished sim_mode.load_from_json_state")
     # exit()s
     
@@ -179,10 +192,10 @@ if __name__ == "__main__":
     
     # sim_model.configure_integrators(verbose=True)
 
-    step_size = 500      # Step counter in terms of time units
     
-    ext_forcing_on = []
+    # ext_forcing_on = []
     checkpoint_fps = []
+    # vmstate_fps = []
     # Pulling on the passive system
     
     ckpt_dir = "scratch"
@@ -190,33 +203,33 @@ if __name__ == "__main__":
         raise Exception("could not find {}".format(ckpt_dir))
     
     for fn in os.listdir(ckpt_dir):
-        if fn.startswith("res") and fn.endswith(".json"):
+        if (fn.startswith("res") or fn.startswith("vmst_")) and fn.endswith(".json"):
             os.remove(os.path.join(ckpt_dir, fn))
     
-    N_checkpoints =20
+    step_size = 700     # Step counter in terms of time units
+    N_checkpoints = 50 
+    
     for i in range(N_checkpoints):
         ckpt_fp = "scratch/res{}.json".format(str(i).zfill(3))
         json_str = sim_model.dump_cpp_json()
         with open(ckpt_fp, "w") as f:
             f.write(json_str)
         
+        # vmstate_fp = "scratch/vmst_{}.json".format(str(i).zfill(3))
+        # json
+        # with open(vmstate_fp, "w") as f:
+        #     f.write()
+        
         checkpoint_fps.append(ckpt_fp)
         
         # Will be reocrded next iteration
-
-        if i/N_checkpoints>=0.25:
-            pass
-            print("Using external forces.. ")
-            # sim_model.set_some_forces()
-            
-            ext_forcing_on.append(True)
-        else:
-            ext_forcing_on.append(False)
         
-        sim_model.run_steps(step_size - 1)#, verbose=True)
-        sim_model.run_steps(1)#, verbose=True)
+        sim_model.run_steps(1, do_time_force_computation=True)
+        sim_model.run_steps(step_size - 1)
         
         # exit()
+        
+    # sim_model.
     
     print("Running analysis on simulation results")
     for ckpt_idx, ckpt_fp in enumerate(checkpoint_fps):
@@ -256,16 +269,19 @@ if __name__ == "__main__":
             W_mean=W_mean,
             H_mean=H_mean,
             ))
-        if ext_forcing_on[ckpt_idx]:
-            strain_x = (W_mean - theoretical_rest_width)/theoretical_rest_width
+        # if ext_forcing_on[ckpt_idx]:
+        #     strain_x = (W_mean - theoretical_rest_width)/theoretical_rest_width
 
-            strain_y = (H_mean - theoretical_rest_height)/theoretical_rest_height
-            print("    strain_x={} strain_y={}, poisson_r={}".format(strain_x, strain_y, -strain_y/strain_x))
-        else:
-            pass
+        #     strain_y = (H_mean - theoretical_rest_height)/theoretical_rest_height
+        #     print("    strain_x={} strain_y={}, poisson_r={}".format(strain_x, strain_y, -strain_y/strain_x))
+        # else:
+        #     pass
         
         if ckpt_idx == len(checkpoint_fps) - 1:
             print([v.to_list() for v in passive_real_cells[0].vertex_coords()])
     # print()
     
 
+
+if __name__ == "__main__":
+    do_stuff()

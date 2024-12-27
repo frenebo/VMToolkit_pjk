@@ -60,7 +60,7 @@ class EFieldSpecConstantPolygonRegion:
     def E_x(self):
         return self._E_x
     
-    def E_y(sef):
+    def E_y(self):
         return self._E_y
     
     def to_json(self):

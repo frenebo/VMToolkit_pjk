@@ -22,9 +22,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
-#include <boost/property_tree/xml_parser.hpp>
 #include <boost/property_tree/info_parser.hpp>
-#include <boost/property_tree/detail/xml_parser_writer_settings.hpp>
 
 #include "json.hpp"
 

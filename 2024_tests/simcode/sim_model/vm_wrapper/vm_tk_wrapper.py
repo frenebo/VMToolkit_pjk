@@ -12,6 +12,7 @@ from ..vm_state import (
     CellForce,
     ElectricForceOnCellBoundary,
     EFieldSpecConstantPolygonRegion,
+    PolygonSpec,
 )
 # from .
 # class 
@@ -117,6 +118,16 @@ class VMToolkitWrapper:
         self._initialize_cpp(verbose=verbose)
         
         # self._tissue_loaded = False
+    
+    # def start
+
+    def start_force_compute_timers(self, verbose=False):
+        self._forces.start_force_compute_timers(verbose=verbose)
+        
+    def get_force_compute_timers_millis(self,verbose=False):
+        # print("starting get force compute")
+        return self._forces.get_force_compute_timers_millis(verbose=verbose)
+        
         
     
     def initialize_from_vm_state(self, vm_state, verbose=False):
@@ -226,13 +237,42 @@ class VMToolkitWrapper:
     def _add_cell_electric_boundary_force(self, force_id, force_spec, cell_indices, verbose=False):
         assert isinstance(force_spec, ElectricForceOnCellBoundary)
         
-        field_spec = force_spec.electric_field_spec()
-        if isinstance(field_spec, EFieldSpecConstantPolygonRegion):
-            raise NotImplementedError()
-        else:
-            raise ValueError("Unimplemented type of field spec: {}".format(field_spec))
+        self._forces.add_force(force_id, "force_efield_on_cell_boundary")
         
-        raise NotImplementedError()
+        field_spec = force_spec.electric_field_spec()
+        if not isinstance(field_spec, EFieldSpecConstantPolygonRegion):
+            raise ValueError("Unimplemented type of field spec: {}".format(field_spec))
+            
+        zone_bounds = field_spec.zone_bounds()
+        if not isinstance(zone_bounds, PolygonSpec):
+            raise ValueError("Unimplemented zone type: {}".format(zone_bounds))
+        
+        num_params = {
+            "E_x": field_spec.E_x(),
+            "E_y": field_spec.E_y(),
+            "n_polygon_vertices": len(zone_bounds.polygon_vertices()),
+        }
+        str_params = {
+            "field_type": "constant",
+            "region_type": "polygon",
+        }
+        for vert_idx, (vert_x, vert_y) in enumerate(zone_bounds.polygon_vertices()):
+            num_params["poly_x" + str(vert_idx)] = vert_x
+            num_params["poly_y" + str(vert_idx)] = vert_y
+        
+        self._forces.set_global_params(force_id, 
+            num_params=num_params,
+            str_params=str_params,
+        )
+        
+        fids = list(cell_indices)
+        face_params = [{} for i in range(len(fids))]
+        
+        self._forces.set_face_params_facewise(force_id, 
+            fids,
+            face_params,
+            verbose,
+        )
     
     def _add_constant_vertex_force(self, force_id, force_spec, vertex_indices, verbose=False):
         assert isinstance(force_spec, ConstantVertexForce)

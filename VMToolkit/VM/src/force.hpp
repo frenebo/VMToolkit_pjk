@@ -49,7 +49,7 @@ namespace VMTutorial
       // computes force on vertex by a given edge
       virtual Vec compute_he_force(const Vertex<Property>&, const HalfEdge<Property>&, bool verbose=false)
       {
-        throw runtime_error("Unimplemented Force::compute - has not been overridden in child clas apparently.");
+        throw runtime_error("Unimplemented Force::compute_he_force - has not been overridden in child clas apparently.");
       }
       
       // compute edge tension for handling 4-vertices (and moves that computation out of integrator)
@@ -75,7 +75,7 @@ namespace VMTutorial
         throw runtime_error("Unimplemented Force::set_vertex_params_vertexwise - has not been overridden in child class apparently.");
       }
       
-      virtual void set_global_params(const vector<params_type>&params, bool verbose)
+      virtual void set_global_params(const params_type& params,const map<string,string>& str_params, bool verbose)
       {
         throw runtime_error("Unimplemented Force::set_global_params - apparently has not been overriden in child class.");
       }

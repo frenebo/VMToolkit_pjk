@@ -72,17 +72,6 @@ namespace VMTutorial
 		double _sfc; // Scaling factor for junction output
 	};
 
-	// void to_json(json &, const HalfEdge<Property> &);
-	// void to_json(json &, const Edge<Property> &);
-	// void to_json(json &, const Vertex<Property> &);
-	// void to_json(json &, const Face<Property> &);
-	// void to_json(json &, const Box &);
-
-	// void from_json(const json &, HalfEdge<Property> &);
-	// void from_json(const json &, Edge<Property> &);
-	// void from_json(const json &, Vertex<Property> &);
-	// void from_json(const json &, Face<Property> &);
-
 	vector<string> split(const std::string &, char);
 
 	void export_Dump(py::module &);

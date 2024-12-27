@@ -25,8 +25,15 @@ class SimModel:
         return self._vm_wrapper.dump_cpp_json()
      
         
-    def run_steps(self, n_steps, verbose=False):
+    def run_steps(self, n_steps, verbose=False, do_time_force_computation=False):
+        if do_time_force_computation:
+            self._vm_wrapper.start_force_compute_timers(verbose=verbose)
+#         "start_force_compute_timers"
+# "get_force_compute_timers_millis"
         self._vm_wrapper.run_steps(n_steps, verbose=verbose)
+        if do_time_force_computation:
+            print("Force computation times (milliseconds):")
+            print(self._vm_wrapper.get_force_compute_timers_millis(verbose=verbose))
     
     def process_model_change_req(self, model_change_req):
         assert isinstance(model_change_req, ModelChangeRequest)

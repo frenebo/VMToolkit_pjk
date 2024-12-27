@@ -1,8 +1,10 @@
 
 import pandas as pd
 import plotly.graph_objects as go
+import shapely
 
 import json
+import math
 
 import os
 # import plotly.graph_objects as go
@@ -114,7 +116,7 @@ def build_framedata(checkpoint_objs, vertices_to_highlight=None):
     
     
 
-def make_animated_tissue_plot(frame_data):
+def make_animated_tissue_plot(frame_data, fields_data):
     fig = go.Figure(layout=go.Layout(
         xaxis=dict(
             range=frame_data["xlims"]
@@ -161,7 +163,7 @@ def make_animated_tissue_plot(frame_data):
             "visible": True,
             "xanchor": "right"
         },
-        "transition": {"duration": 100, "easing": "cubic-in-out"},
+        "transition": {"duration": 200, "easing": "cubic-in-out"},
         "pad": {"b": 10, "t": 50},
         "len": 0.9,
         "x": 0.1,
@@ -173,39 +175,106 @@ def make_animated_tissue_plot(frame_data):
             "args": [
                 [ckpt_idx],
                 {
-                    "frame": {"duration": 100, "redraw": False},
+                    "frame": {"duration": 200, "redraw": False},
                     "mode": "immediate",
-                    "transition": {"duration": 100},
+                    "transition": {"duration": 200},
                 }
             ],
             "label": "{}".format(ckpt_idx),
             "method": "animate"
         }
         sliders_dict["steps"].append(slider_step)
+        
+    # arrow_annotations = []
+    
+    # for x0,y0,x1,y1 in zip(x_end, y_end, x_start, y_start):
+    #     arrow = go.layout.Annotation(dict(
+    #                     x=x0,
+    #                     y=y0,
+    #                     xref="x", yref="y",
+    #                     text="",
+    #                     showarrow=True,
+    #                     axref="x", ayref='y',
+    #                     ax=x1,
+    #                     ay=y1,
+    #                     arrowhead=3,
+    #                     arrowwidth=1.5,
+    #                     arrowcolor='rgb(255,51,0)',)
+    #                 )
+    #     list_of_all_arrows.append(arrow)
+    
+    arrow_annotations = []
+    field_colors = ["rgb(245, 84, 66)", "rgb(255, 5, 176)"]
+    if len(fields_data) > len(field_colors):
+        raise Exception("Need to add more colorss")
+    for field_i, field_dat in enumerate(fields_data):
+        print(field_dat)
+        field_plot_col = field_colors[field_i]
+        
+        verts_x, verts_y = np.array(field_dat["vertices"],dtype=float).T
+        verts_x = list(verts_x) + [verts_x[0]]
+        verts_y = list(verts_y) + [verts_y[0]]
+        
 
-
-
+        fig.add_trace(
+            go.Scatter(
+                x=verts_x,
+                y=verts_y,
+                mode="lines", 
+                marker_size=8,
+                fill="toself",
+                # marker_color="red",
+                line={
+                    "width": 2,
+                    "dash": "dot",
+                    "color": field_plot_col,
+                }
+            ),
+        )
+        
+        arrow_annotations.append(
+            go.layout.Annotation(dict(
+                ax=field_dat["center_x"],
+                ay=field_dat["center_y"],
+                xref="x", yref="y",
+                text="",
+                showarrow=True,
+                axref="x", ayref="y",
+                x=field_dat["center_x"] + field_dat["E_n_x"]*10,
+                y=field_dat["center_y"] + field_dat["E_n_y"]*10,
+                arrowhead=3,
+                arrowwidth=5,
+                arrowcolor=field_plot_col,
+            ))
+        )
+        # field_dat[""]
 
     fig.update_layout(
         sliders=[sliders_dict],
         updatemenus=[{
-        "type": "buttons",
-        "x": 1.075,
-        "y":0.99,
-        "buttons": [{
-                "label":'Play',
-                "method":'animate',    
-                "args":[
-                    None,
-                    {
-                        "frame":{"duration":100, "redraw":False}, 
-                        "transition":{"duration":100},
-                        # "fromcurrent":True,
-                        "mode":'immediate'
-                    },
-                ]
-        }]
-    }])
+            "type": "buttons",
+            "x": 1.075,
+            "y":0.99,
+            "buttons": [{
+                    "label":'Play',
+                    "method":'animate',    
+                    "args":[
+                        None,
+                        {
+                            "frame":{"duration":100, "redraw":False}, 
+                            "transition":{"duration":100},
+                            # "fromcurrent":True,
+                            "mode":'immediate'
+                        },
+                    ]
+            }],
+        }],
+        annotations=arrow_annotations,
+    )
+    
+    # fig.add_trace(
+    #     go.Scatter(x=)
+    # )
     
     if frame_data["ylims"][1] - frame_data["ylims"][0] > frame_data["xlims"][1] - frame_data["xlims"][0]:
         fig.update_xaxes(
@@ -221,9 +290,40 @@ def make_animated_tissue_plot(frame_data):
     fig.update(frames=frames)
     fig.show()
 
+def build_fields_data(vmstate_fp):
+    with open(vmstate_fp, "r") as f:
+        vmstate_obj = json.load(f)
+    
+    elec_fields = []
+    for fid, fspec in vmstate_obj['current_state']['forces'].items():
+        if fspec['type'] == "electric_cell_boundary_force":
+            elec_fields.append(fspec['field_spec'])
+    print(elec_fields)
+    
+    fields_data = []
+    
+    for elec_f_spec in elec_fields:
+        zone_center = shapely.centroid(shapely.Polygon(elec_f_spec["zone_bounds"]["polygon_vertices"]))
+        E_x = elec_f_spec["E_x"]
+        E_y = elec_f_spec["E_y"]
+        E_amp = math.sqrt(E_x**2 + E_y**2)
+        
+        E_n_x = E_x / E_amp
+        E_n_y = E_y / E_amp
+        
+        fields_data.append({
+            "vertices": elec_f_spec["zone_bounds"]["polygon_vertices"],
+            "center_x": zone_center.x,
+            "center_y": zone_center.y,
+            "E_n_x": E_n_x,
+            "E_n_y": E_n_y,
+        })
+    
+    return fields_data
 
 
-def make_plotly_visualizer(tiss_ckpt_fps, vertices_to_highlight=None):
+
+def make_plotly_visualizer(tiss_ckpt_fps, init_vmstate_fp, vertices_to_highlight=None):
     checkpoint_objs = []
     for ckpt_fp in tiss_ckpt_fps:
         with open(ckpt_fp, "r") as f:
@@ -233,4 +333,10 @@ def make_plotly_visualizer(tiss_ckpt_fps, vertices_to_highlight=None):
     
     frame_data = build_framedata(checkpoint_objs, vertices_to_highlight=vertices_to_highlight)
     
-    make_animated_tissue_plot(frame_data)
+    fields_data = build_fields_data(init_vmstate_fp)
+    
+    make_animated_tissue_plot(
+        frame_data,
+        fields_data,
+        # arrow_annotations,
+    )

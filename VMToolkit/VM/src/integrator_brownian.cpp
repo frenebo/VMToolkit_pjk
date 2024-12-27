@@ -24,19 +24,20 @@ namespace VMTutorial
     if (verbose) {
       cout << "Total number of vertices in system - " << _sys.mesh().vertices().size() << endl;
     }
-    for (auto& v : _sys.mesh().vertices())
-    {
-      if (!v.erased)
-      {
-        if (verbose) {
-          cout << "  first round Computing force on vertex " << logvi << endl;
-        }
-        logvi++;
-        v.data().force = _force_compute.compute_v_force(v, verbose);
-      }
-    }
+    _force_compute.compute_and_set_all_vertex_forces();
+    // for (auto& v : _sys.mesh().vertices())
+    // {
+    //   if (!v.erased)
+    //   {
+    //     if (verbose) {
+    //       cout << "  first round Computing force on vertex " << logvi << endl;
+    //     }
+    //     logvi++;
+    //     v.data().force = _force_compute.compute_v_force(v, verbose);
+    //   }
+    // }
     if (verbose) {
-    cout << "Done computing vertex forces" << endl;
+      cout << "Done computing vertex forces" << endl;
     }
     
     // This is actual integrator 
