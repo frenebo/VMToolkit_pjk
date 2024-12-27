@@ -52,16 +52,21 @@ namespace VMTutorial
       { 
         for (auto& p : params)
         {
-          if (p.first == "T")
+          if (p.first == "T") {
             _T = p.second;
-          if (p.first == "gamma")
+          } else if (p.first == "gamma") {
             _gamma = p.second;
-          if (p.first == "Dr")
+          } else if (p.first == "Dr") {
             _Dr = p.second;
+          } else {
+            throw runtime_error("Unknown parameter name - " + p.first);
+          }
         }
-      };
+      }
       
-      void set_string_params(const string_params_type& params) override { }
+      void set_string_params(const string_params_type& params) override {
+        throw runtime_error("IntegratorBrownian::set_string_params - unimplemented");
+      }
       
       
       void set_flag(const string& flag) override 

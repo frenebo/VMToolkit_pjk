@@ -36,8 +36,6 @@ namespace VMTutorial
       vector<bool> _force_enabled_mask_by_cell_index;
       vector<double> _kappa;
       vector<double> _A0;
-      
-      
   };
 
   

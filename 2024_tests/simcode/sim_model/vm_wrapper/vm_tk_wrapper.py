@@ -100,7 +100,6 @@ class VMToolkitWrapper:
         return {
             "cell_ids_to_idx": cell_ids_to_idx,
             "vtx_ids_to_idx": vtx_ids_to_idx,
-            # "vtx_indic"
         }
     
     def __init__(self, verbose=False):
@@ -110,25 +109,19 @@ class VMToolkitWrapper:
         self._dumps = None
         self._simulation = None
         
-        # self._state_sinitialized = False
         self._tissue_initialized = False
         self._ids_to_cpp_index_maps = None
         
+        self._last_vm_state = None
+        
         
         self._initialize_cpp(verbose=verbose)
-        
-        # self._tissue_loaded = False
     
-    # def start
-
     def start_force_compute_timers(self, verbose=False):
         self._forces.start_force_compute_timers(verbose=verbose)
         
     def get_force_compute_timers_millis(self,verbose=False):
-        # print("starting get force compute")
         return self._forces.get_force_compute_timers_millis(verbose=verbose)
-        
-        
     
     def initialize_from_vm_state(self, vm_state, verbose=False):
         if self._tissue_initialized:
@@ -151,6 +144,31 @@ class VMToolkitWrapper:
         self._configure_forces(vm_state, verbose=verbose)
         
         self._tissue_initialized = True
+        self._last_vm_state = vm_state.from_json(vm_state.to_json())
+    
+    def run_steps(
+        self,
+        n_steps,
+        verbose=False,
+    ):
+        if not self._tissue_initialized:
+            raise Exception("No tissue has been loaded...")
+        if verbose:
+            print("About to run simulation for {} steps".format(n_steps))
+        
+        self._simulation.run(n_steps, topological_change=False, verbose=verbose)
+        # self._update_vm_state_from_cpp_vm()
+        
+    def _update_vm_state_from_cpp_vm(self):
+        # All that we need to look at (for now) should be the coordinates of vertices - 
+        # we are asssuming the topology isn't changing.
+        
+        # new_vmstate = vm_state.from_json(self._last_vm_state.to_json())
+        
+        # Get all of the vertex positions
+        # new_
+        raise NotImplementedError()
+        # print("NOT IMP")
     
     def _initialize_cpp(self, verbose=False):
         ##### Running sim
@@ -353,137 +371,6 @@ class VMToolkitWrapper:
                 raise ValueError("Expecteed force '{}' to  either be instance of CellForce or VertexForce! {}".format(force_id, force_spec))
         
         
-        # raise Exception("Following hjsould be removed")
-        
-        # for cell_grp_name, cell_forces in force_sets.cell_group_forces().force_lists_by_group().items():
-        #     cell_ids_within_group = cell_groups[cell_grp_name].cell_ids()
-        #     for c_force in cell_forces:
-        #         if isinstance(c_force, CellAreaForce):
-        #             for cell_id in cell_ids_within_group:
-        #                 if cell_id in area_forces_by_cell:
-        #                     raise ValueError("Conflicting cell area forces for cell id {}".format(cell_id))
-        #                 area_forces_by_cell[cell_id] = {
-        #                     "A0": c_force.A0(),
-        #                     "kappa": c_force.kappa(),
-        #                 }
-        #         elif isinstance(c_force, CellPerimeterForce):
-        #             for cell_id in cell_ids_within_group:
-        #                 if cell_id in perimeter_forces_by_cell:
-        #                     raise  ValueError("Conflicting perimeter forces for cell id {}".format(cell_id))
-        #                 perimeter_forces_by_cell[cell_id] = {
-        #                     "gamma": c_force.gamma(),
-        #                     "lambda": c_force.lam(),
-        #                     # "A0": c_force.A0
-        #                 }
-        #         elif isinstance(c_force, ElectricForceOnCellBoundary):
-        #             for cell_id in cell_ids_within_group:
-        #                 # if cell_id in electric_bound_force_by_cell:
-        #                 #     raise ValueError("Conflicting electric boundrya force for cell id {}".format(cell_id))
-        #                 raise NotImplementedError()
-        #                 # electric_bound_force_by_cell = {
-                            
-        #                 # }
-        #             # for cell_id in 
-        #         else:
-        #             print(c_force)
-        #             raise Exception("Unknown cell force type... {}".format(c_force))
-        
-        # constant_vtx_forces_by_vertex = {}
-        # for vtx_grp_name, vtx_forces in force_sets.vertex_group_forces().force_lists_by_group().items():
-        #     # print("")
-        #     vtx_ids_within_group = vertex_groups[vtx_grp_name].vertex_ids()
-        #     for v_force in vtx_forces:
-        #         if isinstance(v_force, ConstantVertexForce):
-        #             for vtx_id in vtx_ids_within_group:
-        #                 if vtx_id in constant_vtx_forces_by_vertex:
-        #                     raise ValueError("Conflicting constant vertex force for cell id {}".format(vtx_id))
-        #                 constant_vtx_forces_by_vertex[vtx_id] = {
-        #                     "f_x": v_force.f_x(),
-        #                     "f_y": v_force.f_y(),
-        #                 }
-        #         else:
-        #             print(v_force)
-        #             raise Exception("Unknown vertex force type... {}".format(v_force))
-        
-        
-        # ##### Set up these parameters in the model
-        # self._forces.add_force(force_id, 'area')         # add area force form term E = 0.5*kappa*(A-A0)^2
-        # area_force_cell_indices = []
-        # area_force_configs = []
-        # for cell_id, area_conf_dict in area_forces_by_cell.items():
-        #     cell_idx = self._ids_to_cpp_index_maps["cell_ids_to_idx"][cell_id]
-            
-        #     area_force_cell_indices.append(cell_idx)
-        #     area_force_configs.append(area_conf_dict)
-        
-        # self._forces.set_face_params_facewise(
-        #     "area", area_force_cell_indices, area_force_configs, verbose
-        # )
-        
-        
-        # ### Set up perimeter forces
-        # self._forces.add_force(force_id, 'perimeter')    # add perimeter force term from E = 0.5*gamma*P^2 + lambda*P (maybe -?)
-                    
-        # perim_force_cell_indices = []
-        # perim_force_configs = []
-        # for cell_id, perim_conf_dict in perimeter_forces_by_cell.items():
-        #     cell_idx = self._ids_to_cpp_index_maps["cell_ids_to_idx"][cell_id]
-        #     perim_force_cell_indices.append(cell_idx)
-        #     perim_force_configs.append(perim_conf_dict)
-        
-        # self._forces.set_face_params_facewise(
-        #     "perimeter", perim_force_cell_indices, perim_force_configs, verbose
-        # )
-        
-        
-        # self._forces.add_force(force_id, "const_vertex_propulsion")
-        
-        # const_vtx_prop_force_vertex_indices = []
-        # const_vtx_prop_force_configs = []
-        # for vtx_id, const_force_conf_dict in constant_vtx_forces_by_vertex.items():
-        #     vtx_idx = self._ids_to_cpp_index_maps["vtx_ids_to_idx"][vtx_id]
-        #     const_vtx_prop_force_vertex_indices.append(vtx_idx)
-        #     const_vtx_prop_force_configs.append(const_force_conf_dict)
-        
-        # self._forces.set_vertex_params_vertexwise(
-        #     "const_vertex_propulsion", const_vtx_prop_force_vertex_indices, const_vtx_prop_force_configs, verbose
-        # )
-            
-            
-        # self._forces.set_face_params_facewise(
-        #     "perimeter", all_face_ids, [{'gamma': self._default_gamma, "lambda": self._default_lambda_val} for i in range(len(all_face_ids))]
-        # )
-            # print(vtx_grp_name)
-            # print(vtx_forces)
-            
-            # print(vtx_forces)
-
-    # def configure_forces(
-    #     self,
-    #     P0_model,
-    #     gamma,
-    #     kappa,
-    #     verbose=False,
-    #     ):
-    #     # if not self._cell_types_configured:
-    #     #     raise Exception("Cell type not configured - forces won't work without cell types preestablished")
-    #     # if not self._cell_types_
-    #     if verbose:
-    #         print("CONFIGURING FORCES==================")
-    #         self._sim_sys.log_debug_stats()
-        
-    #     if verbose:
-    #         print("Added area and perimeter forces")
-    #         self._sim_sys.log_debug_stats()
-    #     # Set parameters for each cell type
-
-    #     # lambda_val = P0_model * gamma # @TODO either the sim uses this, or it uses the P0... add a way to force P0 usage in set_params in cpp file?
-    #     self._default_gamma = gamma
-    #     self._default_lambda_val = P0_model * gamma
-    #     self._default_kappa = kappa
-
-
-    #     self.forces_configured = True
 
     def _configure_integrators(self, dt, friction_gam, verbose=False):
         if verbose:
@@ -500,15 +387,3 @@ class VMToolkitWrapper:
         if verbose:
             print("Done configuring integrators")
     
-    def run_steps(
-        self,
-        n_steps,
-        verbose=False,
-    ):
-        if not self._tissue_initialized:
-            raise Exception("No tissue has been loaded...")
-        if verbose:
-            print("About to run simulation for {} steps".format(n_steps))
-        
-        self._simulation.run(n_steps, topological_change=False, verbose=verbose)
-        

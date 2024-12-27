@@ -4,9 +4,9 @@ import json
 import os
 from line_profiler import profile
 
-from simcode.analytic_tools.find_hexagon_rest_area import HexagonalModel, find_hexagon_rest_area
+from simcode.theoretical_model.find_hexagon_rest_area import HexagonalModel, find_hexagon_rest_area
 from VMToolkit.config_builder.open.honeycomb_lattice import HoneycombLattice
-# from VMToolkit.VM import Tissue, System, ForceCompute, Integrate, Topology, Dump, Simulation, Vec
+
 from VMToolkit.VMAnalysis.utils.HalfEdge import Mesh
 
 from simcode.tissue_builder.hexagonal import HexagonalCellMesh
@@ -82,21 +82,21 @@ def do_stuff():
     tiss_init_state.forces()["perim_f_all"] = CellPerimeterForce(gamma=gamma, lam=P0_model*gamma)
     tiss_init_state.forces()["area_f_all"] = CellAreaForce(A0=A0_model, kappa=kappa)
     
-    field_size_multiplier = 0.5
+    field_size_multiplier = 0.1
     tiss_init_state.forces()["left_forcing_field"] = make_forcing_field_rectangular(
-        xmin=field_size_multiplier*(-args.box_lx/2),
+        xmin=field_size_multiplier*(-args.box_lx),
         xmax=0,
         ymin=field_size_multiplier*(-args.box_ly),
         ymax=field_size_multiplier*(args.box_ly),
-        field_x=0.0,
+        field_x=0.00,
         field_y=0.01,
     )
     tiss_init_state.forces()["right_forcing_field"] = make_forcing_field_rectangular(
         xmin=0,
-        xmax=field_size_multiplier*(args.box_lx/2),
+        xmax=field_size_multiplier*(args.box_lx),
         ymin=field_size_multiplier*(-args.box_ly),
         ymax=field_size_multiplier*(args.box_ly),
-        field_x=0.0,
+        field_x=0.00,
         field_y=-0.01,
     )
     
@@ -205,8 +205,8 @@ def do_stuff():
         if (fn.startswith("res") or fn.startswith("vmst_")) and fn.endswith(".json"):
             os.remove(os.path.join(ckpt_dir, fn))
     
-    step_size = 700     # Step counter in terms of time units
-    N_checkpoints = 50 
+    step_size = 1500     # Step counter in terms of time units
+    N_checkpoints = 50
     
     for i in range(N_checkpoints):
         ckpt_fp = "scratch/res{}.json".format(str(i).zfill(3))

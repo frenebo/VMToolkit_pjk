@@ -20,6 +20,7 @@ class SimModel:
         vm_state = VMState.from_json(vm_state_json)
         self._vm_wrapper.initialize_from_vm_state(vm_state, verbose=verbose)
     
+    # def update_state_from
     
     def dump_cpp_json(self):
         return self._vm_wrapper.dump_cpp_json()
@@ -28,12 +29,16 @@ class SimModel:
     def run_steps(self, n_steps, verbose=False, do_time_force_computation=False):
         if do_time_force_computation:
             self._vm_wrapper.start_force_compute_timers(verbose=verbose)
-#         "start_force_compute_timers"
-# "get_force_compute_timers_millis"
+
         self._vm_wrapper.run_steps(n_steps, verbose=verbose)
         if do_time_force_computation:
             print("Force computation times (milliseconds):")
             print(self._vm_wrapper.get_force_compute_timers_millis(verbose=verbose))
+        
+        # self._update_state_from_cpp_vm()
+    
+    # def _update_state_from_cpp_vm(self):
+    #     print(self._vm_wrapper.dump_cpp_json())
     
     def process_model_change_req(self, model_change_req):
         assert isinstance(model_change_req, ModelChangeRequest)
@@ -45,29 +50,3 @@ class SimModel:
             print("Model change req: {}".format(model_change_req))
             print("Model change req to json: {}".format(model_change_req.to_json()))
             raise
-        
-        
-        
-
-# default_config = {
-#     "integrator": {
-#         "type": "brownian",
-#         "temp": 0,
-#         "friction_gam": 1.0,
-#         "dt": 0.3,
-#     },
-    
-#     "cell_types": {
-#         "default": {
-#             "forces": {
-#                 "area": {
-#                     'kappa': 1.0,
-#                 },
-#                 "perimeter": {
-#                     'gamma': 0.15,
-#                     'lambda': 0.15 * 0.20 ,
-#                 },
-#             },
-#         },
-#     }
-# }
