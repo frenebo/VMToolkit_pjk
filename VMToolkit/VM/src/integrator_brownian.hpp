@@ -41,10 +41,7 @@ namespace VMTutorial
                                                                     _Dr{0.0},
                                                                     _update_n{false}
                                                                     
-      { 
-        // map<string,int>& vert_types = _sys.vert_types();
-        // map<string,int>& cell_types = _sys.cell_types();
-        
+      {
         _constrainer = make_unique<Constrainer>();
         _constrainer->add<ConstraintNone>("none");
         _constrainer->add<ConstraintFixed>("fixed");
@@ -66,20 +63,6 @@ namespace VMTutorial
       
       void set_string_params(const string_params_type& params) override { }
       
-      // void set_external_forces_by_vertex(const vector<int>& vids, const vector<Vec>& forces) override
-      // {
-      //   if (vids.size() != forces.size()) {
-      //     throw runtime_error("Number of vertex indices and forces do not match");
-      //   }
-        
-      //   for (size_t i = 0; i < vids.size(); ++i)
-      //   {
-      //     int vid = vids[i];
-      //     Vec ext_f = forces[i];
-          
-      //     _const_ext_forces_by_vid[vid] = ext_f;
-      //   }
-      // }
       
       void set_flag(const string& flag) override 
       {  
@@ -95,9 +78,6 @@ namespace VMTutorial
       ConstrainerType _constrainer; // Apply various constraints
       double _T;                 // temperature
       double _gamma;             // friction 
-      // map<int, Vec> _const_ext_forces_by_vid;
-      // vector<Vec> _constant_force;
-      // vector<Vec> 
       double _Dr;                // rotational diffusion constant
       bool _update_n;            // If true, update direction of the cell self-propulsion direction
       

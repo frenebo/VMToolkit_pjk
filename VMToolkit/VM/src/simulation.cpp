@@ -11,7 +11,9 @@ namespace VMTutorial
 {
   void Simulation::run(int steps, bool topological_change, bool old_style, bool verbose)
   {
-    
+    if (topological_change) {
+      throw runtime_error("Simulation::run - topological_change is not guaranteed to work, this code has changed a lot since that was last used.");
+    }
     double progress = 0.0;
     if (verbose) { cout << "Simulation::run - Running simulation for " << steps << " steps" << endl; }
     for (int i = sim_step; i < sim_step + steps; i++)

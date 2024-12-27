@@ -21,7 +21,12 @@ namespace VMTutorial
         typedef boost::geometry::model::multi_linestring<BLineString> BMultiLinestring;
         
         public:
-            PolygonZone() {}
+            PolygonZone() {
+                _xmin=0.0;
+                _xmax=0.0;
+                _ymin=0.0;
+                _ymax=0.0;
+            }
             
             void set_points(const vector<Vec>& polygon_vertices, bool verbose=false)
             {
@@ -29,12 +34,50 @@ namespace VMTutorial
                     cout << "PolygonZone::set_points - setting up" << endl;
                 }
                 boost::geometry::clear(_btpoly);
+                
+                // doubl
+                // if ()
+                _xmin = polygon_vertices.at(0).x;
+                _xmax = _xmin;
+                
+                _ymin = polygon_vertices.at(0).y;
+                _ymax = _ymin;
+                
                 for (const auto& p_vert_vec : polygon_vertices) {
-                    BPoint vert_pt(p_vert_vec.x, p_vert_vec.y);
+                    double vx = p_vert_vec.x;
+                    double vy = p_vert_vec.y;
+                    BPoint vert_pt(vx, vy);
                     _btpoly.outer().push_back(vert_pt);
-                    cout << "  add pt " << p_vert_vec.x << ", " << p_vert_vec.y << endl;
+                    
+                    if (verbose) {
+                        cout << "  add pt " << vx << ", " << vy<< endl;
+                    }
+                    
+                    // if (new_)
+                    if (vx > _xmax) _xmax = vx;
+                    if (vx < _xmin) _xmin = vx;
+                    
+                    if (vy > _ymax) _ymax = vy;
+                    if (vy < _ymin) _ymin = vy;
                 }
                 boost::geometry::correct(_btpoly);
+            }
+            
+            double xmin() const
+            {
+                return _xmin;
+            }
+            double xmax() const
+            {
+                return _xmax;
+            }
+            double ymin() const
+            {
+                return _ymin;
+            }
+            double ymax() const
+            {
+                return _ymax;
             }
             
             double cell_edge_intersection(const Vec& vec_from, const Vec& vec_to,  bool verbose=false) const
@@ -89,5 +132,9 @@ namespace VMTutorial
             virtual ~PolygonZone() {}
         private:
             BPolygon _btpoly;
+            double _xmin;
+            double _ymin;
+            double _xmax;
+            double _ymax;
     };
 }

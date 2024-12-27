@@ -24,7 +24,7 @@ namespace VMTutorial
     if (verbose) {
       cout << "Total number of vertices in system - " << _sys.mesh().vertices().size() << endl;
     }
-    _force_compute.compute_and_set_all_vertex_forces();
+    _force_compute.compute_and_set_all_vertex_forces(verbose);
     // for (auto& v : _sys.mesh().vertices())
     // {
     //   if (!v.erased)

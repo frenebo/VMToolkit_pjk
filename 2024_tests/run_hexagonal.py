@@ -72,7 +72,7 @@ def do_stuff():
     
     
     cm = HexagonalCellMesh(
-        side_length=rest_side_length*1.1,
+        side_length=rest_side_length,
         box_lx=args.box_lx,
         box_ly=args.box_ly,
         # verbose=True,
@@ -86,18 +86,18 @@ def do_stuff():
     tiss_init_state.forces()["left_forcing_field"] = make_forcing_field_rectangular(
         xmin=field_size_multiplier*(-args.box_lx/2),
         xmax=0,
-        ymin=field_size_multiplier*(-args.box_ly/2),
-        ymax=field_size_multiplier*(args.box_ly/2),
+        ymin=field_size_multiplier*(-args.box_ly),
+        ymax=field_size_multiplier*(args.box_ly),
         field_x=0.0,
-        field_y=0.02,
+        field_y=0.01,
     )
     tiss_init_state.forces()["right_forcing_field"] = make_forcing_field_rectangular(
         xmin=0,
         xmax=field_size_multiplier*(args.box_lx/2),
-        ymin=field_size_multiplier*(-args.box_ly/2),
-        ymax=field_size_multiplier*(args.box_ly/2),
+        ymin=field_size_multiplier*(-args.box_ly),
+        ymax=field_size_multiplier*(args.box_ly),
         field_x=0.0,
-        field_y=-0.02,
+        field_y=-0.01,
     )
     
     tiss_init_state.cell_groups()["all"].force_ids().extend([
@@ -113,13 +113,12 @@ def do_stuff():
         sim_settings=SimulationSettings(
             integrator_settings=IntegratorSettings(
                 vertex_friction_gamma=0.1,
-                step_dt=0.02,
+                step_dt=0.08,
             ),
         )
     )
     
     ## Add forces to top and bottom
-    
     vertex_ymin = min([vgeom.y() for vid, vgeom in vm_initial_state.current_state().geometry().vertices().items()])
     vertex_ymax = max([vgeom.y() for vid, vgeom in vm_initial_state.current_state().geometry().vertices().items()])
     
@@ -224,51 +223,51 @@ def do_stuff():
         
         # Will be reocrded next iteration
         
-        sim_model.run_steps(1, do_time_force_computation=True)
-        sim_model.run_steps(step_size - 1)
+        # sim_model.run_steps(1)#, do_time_force_computation=True)
+        sim_model.run_steps(step_size )
         
         # exit()
         
     # sim_model.
     
-    print("Running analysis on simulation results")
-    for ckpt_idx, ckpt_fp in enumerate(checkpoint_fps):
+    # print("Running analysis on simulation results")
+    # for ckpt_idx, ckpt_fp in enumerate(checkpoint_fps):
 
-        print(ckpt_fp,end="")
+    #     # print(ckpt_fp)
 
-        mesh = Mesh()
-        mesh.read(ckpt_fp)
+    #     mesh = Mesh()
+    #     mesh.read(ckpt_fp)
 
-        cell_widths = []
-        cell_heights = []
-        passive_real_cells= []
-        for f in mesh.faces:
-            if f.outer == False:
+        # cell_widths = []
+        # # cell_heights = []
+        # # passive_real_cells= []
+        # for f in mesh.faces:
+        #     if f.outer == False:
                 
-                cell_vertices = np.array([v.to_list() for v in f.vertex_coords()],dtype=float)
+        #         cell_vertices = np.array([v.to_list() for v in f.vertex_coords()],dtype=float)
                 
                 
-                cell_w = cell_vertices[:,0].max() - cell_vertices[:,0].min()
-                cell_h = cell_vertices[:,1].max() - cell_vertices[:,1].min()
-                cell_widths.append(cell_w)
-                cell_heights.append(cell_h)
+        #         cell_w = cell_vertices[:,0].max() - cell_vertices[:,0].min()
+        #         cell_h = cell_vertices[:,1].max() - cell_vertices[:,1].min()
+        #         cell_widths.append(cell_w)
+        #         cell_heights.append(cell_h)
                 
-                passive_real_cells.append(f)
+        #         passive_real_cells.append(f)
         
-        # print(mesh.faces[len(mesh.faces)//3].vertex_coords())
-        areas = [face.area() for face in passive_real_cells]
-        areas = np.array(areas)
+        # # print(mesh.faces[len(mesh.faces)//3].vertex_coords())
+        # areas = [face.area() for face in passive_real_cells]
+        # areas = np.array(areas)
 
-        W_mean = np.array(cell_widths).mean()
-        H_mean = np.array(cell_heights).mean()
+        # W_mean = np.array(cell_widths).mean()
+        # H_mean = np.array(cell_heights).mean()
 
-        print("  A_min={:.4f}, A_max={:.4f}, A_mean={:.4f}, W_mean={W_mean:.4f}, H_mean={H_mean:.4f}".format(
-            areas.min(),
-            areas.max(),
-            areas.mean(),
-            W_mean=W_mean,
-            H_mean=H_mean,
-            ))
+        # print("  A_min={:.4f}, A_max={:.4f}, A_mean={:.4f}, W_mean={W_mean:.4f}, H_mean={H_mean:.4f}".format(
+        #     areas.min(),
+        #     areas.max(),
+        #     areas.mean(),
+        #     W_mean=W_mean,
+        #     H_mean=H_mean,
+        #     ))
         # if ext_forcing_on[ckpt_idx]:
         #     strain_x = (W_mean - theoretical_rest_width)/theoretical_rest_width
 
@@ -277,8 +276,8 @@ def do_stuff():
         # else:
         #     pass
         
-        if ckpt_idx == len(checkpoint_fps) - 1:
-            print([v.to_list() for v in passive_real_cells[0].vertex_coords()])
+        # if ckpt_idx == len(checkpoint_fps) - 1:
+        #     print([v.to_list() for v in passive_real_cells[0].vertex_coords()])
     # print()
     
 

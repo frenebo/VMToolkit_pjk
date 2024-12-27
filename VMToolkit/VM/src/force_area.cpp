@@ -50,21 +50,55 @@ namespace VMTutorial
 		return farea_vec;
 	}
 
-	// double ForceArea::energy(const Face<Property> &f)
-	// {
-	// 	double A = _sys.mesh().area(f);
+	void ForceArea::set_face_params_facewise(const vector<int>& fids, const vector<params_type>& params, bool verbose)
+	{
+		// Resize the internal parameter arrays if needed...
+		int max_fid = 0;
+		for (const auto& fid : fids) {
+			if (fid > max_fid) max_fid = fid;
+		}
 		
-	// 	if (f.outer || f.erased)
-	// 		return 0.0;
-
-	// 	double A0;
-	// 	double kappa = 0.0;
-	// 	if (enabled_for_faceidx(f.id)) {
-	// 		A0  = _A0.at(f.id);
-	// 		kappa = _kappa.at(f.id);
-	// 	}
-
-	// 	double dA = A - A0;
-	// 	return 0.5 * kappa * dA * dA;
-	// }
+		if (max_fid >= _force_enabled_mask_by_cell_index.size()) {
+			_force_enabled_mask_by_cell_index.resize(max_fid + 1, false);
+			_kappa.resize(max_fid + 1, 0.0);
+			_A0.resize(max_fid + 1, 0.0);
+		}
+		
+		for (size_t i = 0; i < fids.size(); ++i) {
+			int fid = fids[i];
+			const auto& fparam = params[i];
+			
+			_force_enabled_mask_by_cell_index.at(fid) = true;
+			_kappa.at(fid) = fparam.at("kappa");
+			_A0.at(fid) = fparam.at("A0");
+			
+			if (verbose) {
+				cout << "Setting area force for face '" << fid << "':  kappa=" << fparam.at("kappa") << " A0=" << fparam.at("A0") << endl;
+			}
+		}
+	}
+	
+	bool ForceArea::enabled_for_faceidx(int fid, bool verbose)
+	{
+		if (fid >= _force_enabled_mask_by_cell_index.size())
+		{
+			return false;
+		}
+		
+		bool is_enabled =  _force_enabled_mask_by_cell_index[fid];
+		
+		if (verbose)
+		{
+			if (is_enabled)
+			{
+				cout << "          - Confirmed that area force is enabled for fid=" << fid << endl;
+			}
+			else
+			{
+				cout << "          - Area force NOT enabled for fid=" << fid << endl;
+			}
+		}
+	
+		return is_enabled;
+	}
 }
