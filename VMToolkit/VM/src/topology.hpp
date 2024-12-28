@@ -41,9 +41,9 @@ namespace VMTutorial
 		};
 
 
-		void set_flag(const string &flag)
-		{
-		}
+		// void set_flag(const string &flag)
+		// {
+		// }
 
 		void T1();
 

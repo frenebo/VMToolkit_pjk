@@ -17,7 +17,7 @@ namespace VMTutorial
 	class ForcePerimeter : public Force
 	{
 	public:
-		ForcePerimeter(System &sys) : Force{sys}
+		ForcePerimeter(const System &sys) : Force{sys}
 		{
 		}
 		virtual ~ForcePerimeter() {}

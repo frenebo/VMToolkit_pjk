@@ -162,6 +162,6 @@ namespace VMTutorial
 		py::class_<Dump>(m, "Dump")
 			.def(py::init<System &, ForceCompute &>())
 			.def("mesh_to_jsonstr", &Dump::mesh_to_jsonstr)
-			.def("set_sfc", &Dump::set_sfc);
+			;
 	}
 }

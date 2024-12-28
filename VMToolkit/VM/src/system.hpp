@@ -98,6 +98,8 @@ namespace VMTutorial
 
       // System info access 
       MyMesh& mesh()  { return _mesh; }
+      const MyMesh& cmesh() const { return _mesh; }
+      
       const shared_ptr<Box> &box() const { return _mesh.box(); }
       int& time_step() { return _time_step; }
       bool periodic() { return (_mesh.box() != nullptr); }

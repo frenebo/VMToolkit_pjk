@@ -15,7 +15,7 @@ namespace VMTutorial
             cout << "          force enabled for fid " << f.id << ", calculating electric force" << endl;
         }
         double Q1 = _cell_charges_by_face_index.at(f.id);
-        double P1 = _sys.mesh().perim(f);
+        double P1 = _sys.cmesh().perim(f);
         double F1_charge_within_poly = Q1 * (edge_len_within_polygon / P1);
         if (verbose) {
             cout << "          edge length inside polygon: " << edge_len_within_polygon << " total perim: " << P1 << " charge within poly " << Q1 << endl;

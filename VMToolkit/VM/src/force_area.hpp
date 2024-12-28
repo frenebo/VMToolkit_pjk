@@ -18,7 +18,7 @@ namespace VMTutorial
   {
     public:
                                                                                                                                 
-      ForceArea(System& sys) : Force(sys) 
+      ForceArea(const System& sys) : Force(sys) 
       { 
       }
       virtual ~ForceArea() { }

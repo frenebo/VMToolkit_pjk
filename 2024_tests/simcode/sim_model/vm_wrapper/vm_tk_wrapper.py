@@ -374,8 +374,11 @@ class VMToolkitWrapper:
 
     def _configure_integrators(self, dt, friction_gam, verbose=False):
         if verbose:
-            print("Adding brownian integrator")
-        self._integrators.add('brownian')
+            print("Adding runge_kutta integrator")
+        self._integrators.add('runge_kutta')
+        # if verbose:
+        #     print("Adding brownian integrator")
+        # self._integrators.add('brownian')
 
 
         # dt = 0.3
@@ -383,7 +386,8 @@ class VMToolkitWrapper:
         if verbose:
             print("Setting dt={}, friction_gamma={}".format(dt, friction_gam))
         self._integrators.set_dt(dt) # set time step
-        self._integrators.set_params("brownian", {"gamma": friction_gam})
+        self._integrators.set_params("runge_kutta", {"gamma": friction_gam})
+        # self._integrators.set_params("brownian", {"gamma": friction_gam})
         if verbose:
             print("Done configuring integrators")
     

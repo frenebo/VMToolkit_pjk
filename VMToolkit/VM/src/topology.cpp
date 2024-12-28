@@ -31,7 +31,7 @@ namespace VMTutorial
     py::class_<Topology>(m, "Topology")
       .def(py::init<System&, ForceCompute&, int>(), py::arg("sys"), py::arg("force_compute"), py::arg("seed") = 0)
       .def("set_params", &Topology::set_params)
-      .def("set_flag", &Topology::set_flag);
+      ;
   }
   
 }

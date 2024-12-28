@@ -76,13 +76,13 @@ namespace VMTutorial
       //     throw runtime_error("set_string_params: Integrator type " + iname + " is not used in this simulation.");
       // }
 
-      void set_flag(const string& iname, const string& flag)
-      {
-        if (this->factory_map.find(iname) != this->factory_map.end())
-          this->factory_map[iname]->set_flag(flag);
-        else
-          throw runtime_error("set_flag: Integrator type " + iname + " is not used in this simulation.");
-      }
+      // void set_flag(const string& iname, const string& flag)
+      // {
+      //   if (this->factory_map.find(iname) != this->factory_map.end())
+      //     this->factory_map[iname]->set_flag(flag);
+      //   else
+      //     throw runtime_error("set_flag: Integrator type " + iname + " is not used in this simulation.");
+      // }
 
       void enable(const string& iname)
       {

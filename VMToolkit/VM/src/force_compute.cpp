@@ -53,7 +53,7 @@ namespace VMTutorial
 			cout << "ForceCompute::compute_and_apply_vertex_force - computing all forces" << endl;
 		}
 		
-		std::vector<Vec> v_forces(_sys.mesh().vertices().size(), Vec(0.0,0.0));
+		std::vector<Vec> v_forces(_sys.cmesh().cvertices().size(), Vec(0.0,0.0));
 		
 		bool do_time_computations = (_force_timers.size() > 1);
 		
@@ -77,7 +77,7 @@ namespace VMTutorial
 			t1 = std::chrono::high_resolution_clock::now();
 			}
 			
-			for (auto& vertex : _sys.mesh().vertices())
+			for (auto& vertex : _sys.cmesh().cvertices())
 			{
 			if (vertex.erased) {
 				continue;
@@ -168,13 +168,13 @@ namespace VMTutorial
 		}
 		
 		if (force_type == "area") {
-			this->add<ForceArea,System&>(force_id, _sys);
+			this->add<ForceArea,const System&>(force_id, _sys);
 		} else if (force_type == "perimeter") {
-			this->add<ForcePerimeter,System&>(force_id, _sys);
+			this->add<ForcePerimeter,const System&>(force_id, _sys);
 		} else if (force_type == "const_vertex_propulsion") {
-			this->add<ForceConstVertexPropulsion,System&>(force_id, _sys);
+			this->add<ForceConstVertexPropulsion,const System&>(force_id, _sys);
 		} else if (force_type == "force_efield_on_cell_boundary") {
-			this->add<ForceEFieldOnCellBoundary, System&>(force_id, _sys);
+			this->add<ForceEFieldOnCellBoundary, const System&>(force_id, _sys);
 		} else  {
 			throw runtime_error("Unknown force name : " + force_id + ".");
 		}
@@ -189,10 +189,8 @@ namespace VMTutorial
 			.def("set_global_params", &ForceCompute::set_global_params, py::arg("force_id"), py::arg("num_params"), py::arg("str_params"), py::arg("verbose")=false)
 			.def("set_face_params_facewise", &ForceCompute::set_face_params_facewise)
 			.def("set_vertex_params_vertexwise", &ForceCompute::set_vertex_params_vertexwise)
-			// .def("set_flag", &ForceCompute::set_flag)
 			.def("add_force", &ForceCompute::add_force, py::arg("force_id"), py::arg("force_type"), py::arg("verbose")=false)
-			// .def()
-
+			
 			.def("start_force_compute_timers", &ForceCompute::start_force_compute_timers, py::arg("verbose")=false)
 			.def("get_force_compute_timers_millis", &ForceCompute::get_force_compute_timers_millis, py::arg("verbose")=false);
 			// .def("compute", &ForceCompute::compute_forces)

@@ -14,7 +14,7 @@
 
 #include "vec.hpp"
 
-#include "base_property.hpp"
+// #include "base_property.hpp"
 
 using std::map;
 using std::string;
@@ -23,16 +23,16 @@ using std::vector;
 namespace VMTutorial
 {
 
-	struct Property : public BaseProperty
+	struct Property //: public BaseProperty
 	{
-		struct HEProperty : public BaseProperty::HEProperty
+		struct HEProperty// : public BaseProperty::HEProperty
 		{
 			double tension = 0.0;
 			// double l0;					 // Native length of an edge
 			int old_face_id;			 // the way to distinguish if a vertex split was actual T1 or a bounce back
 			// map<string, Vec> force_type; // Force of a given type on the he->from() vertex due to along this half-edge
 		};
-		struct VertexProperty : public BaseProperty::VertexProperty
+		struct VertexProperty //: public BaseProperty::VertexProperty
 		{
 			Vec vel;
 			Vec r;
@@ -49,12 +49,12 @@ namespace VMTutorial
 				return *this;
 			}
 		};
-		struct EdgeProperty : public BaseProperty::EdgeProperty
+		struct EdgeProperty //: public BaseProperty::EdgeProperty
 		{
 			double tension = 0.0;
 			// double l0; // Native length of an edge
 		};
-		struct FaceProperty : public BaseProperty::FaceProperty
+		struct FaceProperty //: public BaseProperty::FaceProperty
 		{
 			// double A0;
 			// double P0;

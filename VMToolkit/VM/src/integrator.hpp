@@ -59,10 +59,10 @@ namespace VMTutorial
       //   throw runtime_error("Child has not implemented Integrator::set_string_params");
       // }
       
-      virtual void set_flag(const string&)
-      {
-        throw runtime_error("Child has not implemented Integrator::set_flag");
-      }
+      // virtual void set_flag(const string&)
+      // {
+      //   throw runtime_error("Child has not implemented Integrator::set_flag");
+      // }
 
       void set_dt(double dt) { _dt = dt; }
       void enable() { _enabled = true; }

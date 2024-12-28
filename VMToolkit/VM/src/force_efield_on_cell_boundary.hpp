@@ -19,7 +19,7 @@ namespace VMTutorial
 	class ForceEFieldOnCellBoundary : public Force
 	{
 	public:
-		ForceEFieldOnCellBoundary(System &sys) : Force{sys}, _E_x{0},_E_y{0} {
+		ForceEFieldOnCellBoundary(const System &sys) : Force{sys}, _E_x{0},_E_y{0} {
 		}
         
 		virtual ~ForceEFieldOnCellBoundary() {}

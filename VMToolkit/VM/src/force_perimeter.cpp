@@ -19,8 +19,8 @@ namespace VMTutorial
     Vec l = he.to()->data().r - v.data().r;                    // vector along the junction pointing away from the vertex
     const Face<Property>& f   = *(he.face());         // cell to the right of the half edge
     const Face<Property>& fp = *(he.pair()->face()); // pair cell (opposite side of the same junction)
-    double P1 = _sys.mesh().perim(f);
-    double P2 = _sys.mesh().perim(fp);
+    double P1 = _sys.cmesh().perim(f);
+    double P2 = _sys.cmesh().perim(fp);
     
     double gamma_1 = 0.0;
     double lambda_1 = 0.0;

@@ -40,7 +40,7 @@ namespace VMTutorial
       // const param_type& gammaLen, const param_type& l0, const param_type& counter
       // _gammaLen(gammaLen), _l0(l0), _counter(counter)
                                                                                                                                 
-      Force(System& sys) : _sys{sys}
+      Force(const System& sys) : _sys{sys}
       { 
 
       }
@@ -82,7 +82,7 @@ namespace VMTutorial
     
     protected:
 
-      System& _sys;    // Mesh
+      const System& _sys;    // Mesh
      
       
   };

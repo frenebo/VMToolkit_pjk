@@ -17,7 +17,7 @@ namespace VMTutorial
 	class ForceConstVertexPropulsion : public Force
 	{
 	public:
-		ForceConstVertexPropulsion(System &sys) : Force{sys} {
+		ForceConstVertexPropulsion(const System &sys) : Force{sys} {
 		}
         
 		virtual ~ForceConstVertexPropulsion() {}

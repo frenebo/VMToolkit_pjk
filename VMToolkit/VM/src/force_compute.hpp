@@ -44,7 +44,7 @@ namespace VMTutorial
     
     public:
 
-      ForceCompute(System& sys) : _sys{sys}
+      ForceCompute(const System& sys) : _sys{sys}
       { 
 
       }
@@ -71,7 +71,7 @@ namespace VMTutorial
       void add_force(const string& force_id, const string& force_type, bool verbose);
 
     private:
-      System& _sys;
+      const System& _sys;
       map<string, timer_duration> _force_timers;
   };
 

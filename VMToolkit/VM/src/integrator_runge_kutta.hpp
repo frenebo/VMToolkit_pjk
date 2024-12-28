@@ -23,6 +23,9 @@ namespace VMTutorial
 
   class IntegratorRungeKutta : public Integrator 
   {
+    /*
+      Implementation of RK4
+    */
     public:
       
       IntegratorRungeKutta(
@@ -50,12 +53,9 @@ namespace VMTutorial
       }
       
       
-      void set_flag(const string& flag) override 
-      {  
-          throw runtime_error("IntegratorRungeKutta::set_flag - Unknown flag : " + flag + ".");
-      }
-      
     private:
+      std::vector<Vec> instantaneous_velocities(bool verbose) const;
+      
       double _gamma;             // friction 
   };
 }

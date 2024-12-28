@@ -22,37 +22,22 @@ def do_stuff():
     args = parser.parse_args()
     
     
-    # A0_model = tissue_cell_properties["A0"]
-    # P0_model = tissue_cell_properties["P0"]
-    
-    # gamma_force_coeff = tissue_cell_properties["gamma"]
-    # kappa_force_coeff = tissue_cell_properties["kappa"]
-    
-    # box_lx = env_setup_properties["box_lx"]
-    # box_ly = env_setup_properties["box_ly"]
-    
-    # sim_friction_gamma = simulation_settings["friction_gamma"]
-    # sim_step_dt = simulation_settings["step_dt"]
-    
-    # forcing_field_strength = env_setup_properties["forcing_field_strength"]
-    # field_zone_rel_width = env_setup_properties["forcing_field_relative_width"]
-    
     vm_initial_state = build_squeezer_model(
         tissue_cell_properties={
-            "A0": 5,
-            "P0": 6.0,
-            "gamma": 0.1,
-            "kappa": 0.1,
+            "A0": 1.0,
+            "P0": 0.3,
+            "gamma": 0.16,
+            "kappa": 1.0,
         },
         env_setup_properties={
-            "box_lx": 30.0,
-            "box_ly": 30.0,
+            "box_lx": 15.0,
+            "box_ly": 5.0,
             "forcing_field_strength": 0.005,
             "forcing_field_relative_width": 1/4,
         },
         simulation_settings={
             "friction_gamma": 0.1,
-            "step_dt": 0.08,
+            "step_dt": 0.05,
         },
     )
     
@@ -81,8 +66,8 @@ def do_stuff():
         if (fn.startswith("res") or fn.startswith("vmst_")) and fn.endswith(".json"):
             os.remove(os.path.join(ckpt_dir, fn))
     
-    step_size = 700     # Step counter in terms of time units
-    N_checkpoints = 15
+    step_size = 40     # Step counter in terms of time units
+    N_checkpoints = 50
     
     for i in range(N_checkpoints):
         ckpt_fp = "scratch/res{}.json".format(str(i).zfill(3))

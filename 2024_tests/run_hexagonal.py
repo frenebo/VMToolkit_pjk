@@ -82,7 +82,7 @@ def do_stuff():
     tiss_init_state.forces()["perim_f_all"] = CellPerimeterForce(gamma=gamma, lam=P0_model*gamma)
     tiss_init_state.forces()["area_f_all"] = CellAreaForce(A0=A0_model, kappa=kappa)
     
-    field_size_multiplier = 0.1
+    field_size_multiplier = 0.3
     tiss_init_state.forces()["left_forcing_field"] = make_forcing_field_rectangular(
         xmin=field_size_multiplier*(-args.box_lx),
         xmax=0,
@@ -113,7 +113,7 @@ def do_stuff():
         sim_settings=SimulationSettings(
             integrator_settings=IntegratorSettings(
                 vertex_friction_gamma=0.1,
-                step_dt=0.08,
+                step_dt=0.1,
             ),
         )
     )
@@ -205,7 +205,7 @@ def do_stuff():
         if (fn.startswith("res") or fn.startswith("vmst_")) and fn.endswith(".json"):
             os.remove(os.path.join(ckpt_dir, fn))
     
-    step_size = 1500     # Step counter in terms of time units
+    step_size = 500     # Step counter in terms of time units
     N_checkpoints = 50
     
     for i in range(N_checkpoints):
@@ -224,7 +224,7 @@ def do_stuff():
         # Will be reocrded next iteration
         
         # sim_model.run_steps(1)#, do_time_force_computation=True)
-        sim_model.run_steps(step_size )
+        sim_model.run_steps(step_size)
         
         # exit()
         

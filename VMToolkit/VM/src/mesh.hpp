@@ -81,6 +81,7 @@ namespace VMTutorial
 
 		vector<HalfEdge<Property>> &halfedges() { return _halfedges; }
 		vector<Vertex<Property>> &vertices() { return _vertices; }
+		const vector<Vertex<Property>> &cvertices() const { return _vertices; }
 		vector<Edge<Property>> &edges() { return _edges; }
 		vector<Face<Property>> &faces() { return _faces; }
 

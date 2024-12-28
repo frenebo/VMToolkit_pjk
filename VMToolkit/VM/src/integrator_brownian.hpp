@@ -38,8 +38,7 @@ namespace VMTutorial
       IntegratorBrownian(System& sys, ForceCompute& fc, int seed) : Integrator{sys, fc, seed},
                                                                     _T{0.0},
                                                                     _gamma{1.0},
-                                                                    _Dr{0.0},
-                                                                    _update_n{false}
+                                                                    _Dr{0.0}
                                                                     
       {
       }
@@ -62,13 +61,13 @@ namespace VMTutorial
       }
       
       
-      void set_flag(const string& flag) override 
-      {  
-        if (flag == "update_n")
-          _update_n = true;
-        else
-          throw runtime_error("Brownian integrator: Unknown flag : " + flag + ".");
-      }
+      // void set_flag(const string& flag) override 
+      // {  
+      //   if (flag == "update_n")
+      //     _update_n = true;
+      //   else
+      //     throw runtime_error("Brownian integrator: Unknown flag : " + flag + ".");
+      // }
 
       
     private:
@@ -76,7 +75,7 @@ namespace VMTutorial
       double _T;                 // temperature
       double _gamma;             // friction 
       double _Dr;                // rotational diffusion constant
-      bool _update_n;            // If true, update direction of the cell self-propulsion direction
+      // bool _update_n;            // If true, update direction of the cell self-propulsion direction
       
     };
 

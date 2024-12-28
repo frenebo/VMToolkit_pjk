@@ -55,21 +55,14 @@ namespace VMTutorial
 	class Dump
 	{
 	public:
-		Dump(System &sys, ForceCompute &fc) : _sys{sys}, _force_compute{fc}, _sfc(0.95) {}
+		Dump(System &sys, ForceCompute &fc) : _sys{sys}, _force_compute{fc} {}
 
-		// void dump_cells(const string &, bool = false, bool = false);
-		// void dump_junctions(const string &, bool = false);
-		// void dump_mesh(const string &, bool = false);
-		// void dump_json(const string &);
 		std::string mesh_to_jsonstr();
-		// void dump_cell_directors(const string&, bool = false, bool = false);
 
-		void set_sfc(double sfc) { _sfc = sfc; }
 
 	private:
 		System &_sys;
 		ForceCompute &_force_compute;
-		double _sfc; // Scaling factor for junction output
 	};
 
 	vector<string> split(const std::string &, char);
