@@ -91,7 +91,8 @@ namespace VMTutorial
       
       void log_debug_stats()
       {
-        cout << "   CURRENT size of _halfedges: " << _mesh.halfedges().size() << endl; 
+        cout << "   System::log_debug_stats:" << endl;
+        cout << "     CURRENT size of _halfedges: " << _mesh.halfedges().size() << endl; 
       }
       void set_topology_change(bool flag) { _topology_changed = flag; }
 

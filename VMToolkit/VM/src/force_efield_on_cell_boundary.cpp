@@ -110,8 +110,8 @@ namespace VMTutorial
             cout << "        ForceEFieldOnCellBoundary::compute_he_force - finding force by he " << he.idx() << endl;
         }
         
-        Vec v_r = vert.r;
-        Vec vto_r = he.to()->r;
+        Vec v_r = vert.data().r;
+        Vec vto_r = he.to()->data().r;
         
         if (vec_outside_polygon_bbox(v_r) && vec_outside_polygon_bbox(vto_r)) {
             return Vec(0.0, 0.0);

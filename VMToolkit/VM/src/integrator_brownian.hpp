@@ -42,9 +42,6 @@ namespace VMTutorial
                                                                     _update_n{false}
                                                                     
       {
-        // _constrainer = make_unique<Constrainer>();
-        // _constrainer->add<ConstraintNone>("none");
-        // _constrainer->add<ConstraintFixed>("fixed");
       }
 
       void step(bool verbose) override;
@@ -64,10 +61,6 @@ namespace VMTutorial
         }
       }
       
-      // void set_string_params(const string_params_type& params) override {
-      //   throw runtime_error("IntegratorBrownian::set_string_params - unimplemented");
-      // }
-      
       
       void set_flag(const string& flag) override 
       {  
@@ -80,7 +73,6 @@ namespace VMTutorial
       
     private:
 
-      // ConstrainerType _constrainer; // Apply various constraints
       double _T;                 // temperature
       double _gamma;             // friction 
       double _Dr;                // rotational diffusion constant

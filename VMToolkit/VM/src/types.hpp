@@ -109,7 +109,7 @@ namespace VMTutorial
 		HECHandle<Property> next() const { return _mesh.get_mesh_he(_next); }
 		HECHandle<Property> prev() const { return _mesh.get_mesh_he(_prev); }
 
-		Vec direction() { return this->to()->r - this->from()->r; }
+		Vec direction() { return this->to()->data().r - this->from()->data().r; }
 		
 		bool erased;
 
@@ -141,30 +141,33 @@ namespace VMTutorial
 		// Constructors
 		Vertex(Mesh<Property> &mesh) : _mesh{mesh},
 									   id{0},
-									   r{0.0, 0.0},
+									//    r{0.0, 0.0},
 									   _he{-1},
 									   _property{typename Property::VertexProperty()},
 									   erased{false},
 									   boundary{false}
 		{
+			_property.r = Vec(0.0,0.0);
 		}
 		Vertex(int id, const Vec &r, Mesh<Property> &mesh) : _mesh{mesh},
 															 id{id},
-															 r{r},
+															//  r{r},
 															 _property{typename Property::VertexProperty()},
 															 _he{-1},
 															 erased{false},
 															 boundary{false}
 		{
+			_property.r = r;
 		}
 		Vertex(int id, const Vec &r, bool bnd, Mesh<Property> &mesh) : _mesh{mesh},
 																	   id{id},
-																	   r{r},
+																	//    r{r},
 																	   _he{-1},
 																	   _property{typename Property::VertexProperty()},
 																	   erased{false},
 																	   boundary{bnd}
 		{
+			_property.r = r;
 		}
 
 		
@@ -178,7 +181,7 @@ namespace VMTutorial
 		VertexCCirculator<Property> circulator() const { return VertexCCirculator<Property>(this->he()); }
 
 		// Public members
-		Vec r;			  // position
+		// Vec r;			  // position
 		int id;			  // unique id
 		bool erased;	  // marks vertices that are not connected to the rest of the mesh, but are still in memory
 		bool boundary;	  // if true, vertex is on boundary

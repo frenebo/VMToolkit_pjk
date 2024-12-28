@@ -18,7 +18,7 @@ namespace VMTutorial
 		
 		
 		// if (_force_enabled_mask_by_cell_index.)
-		Vec l = he.to()->r - v.r;					// vector along the junction pointing away from the vertex
+		Vec l = he.to()->data().r - v.data().r;					// vector along the junction pointing away from the vertex
 		const Face<Property> &f = *(he.face());			// cell to the right of the half edge
 		const Face<Property> &fp = *(he.pair()->face()); // pair cell (opposite side of the same junction)
 		double A1 = _sys.mesh().area(f);

@@ -66,8 +66,8 @@ namespace VMTutorial
 			pt::ptree erased;
 			id.put("", v.id);
 			boundary.put("", v.boundary);
-			x.put("", v.r.x);
-			y.put("", v.r.y);
+			x.put("", v.data().r.x);
+			y.put("", v.data().r.y);
 			r.push_back(std::make_pair("", x));
 			r.push_back(std::make_pair("", y));
 			force.push_back(std::make_pair("", fx));

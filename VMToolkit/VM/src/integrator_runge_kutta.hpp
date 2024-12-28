@@ -21,9 +21,6 @@ using std::make_unique;
 namespace VMTutorial
 {
 
-  // using ConstrainerType = unique_ptr<Constrainer>;
-
-
   class IntegratorRungeKutta : public Integrator 
   {
     public:
@@ -35,9 +32,6 @@ namespace VMTutorial
       ) : Integrator{sys, fc, seed},
           _gamma{1.0}
       {
-        // _constrainer = make_unique<Constrainer>();
-        // _constrainer->add<ConstraintNone>("none");
-        // _constrainer->add<ConstraintFixed>("fixed");
       }
       
       void step(bool verbose) override;
@@ -56,18 +50,12 @@ namespace VMTutorial
       }
       
       
-      // void set_string_params(const string_params_type& params) override {
-      //   throw runtime_error("IntegratorRungeKutta::set_string_params - unimplemented");
-      // }
-      
-      
       void set_flag(const string& flag) override 
       {  
           throw runtime_error("IntegratorRungeKutta::set_flag - Unknown flag : " + flag + ".");
       }
       
     private:
-      // ConstrainerType _constrainer; // Apply various constraints
       double _gamma;             // friction 
   };
 }

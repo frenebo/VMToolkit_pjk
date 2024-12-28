@@ -50,8 +50,8 @@ namespace VMTutorial
         if (verbose) {
           cout << "     Adding to the r vector" << endl;
         }
-        Vec rold = v.r;
-        v.r += _dt*mu*f;
+        Vec rold = v.data().r;
+        v.data().r += _dt*mu*f;
         
         if (verbose) {
           cout << "     added _dt*mu*f" << endl;
@@ -64,9 +64,9 @@ namespace VMTutorial
           // if (_constraint_enabled)  {
           //   fr = _constrainer->apply_vector(v, ffr);
           // }
-          v.r += sqrt_dt*fr;  // update vertex position due to noise
+          v.data().r += sqrt_dt*fr;  // update vertex position due to noise
         }
-        v.data().vel = (1.0 / _dt) * (v.r - rold);  
+        v.data().vel = (1.0 / _dt) * (v.data().r - rold);  
       }
     }
     if (verbose) {

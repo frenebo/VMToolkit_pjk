@@ -305,14 +305,14 @@ namespace VMTutorial
 		VertexHandle<Property> v1 = he->from(); // We define v1 and the vertex he points from
 		VertexHandle<Property> v2 = he->to();	// We define v2 and the vertex he points to
 
-		Vec l = 0.5 * (v2->r - v1->r); // Vector l points from v1 towards the geometric centre of the v1-v2 line
+		Vec l = 0.5 * (v2->data().r - v1->data().r); // Vector l points from v1 towards the geometric centre of the v1-v2 line
 
-		Vec rc = v1->r + l;
+		Vec rc = v1->data().r + l;
 
 		Vec rot_l = Vec(-l.y, l.x).unit();
 
-		v1->r = rc - 0.5 * edge_len * rot_l;
-		v2->r = rc + 0.5 * edge_len * rot_l;
+		v1->data().r = rc - 0.5 * edge_len * rot_l;
+		v2->data().r = rc + 0.5 * edge_len * rot_l;
 
 		v1->he() = he;
 		v2->he() = hep;
@@ -377,12 +377,12 @@ namespace VMTutorial
 		if (f.outer)
 			return 0.0;
 
-		Vec r0 = f.he()->from()->r;
+		Vec r0 = f.he()->from()->data().r;
 		double A = 0.0;
 		for (auto he : f.circulator())
 		{
-			Vec r1 = he.from()->r - r0; // this takes care of the boundary conditions
-			Vec r2 = he.to()->r - r0;
+			Vec r1 = he.from()->data().r - r0; // this takes care of the boundary conditions
+			Vec r2 = he.to()->data().r - r0;
 			A += r1.x * r2.y - r2.x * r1.y;
 		}
 		return 0.5 * fabs(A);
@@ -396,7 +396,7 @@ namespace VMTutorial
 
 		double P = 0.0;
 		for (auto he : f.circulator())
-			P += (he.to()->r - he.from()->r).len();
+			P += (he.to()->data().r - he.from()->data().r).len();
 
 		return P;
 	}
@@ -404,7 +404,7 @@ namespace VMTutorial
 	template <typename Property>
 	double Mesh<Property>::len(const Edge<Property> &e)
 	{
-		return (e.he()->to()->r - e.he()->from()->r).len();
+		return (e.he()->to()->data().r - e.he()->from()->data().r).len();
 	}
 
 	template <typename Property>
@@ -446,7 +446,7 @@ namespace VMTutorial
 	{
 		Vec cm(0.0, 0.0);
 		for (auto v : _vertices)
-			cm += v.r;
+			cm += v.data().r;
 		return static_cast<double>(1.0 / _vertices.size()) * cm;
 	}
 
@@ -456,11 +456,11 @@ namespace VMTutorial
 	{
 		if (f.outer)
 			return Vec(0.0, 0.0);
-		Vec r0 = f.he()->from()->r;
+		Vec r0 = f.he()->from()->data().r;
 		Vec rc(0.0, 0.0);
 		for (auto he : f.circulator())
 		{
-			Vec dr = he.from()->r - r0;
+			Vec dr = he.from()->data().r - r0;
 			rc += Vec(dr.x, dr.y);
 		}
 		Vec Rc = (1.0 / f.nsides) * rc + r0;
@@ -474,12 +474,12 @@ namespace VMTutorial
 		if (f.outer)
 			return Vec(0.0, 0.0);
 
-		Vec r0 = f.he()->from()->r;
+		Vec r0 = f.he()->from()->data().r;
 		Vec rc(0.0, 0.0);
 		for (auto he : f.circulator())
 		{
-			Vec ri = he.from()->r - r0;
-			Vec rj = he.to()->r - r0;
+			Vec ri = he.from()->data().r - r0;
+			Vec rj = he.to()->data().r - r0;
 			double fact = ri.x * rj.y - ri.y * rj.x;
 			rc.x += (ri.x + rj.x) * fact;
 			rc.y += (ri.y + rj.y) * fact;
