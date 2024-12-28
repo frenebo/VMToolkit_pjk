@@ -30,7 +30,7 @@ namespace VMTutorial
 			double tension = 0.0;
 			// double l0;					 // Native length of an edge
 			int old_face_id;			 // the way to distinguish if a vertex split was actual T1 or a bounce back
-			map<string, Vec> force_type; // Force of a given type on the he->from() vertex due to along this half-edge
+			// map<string, Vec> force_type; // Force of a given type on the he->from() vertex due to along this half-edge
 		};
 		struct VertexProperty : public BaseProperty::VertexProperty
 		{

@@ -9,9 +9,9 @@
 #define __INTEGRATOR_RUNGE_KUTTA_HPP__
 
 
-#include "constrainer.hpp"
-#include "constraint_none.hpp"
-#include "constraint_fixed.hpp"
+// #include "constrainer.hpp"
+// #include "constraint_none.hpp"
+// #include "constraint_fixed.hpp"
 #include "integrator.hpp"
 
 using namespace std::chrono;
@@ -19,12 +19,9 @@ using std::map;
 using std::make_unique;
 
 namespace VMTutorial
-
-
-namespace VMTutorial
 {
 
-  using ConstrainerType = unique_ptr<Constrainer>;
+  // using ConstrainerType = unique_ptr<Constrainer>;
 
 
   class IntegratorRungeKutta : public Integrator 
@@ -38,9 +35,9 @@ namespace VMTutorial
       ) : Integrator{sys, fc, seed},
           _gamma{1.0}
       {
-        _constrainer = make_unique<Constrainer>();
-        _constrainer->add<ConstraintNone>("none");
-        _constrainer->add<ConstraintFixed>("fixed");
+        // _constrainer = make_unique<Constrainer>();
+        // _constrainer->add<ConstraintNone>("none");
+        // _constrainer->add<ConstraintFixed>("fixed");
       }
       
       void step(bool verbose) override;
@@ -59,9 +56,9 @@ namespace VMTutorial
       }
       
       
-      void set_string_params(const string_params_type& params) override {
-        throw runtime_error("IntegratorRungeKutta::set_string_params - unimplemented");
-      }
+      // void set_string_params(const string_params_type& params) override {
+      //   throw runtime_error("IntegratorRungeKutta::set_string_params - unimplemented");
+      // }
       
       
       void set_flag(const string& flag) override 
@@ -70,10 +67,10 @@ namespace VMTutorial
       }
       
     private:
-      ConstrainerType _constrainer; // Apply various constraints
+      // ConstrainerType _constrainer; // Apply various constraints
       double _gamma;             // friction 
-  }
-  {
+  };
+}
 
 
 #endif

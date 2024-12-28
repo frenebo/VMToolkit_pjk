@@ -200,8 +200,8 @@ namespace VMTutorial
   void export_VertexProperty(py::module& m)
   {
     py::class_<Property::VertexProperty>(m, "VertexProperty")
-      .def_readonly("vel", &Property::VertexProperty::vel)
-      .def_readonly("force", &Property::VertexProperty::force);
+      .def_readonly("vel", &Property::VertexProperty::vel);
+      // .def_readonly("force", &Property::VertexProperty::force);
   }
 
   void export_EdgeProperty(py::module& m)
@@ -214,9 +214,9 @@ namespace VMTutorial
   void export_HEProperty(py::module& m)
   {
     py::class_<Property::HEProperty>(m, "HEProperty")
-      .def_readonly("tension", &Property::HEProperty::tension)
+      .def_readonly("tension", &Property::HEProperty::tension);
       // .def_readonly("l0", &Property::HEProperty::l0)
-      .def_readonly("force_type", &Property::HEProperty::force_type);
+      // .def_readonly("force_type", &Property::HEProperty::force_type);
   }
 
   

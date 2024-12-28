@@ -33,19 +33,19 @@ namespace VMTutorial
     // This is actual integrator 
     for (size_t vid = 0; vid < _sys.mesh().vertices().size(); vid++)
     {
-      Vertex& v = _sys.mesh().vertices()[vid];
+      Vertex<Property>& v = _sys.mesh().vertices()[vid];
       
       if (!v.erased)
       {
         const Vec& f = vertex_forces.at(vid);
       
         // apply constraint
-        if (_constraint_enabled) {
-          if (verbose) {
-            cout << "     Applying constraint " << endl;
-          }
-          f = _constrainer->apply_vertex(v, f);
-        }
+        // if (_constraint_enabled) {
+        //   if (verbose) {
+        //     cout << "     Applying constraint " << endl;
+        //   }
+        //   f = _constrainer->apply_vertex(v, f);
+        // }
 
         if (verbose) {
           cout << "     Adding to the r vector" << endl;
@@ -61,9 +61,9 @@ namespace VMTutorial
         {
           Vec ffr(B*_rng.gauss_rng(), B*_rng.gauss_rng());  // random noise contribution to force
           Vec fr = ffr;
-          if (_constraint_enabled)  {
-            fr = _constrainer->apply_vector(v, ffr);
-          }
+          // if (_constraint_enabled)  {
+          //   fr = _constrainer->apply_vector(v, ffr);
+          // }
           v.r += sqrt_dt*fr;  // update vertex position due to noise
         }
         v.data().vel = (1.0 / _dt) * (v.r - rold);  

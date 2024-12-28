@@ -17,6 +17,7 @@
 #include "force_compute.hpp"
 #include "integrator.hpp"
 #include "integrator_brownian.hpp"
+#include "integrator_runge_kutta.hpp"
 
 using std::runtime_error;
 using std::transform;
@@ -45,12 +46,10 @@ namespace VMTutorial
 
       void apply(bool verbose=false)
       {
-        // bool verbose = true;
-        
         if (verbose) {
           cout << "In Integrate::apply" << endl;
         }
-        for (auto i : this->integ_order) {
+        for (const string& i : this->integ_order) {
           if (this->factory_map[i]->is_enabled()) {
             if (verbose) { cout << "Going to apply a step " << endl; }
             this->factory_map[i]->step(verbose);
@@ -69,13 +68,13 @@ namespace VMTutorial
       }
 
 
-      void set_string_params(const string& iname, const string_params_type& params)
-      {
-        if (this->factory_map.find(iname) != this->factory_map.end())
-          this->factory_map[iname]->set_string_params(params);
-        else
-          throw runtime_error("set_string_params: Integrator type " + iname + " is not used in this simulation.");
-      }
+      // void set_string_params(const string& iname, const string_params_type& params)
+      // {
+      //   if (this->factory_map.find(iname) != this->factory_map.end())
+      //     this->factory_map[iname]->set_string_params(params);
+      //   else
+      //     throw runtime_error("set_string_params: Integrator type " + iname + " is not used in this simulation.");
+      // }
 
       void set_flag(const string& iname, const string& flag)
       {
@@ -110,23 +109,26 @@ namespace VMTutorial
           integ.second->set_dt(dt);
       }
 
-      void enable_constraint(const string& iname, bool enable)
-      {
-        if (this->factory_map.find(iname) != this->factory_map.end())
-          this->factory_map[iname]->enable_constraint(enable);
-        else
-          throw runtime_error("enable_constraint: Integrator type " + iname + " is not used in this simulation.");
-      }
+      // void enable_constraint(const string& iname, bool enable)
+      // {
+      //   if (this->factory_map.find(iname) != this->factory_map.end())
+      //     this->factory_map[iname]->enable_constraint(enable);
+      //   else
+      //     throw runtime_error("enable_constraint: Integrator type " + iname + " is not used in this simulation.");
+      // }
 
       
       void add_integrator(const string& iname)
       {
         string name = iname; 
         transform(name.begin(), name.end(), name.begin(), ::tolower);
-        if (name == "brownian")
+        if (name == "brownian") {
           this->add<IntegratorBrownian, System&, ForceCompute&, int>(name, _sys, _force_compute, _seed);
-        else 
+        } else if (name == "runge_kutta") {
+          this->add<IntegratorRungeKutta, System&, ForceCompute&, int>(name, _sys, _force_compute, _seed);
+        } else  {
           throw runtime_error("Unknown integrator type : " + name + ".");
+        }
         integ_order.push_back(name);
       }
 
