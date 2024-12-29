@@ -17,7 +17,6 @@
 #include <chrono>
 
 #include "system.hpp"
-// #include "rng.hpp"
 
 double const SMALL_NUMBER = 1e-6;
 

@@ -141,7 +141,6 @@ namespace VMTutorial
 		// Constructors
 		Vertex(Mesh<Property> &mesh) : _mesh{mesh},
 									   id{0},
-									//    r{0.0, 0.0},
 									   _he{-1},
 									   _property{typename Property::VertexProperty()},
 									   erased{false},
@@ -151,7 +150,6 @@ namespace VMTutorial
 		}
 		Vertex(int id, const Vec &r, Mesh<Property> &mesh) : _mesh{mesh},
 															 id{id},
-															//  r{r},
 															 _property{typename Property::VertexProperty()},
 															 _he{-1},
 															 erased{false},
@@ -161,7 +159,6 @@ namespace VMTutorial
 		}
 		Vertex(int id, const Vec &r, bool bnd, Mesh<Property> &mesh) : _mesh{mesh},
 																	   id{id},
-																	//    r{r},
 																	   _he{-1},
 																	   _property{typename Property::VertexProperty()},
 																	   erased{false},

@@ -17,7 +17,6 @@
 #include <memory>
 #include <list>
 
-#include <pybind11/stl.h>
 
 #include "types.hpp"
 
@@ -28,8 +27,6 @@ using std::prev;
 using std::runtime_error;
 using std::shared_ptr;
 using std::vector;
-
-namespace py = pybind11;
 
 namespace VMTutorial
 {
@@ -116,18 +113,12 @@ namespace VMTutorial
 		Vec get_centre(); // compute geometric centre of the mesh
 		Vec get_face_centre(const Face<Property> &);
 		Vec get_face_centroid(const Face<Property> &);
-		Vec get_face_direction(const Face<Property> &);
 
 	private:
 		vector<HalfEdge<Property>> _halfedges;
 		vector<Vertex<Property>> _vertices;
 		vector<Edge<Property>> _edges;
 		vector<Face<Property>> _faces;
-
-		// list<int> _erased_vertices;
-		// list<int> _erased_edges;
-		// list<int> _erased_halfedges;
-		// list<int> _erased_faces;
 	};
 
 	template <typename Property>
