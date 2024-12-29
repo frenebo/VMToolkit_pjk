@@ -31,7 +31,6 @@ namespace VMTutorial
 		}
 		Box(double ax, double ay, double bx, double by) : h{ax, bx, ay, by},
 														  inv_h{h.inv()}
-														//   s_mat{1.0, 0.0, 0.0, 1.0}
 		{
 		}
 		double area() { return h.det(); }
@@ -39,7 +38,6 @@ namespace VMTutorial
 
 		Matrix h;
 		Matrix inv_h;
-		// Matrix s_mat;
 	};
 
 	void export_Box(py::module &m);

@@ -118,51 +118,11 @@ def do_stuff():
         )
     )
     
-    ## Add forces to top and bottom
-    vertex_ymin = min([vgeom.y() for vid, vgeom in vm_initial_state.current_state().geometry().vertices().items()])
-    vertex_ymax = max([vgeom.y() for vid, vgeom in vm_initial_state.current_state().geometry().vertices().items()])
-    
-    # vm_initial_state.current_state().forces()["top_const_f"] = ConstantVertexForce(f_x=0.05,f_y=0.0)
-    # vm_initial_state.current_state().forces()["bot_const_f"] = ConstantVertexForce(f_x=-0.05,f_y=-0.0)
-    
-    # vm_initial_state.current_state().vertex_groups()["bot"] = VertexGroup(
-    #     vertex_ids=BoxSelector.get_vertices_in_box(
-    #         vm_initial_state,
-    #         x1= -1*args.box_lx,
-    #         x2=    args.box_lx,
-    #         y1 = -args.box_ly,
-    #         y2 = vertex_ymin + rest_side_length*2,
-    #         verbose=True,
-    #     ),
-    #     force_ids=["top_const_f"],
-    # )
-    # vm_initial_state.current_state().vertex_groups()["top"] = VertexGroup(
-    #     vertex_ids=BoxSelector.get_vertices_in_box(
-    #         vm_initial_state,
-    #         x1= -1*args.box_lx,
-    #         x2=    args.box_lx,
-    #         y1 = vertex_ymax - rest_side_length*2,
-    #         y2 = args.box_ly,
-    #         verbose=True,
-    #     ),
-    #     force_ids=["bot_const_f"]
-    # )
-    
-    
     
     print("MODEL PARAMS")
     print("A0={A0}  P0={P0}  kappa={kappa} gamma={gamma}".format(A0=A0_model,P0=P0_model,kappa=kappa,gamma=gamma))
     print(analytical_predictions)
     print("theoretical rest width={}, height={}".format(theoretical_rest_width, theoretical_rest_height))
-    # ##### Running sim
-    # tissue  = Tissue()                                               # initialise mesh
-    # sim_sys = System(tissue)                                         # base object for the system
-    # forces = Force(sim_sys)                                          # handles all types of forces
-    # integrators = Integrate(sim_sys, forces, 0)              # handles all integrators
-    # topology = Topology(sim_sys, forces)                             # handles all topology changes (T1, division, ingression)
-    # dumps = Dump(sim_sys, forces)                                    # handles all data output 
-    # simulation = Simulation(sim_sys, integrators, forces, topology)  # simulation object
-
 
 
     # # #################################################################
@@ -177,25 +137,8 @@ def do_stuff():
         f.write(json.dumps(vm_initial_state.to_json()))
     sim_model.load_from_json_state(vm_initial_state.to_json())#, verbose=True)
     print("Finished sim_mode.load_from_json_state")
-    # exit()s
     
-    # sim_model.configure_forces(P0_model, gamma, kappa, verbose=True)
-    
-    # sim_model.load_json_obj(
-    #     cm.build_vm_state(verbose=True),
-    # )
-    
-    
-    # with open("scratch/forgodot.json", "w") as f:
-    #     json.dump(sim_model.get_json_state(), f)
-    
-    # sim_model.configure_integrators(verbose=True)
-
-    
-    # ext_forcing_on = []
     checkpoint_fps = []
-    # vmstate_fps = []
-    # Pulling on the passive system
     
     ckpt_dir = "scratch"
     if not os.path.exists(ckpt_dir):
@@ -210,76 +153,12 @@ def do_stuff():
     
     for i in range(N_checkpoints):
         ckpt_fp = "scratch/res{}.json".format(str(i).zfill(3))
-        json_str = sim_model.dump_cpp_json()
+        vmstate_json = sim_model.vm_state_json()
         with open(ckpt_fp, "w") as f:
-            f.write(json_str)
-        
-        # vmstate_fp = "scratch/vmst_{}.json".format(str(i).zfill(3))
-        # json
-        # with open(vmstate_fp, "w") as f:
-        #     f.write()
+            f.write(json.dumps(vmstate_json))
         
         checkpoint_fps.append(ckpt_fp)
-        
-        # Will be reocrded next iteration
-        
-        # sim_model.run_steps(1)#, do_time_force_computation=True)
         sim_model.run_steps(step_size)
-        
-        # exit()
-        
-    # sim_model.
-    
-    # print("Running analysis on simulation results")
-    # for ckpt_idx, ckpt_fp in enumerate(checkpoint_fps):
-
-    #     # print(ckpt_fp)
-
-    #     mesh = Mesh()
-    #     mesh.read(ckpt_fp)
-
-        # cell_widths = []
-        # # cell_heights = []
-        # # passive_real_cells= []
-        # for f in mesh.faces:
-        #     if f.outer == False:
-                
-        #         cell_vertices = np.array([v.to_list() for v in f.vertex_coords()],dtype=float)
-                
-                
-        #         cell_w = cell_vertices[:,0].max() - cell_vertices[:,0].min()
-        #         cell_h = cell_vertices[:,1].max() - cell_vertices[:,1].min()
-        #         cell_widths.append(cell_w)
-        #         cell_heights.append(cell_h)
-                
-        #         passive_real_cells.append(f)
-        
-        # # print(mesh.faces[len(mesh.faces)//3].vertex_coords())
-        # areas = [face.area() for face in passive_real_cells]
-        # areas = np.array(areas)
-
-        # W_mean = np.array(cell_widths).mean()
-        # H_mean = np.array(cell_heights).mean()
-
-        # print("  A_min={:.4f}, A_max={:.4f}, A_mean={:.4f}, W_mean={W_mean:.4f}, H_mean={H_mean:.4f}".format(
-        #     areas.min(),
-        #     areas.max(),
-        #     areas.mean(),
-        #     W_mean=W_mean,
-        #     H_mean=H_mean,
-        #     ))
-        # if ext_forcing_on[ckpt_idx]:
-        #     strain_x = (W_mean - theoretical_rest_width)/theoretical_rest_width
-
-        #     strain_y = (H_mean - theoretical_rest_height)/theoretical_rest_height
-        #     print("    strain_x={} strain_y={}, poisson_r={}".format(strain_x, strain_y, -strain_y/strain_x))
-        # else:
-        #     pass
-        
-        # if ckpt_idx == len(checkpoint_fps) - 1:
-        #     print([v.to_list() for v in passive_real_cells[0].vertex_coords()])
-    # print()
-    
 
 
 if __name__ == "__main__":

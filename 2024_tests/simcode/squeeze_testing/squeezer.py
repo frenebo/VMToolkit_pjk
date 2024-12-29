@@ -15,6 +15,7 @@ from ..sim_model.vm_state import (
 )
 from ..sim_model.box_selector import BoxSelector
 
+        
 
 def make_forcing_field_rectangular(
     xmin,
@@ -81,7 +82,7 @@ def build_squeezer_model(
         box_ly=box_ly,
     )
     
-    tiss_topology, tiss_init_state = cm.build_vm_state()#verbose=True)
+    tiss_topology, tiss_init_state = cm.build_vm_state()
     
     tiss_init_state.forces()["perim_f"] = CellPerimeterForce(
         gamma=gamma_force_coeff,

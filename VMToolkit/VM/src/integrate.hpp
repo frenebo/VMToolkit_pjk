@@ -51,7 +51,9 @@ namespace VMTutorial
         }
         for (const string& i : this->_integ_order) {
           if (this->_integrators_enabled.at(i)) {
-            if (verbose) { cout << "Going to apply a step " << endl; }
+            if (verbose) {
+              cout << "Going to apply a step for " << i << endl;
+            }
             this->factory_map[i]->step(verbose);
           }
         }

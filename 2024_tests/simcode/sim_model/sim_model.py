@@ -13,18 +13,13 @@ from .model_change_req_applicator import ModelChangeReqApplicator
 class SimModel:
     def __init__(self, verbose):
         self._vm_wrapper = VMToolkitWrapper(verbose=verbose)
-        
-        self._last_vm_state = None
     
     def load_from_json_state(self, vm_state_json, verbose=False):
         vm_state = VMState.from_json(vm_state_json)
         self._vm_wrapper.initialize_from_vm_state(vm_state, verbose=verbose)
     
-    # def update_state_from
-    
-    def dump_cpp_json(self):
-        return self._vm_wrapper.dump_cpp_json()
-     
+    def vm_state_json(self):
+        return self._vm_wrapper.vm_state_json()
         
     def run_steps(self, n_steps, verbose=False, do_time_force_computation=False):
         if do_time_force_computation:
@@ -35,18 +30,15 @@ class SimModel:
             print("Force computation times (milliseconds):")
             print(self._vm_wrapper.get_force_compute_timers_millis(verbose=verbose))
         
-        # self._update_state_from_cpp_vm()
-    
-    # def _update_state_from_cpp_vm(self):
-    #     print(self._vm_wrapper.dump_cpp_json())
     
     def process_model_change_req(self, model_change_req):
         assert isinstance(model_change_req, ModelChangeRequest)
         
-        try:
-            ModelChangeReqApplicator.apply_request_to_vm_state(self._last_vm_state, model_change_req)
-        except:
-            print("Failed to apply model change rquest to current vm state.")
-            print("Model change req: {}".format(model_change_req))
-            print("Model change req to json: {}".format(model_change_req.to_json()))
-            raise
+        raise NotImplementedError()
+        # try:
+        #     ModelChangeReqApplicator.apply_request_to_vm_state(self._last_vm_state, model_change_req)
+        # except:
+        #     print("Failed to apply model change rquest to current vm state.")
+        #     print("Model change req: {}".format(model_change_req))
+        #     print("Model change req to json: {}".format(model_change_req.to_json()))
+        #     raise

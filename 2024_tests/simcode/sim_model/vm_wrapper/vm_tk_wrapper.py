@@ -5,42 +5,30 @@ from VMToolkit.VM import ForceCompute, Integrate
 from VMToolkit.VM import Topology, Dump, Simulation, Vec
 
 from ..vm_state import (
+    VMState,
     CellAreaForce,
     CellPerimeterForce,
     ConstantVertexForce,
+    VertexGeometry,
     VertexForce,
     CellForce,
     ElectricForceOnCellBoundary,
     EFieldSpecConstantPolygonRegion,
     PolygonSpec,
 )
-# from .
-# class 
-# class CppJson
+
 class CppJsonTissueBuilder:
     @staticmethod
     def build_json_obj_for_vmtoolkit_loader(vm_state, vertex_id_to_cpp_idx, cell_id_to_cpp_face_idx):
-        
-        # raise NotImplementedError("need to convert bween vvertex id and cpp indices")
-        
-        
         # Make 'blank' lists with the length we expect (length = max index plus one)
         cpp_vertex_objs = [None] * (1+max(list(vertex_id_to_cpp_idx.values())))
         cpp_face_objs = [None] * (1+max(list(cell_id_to_cpp_face_idx.values())))
         
-        # vtx_num_faces = {}
-        # vtx_neighbours = {}
-        # for 
         for cell_id, cell_top in vm_state.topology().cells().items():
             face_index = cell_id_to_cpp_face_idx[cell_id]
             
             cpp_vids = [ vertex_id_to_cpp_idx[vid] for vid in cell_top.vertex_ids() ]
             
-            # for vid in cell_top.vertex_ids():
-            #     if vid not in vtx_num_faces:
-            #         vtx_num_faces[vid] = 0
-                
-            #     vtx_num_faces[vid] += 1
             
             cpp_face_objs[face_index] = {
                 "id": face_index,
@@ -56,16 +44,12 @@ class CppJsonTissueBuilder:
             vtx_x = v_geometry.x()
             vtx_y = v_geometry.y()
             
-            # num_faces = 
-            
             cpp_vertex_objs[vertex_index] = {
                 "id": vertex_index, # This is just so the vertex in the model knows its own index
                 "r": [vtx_x, vtx_y],
                 "boundary": vertex_top.is_boundary(),
-                # "coorination": vtx_num_faces[vertex_id],
                 "erased": False,
                 "constraint": "none",
-                # "neighbours": vtx_neighbours,
             }
             
         for i, el in enumerate(cpp_vertex_objs):
@@ -78,12 +62,10 @@ class CppJsonTissueBuilder:
         
         return {
             "mesh": {
-                # "time_step": 0,
                 "vertices": cpp_vertex_objs,
                 "faces": cpp_face_objs,
             }
         }
-
 
 
 class VMToolkitWrapper:
@@ -94,12 +76,15 @@ class VMToolkitWrapper:
             cell_ids_to_idx[cell_id] = cell_idx
         
         vtx_ids_to_idx = {}
+        vtx_indices_to_ids = {}
         for v_idx, vertex_id in enumerate(vm_state.topology().vertices().keys()):
             vtx_ids_to_idx[vertex_id] = v_idx
+            vtx_indices_to_ids[v_idx] = vertex_id
         
         return {
             "cell_ids_to_idx": cell_ids_to_idx,
             "vtx_ids_to_idx": vtx_ids_to_idx,
+            "vtx_indices_to_ids": vtx_indices_to_ids,
         }
     
     def __init__(self, verbose=False):
@@ -130,11 +115,9 @@ class VMToolkitWrapper:
         self._ids_to_cpp_index_maps = VMToolkitWrapper._make_ids_to_cpp_index_maps(vm_state)
         cpp_state_json_str = json.dumps(CppJsonTissueBuilder.build_json_obj_for_vmtoolkit_loader(
             vm_state=vm_state,
-            # cellvvver
             vertex_id_to_cpp_idx=self._ids_to_cpp_index_maps["vtx_ids_to_idx"],
             cell_id_to_cpp_face_idx=self._ids_to_cpp_index_maps["cell_ids_to_idx"],
         ))
-        # print(cpp_state_json_str)
         self._sim_sys.read_input_from_jsonstring(cpp_state_json_str, verbose=verbose)
         
         self._configure_integrators(
@@ -144,7 +127,7 @@ class VMToolkitWrapper:
         self._configure_forces(vm_state, verbose=verbose)
         
         self._tissue_initialized = True
-        self._last_vm_state = vm_state.from_json(vm_state.to_json())
+        self._last_vm_state = VMState.from_json(vm_state.to_json())
     
     def run_steps(
         self,
@@ -157,18 +140,30 @@ class VMToolkitWrapper:
             print("About to run simulation for {} steps".format(n_steps))
         
         self._simulation.run(n_steps, topological_change=False, verbose=verbose)
-        # self._update_vm_state_from_cpp_vm()
+        self._update_vm_state_from_cpp_vm()
         
     def _update_vm_state_from_cpp_vm(self):
         # All that we need to look at (for now) should be the coordinates of vertices - 
         # we are asssuming the topology isn't changing.
         
-        # new_vmstate = vm_state.from_json(self._last_vm_state.to_json())
+        new_vmstate = VMState.from_json(self._last_vm_state.to_json())
         
-        # Get all of the vertex positions
-        # new_
-        raise NotImplementedError()
-        # print("NOT IMP")
+        vtx_positions = self._get_cpp_vertex_positions()
+        
+        state_vertex_geos = new_vmstate.current_state().geometry().vertices()
+        
+        for vtx_idx, vtx_pos in enumerate(vtx_positions):
+            vtx_id = self._ids_to_cpp_index_maps["vtx_indices_to_ids"][vtx_idx]
+            
+            state_vertex_geos[vtx_id] = VertexGeometry(
+                x=vtx_pos[0],
+                y=vtx_pos[1],
+            )
+        
+        self._last_vm_state = new_vmstate
+    
+    def _get_cpp_vertex_positions(self):
+        return self._sim_sys.mesh().get_vertex_positions()
     
     def _initialize_cpp(self, verbose=False):
         ##### Running sim
@@ -219,6 +214,9 @@ class VMToolkitWrapper:
         
     def dump_cpp_json(self):
         return self._dumps.mesh_to_jsonstr()
+    
+    def vm_state_json(self):
+        return self._last_vm_state.to_json()
     
     def _add_cell_area_force(self, force_id, force_spec, cell_indices, verbose=False):
         assert isinstance(force_spec, CellAreaForce)
@@ -369,25 +367,17 @@ class VMToolkitWrapper:
                 self._add_new_cell_force(force_id, force_spec, cell_indices_for_force, verbose=verbose)
             else:
                 raise ValueError("Expecteed force '{}' to  either be instance of CellForce or VertexForce! {}".format(force_id, force_spec))
-        
-        
 
     def _configure_integrators(self, dt, friction_gam, verbose=False):
         if verbose:
             print("Adding runge_kutta integrator")
         self._integrators.add('runge_kutta')
-        # if verbose:
-        #     print("Adding brownian integrator")
-        # self._integrators.add('brownian')
-
-
-        # dt = 0.3
-        # friction_gam = 1.0
+        
         if verbose:
             print("Setting dt={}, friction_gamma={}".format(dt, friction_gam))
         self._integrators.set_dt(dt) # set time step
         self._integrators.set_params("runge_kutta", {"gamma": friction_gam})
-        # self._integrators.set_params("brownian", {"gamma": friction_gam})
+        
         if verbose:
             print("Done configuring integrators")
     

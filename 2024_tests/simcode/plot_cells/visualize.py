@@ -14,33 +14,34 @@ import numpy as np
 class TissueVisualizer:
     @classmethod
     def tiss_struct_from_json_obj(cls, json_o,verbose=False):
-        if "mesh" not in json_o:
-            raise ValueError("Expected to find mesh in json object")
-        if "vertices" not in json_o["mesh"]:
-            raise ValueError("Expected to find vertices in json['mesh'] object")
+        
+        # if "mesh" not in json_o:
+        #     raise ValueError("Expected to find mesh in json object")
+        # if "vertices" not in json_o["mesh"]:
+        #     raise ValueError("Expected to find vertices in json['mesh'] object")
         
         vertices = {}
-        for  v in json_o["mesh"]["vertices"]:
-            if v["erased"]:
-                raise NotImplementedError()
+        for vid, v in json_o["current_state"]["geometry"]["vertices"].items():
+            # if v["erased"]:
+            #     raise NotImplementedError()
                 
-            vertices[v["id"]] = {
-                "r": v["r"],
+            vertices[vid] = {
+                "r": [ v["x"], v["y"] ],
             }
         
         faces = {}
-        for f in json_o["mesh"]["faces"]:
-            if "erased" in f and f["erased"]:
-                raise NotImplementedError()
-            if f["outer"]:
-                if verbose:
-                    print("SKIPPING outer face - boundary")
-                continue
+        for fid, f in json_o["topology"]["cells"].items():
+            # if "erased" in f and f["erased"]:
+            #     raise NotImplementedError()
+            # if f["outer"]:
+            #     if verbose:
+            #         print("SKIPPING outer face - boundary")
+            #     continue
             
             # If not outer, and not erased, we want to graph it
             
-            faces[f["id"]] = {
-                "vtx_ids": f["vertices"],
+            faces[fid] = {
+                "vtx_ids": f["vertex_ids"],
                 # "type": f["type"],
             }
         
@@ -288,7 +289,9 @@ def make_animated_tissue_plot(frame_data, fields_data):
             )
     
     fig.update(frames=frames)
-    fig.show()
+    # fig.show()
+    
+    return fig
 
 def build_fields_data(vmstate_fp):
     with open(vmstate_fp, "r") as f:
@@ -335,7 +338,7 @@ def make_plotly_visualizer(tiss_ckpt_fps, init_vmstate_fp, vertices_to_highlight
     
     fields_data = build_fields_data(init_vmstate_fp)
     
-    make_animated_tissue_plot(
+    return make_animated_tissue_plot(
         frame_data,
         fields_data,
         # arrow_annotations,

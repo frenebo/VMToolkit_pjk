@@ -85,14 +85,29 @@ namespace VMTutorial
 		vector<Edge<Property>> &edges() { return _edges; }
 		vector<Face<Property>> &faces() { return _faces; }
 
-		int num_vert() { return _vertices.size(); }
-		int num_faces() { return _faces.size(); }
+		int num_vert() const { return _vertices.size(); }
+		int num_faces() const { return _faces.size(); }
 
 		// mesh manipulation functions
 		
 		bool T1(Edge<Property> &, double);
 
 		// mesh info functions
+		vector<vector<double>> get_vertex_positions() const
+		{
+			vector<vector<double>> vpositions(num_vert(), vector<double>{0.0,0.0});
+			
+			size_t vidx = 0;
+			for (const auto& v : _vertices)
+			{
+				vpositions[vidx][0] = v.data().r.x;
+				vpositions[vidx][1] = v.data().r.y;
+				
+				vidx++;
+			}
+			
+			return vpositions;
+		}
 
 		double area(const Face<Property> &) const;
 		double perim(const Face<Property> &) const;

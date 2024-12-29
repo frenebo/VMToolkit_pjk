@@ -22,7 +22,6 @@
 #include "force_perimeter.hpp"
 #include "force_const_vertex_propulsion.hpp"
 #include "force_efield_on_cell_boundary.hpp"
-// #include "force_self_propulsion.hpp"
 
  
 using std::runtime_error;

@@ -14,7 +14,6 @@
 
 #include "vec.hpp"
 
-// #include "base_property.hpp"
 
 using std::map;
 using std::string;

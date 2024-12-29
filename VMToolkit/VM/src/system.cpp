@@ -112,20 +112,10 @@ namespace VMTutorial
       }
       
       Face<Property>& f = _mesh.faces().back();
-      // f.data().unique_id = f.id;
       
       if (!erased_face)
       {
         f.outer = j["mesh"]["faces"][i]["outer"];
-        
-        // if (j["mesh"]["faces"][i].find("n") != j["mesh"]["faces"][i].end())
-        // {
-        //   double nx = j["mesh"]["faces"][i]["n"][0];
-        //   double ny = j["mesh"]["faces"][i]["n"][1];
-        //   f.data().n = Vec(nx, ny);
-        // }
-        // else  
-        //   f.data().n = Vec{0,0};
       }
     }
     cout << "Finished reading faces." << endl;
@@ -304,6 +294,7 @@ namespace VMTutorial
       .def("get_centre", &Mesh<Property>::get_centre)
       .def("cell_area", [](Mesh<Property> &m, int i) -> double { return m.area(*(m.get_mesh_face(i))); })
       .def("cell_perim", [](Mesh<Property> &m, int i) -> double { return m.perim(*(m.get_mesh_face(i))); })
+      .def("get_vertex_positions", &Mesh<Property>::get_vertex_positions)
       ;
   }
 
