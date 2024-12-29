@@ -83,7 +83,6 @@ namespace VMTutorial
       // System setup
       void set_box(const shared_ptr<Box>& box) { _mesh.set_box(box); }
       
-      void read_input_from_json_fp(const string&, bool verbose=false);
       void read_input_from_jsonstring(const string& json_contents, bool verbose=false);
       void input_from_jsonobj(json& j, bool verbose);
       

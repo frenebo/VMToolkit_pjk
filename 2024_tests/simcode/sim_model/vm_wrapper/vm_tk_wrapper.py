@@ -188,7 +188,7 @@ class VMToolkitWrapper:
         if verbose:
             print("constructing dumps")
             sim_sys.log_debug_stats()
-        dumps = Dump(sim_sys, forces)                                    # handles all data output 
+        dumps = Dump(sim_sys)                                    # handles all data output 
         
         if verbose:
             print("constructing simulation")
@@ -212,8 +212,6 @@ class VMToolkitWrapper:
             print("Finished intializing cpp...")
             sim_sys.log_debug_stats()
         
-    def dump_cpp_json(self):
-        return self._dumps.mesh_to_jsonstr()
     
     def vm_state_json(self):
         return self._last_vm_state.to_json()

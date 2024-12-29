@@ -113,20 +113,20 @@ namespace VMTutorial
 		return result;
 	}
 	
-	vector<string> split(const string &s, char delim)
-	{
-		stringstream ss{s};
-		string item;
-		vector<string> elems;
-		while (std::getline(ss, item, delim))
-			elems.push_back(move(item));
-		return elems;
-	}
+	// vector<string> split(const string &s, char delim)
+	// {
+	// 	stringstream ss{s};
+	// 	string item;
+	// 	vector<string> elems;
+	// 	while (std::getline(ss, item, delim))
+	// 		elems.push_back(move(item));
+	// 	return elems;
+	// }
 
 	void export_Dump(py::module &m)
 	{
 		py::class_<Dump>(m, "Dump")
-			.def(py::init<System &, ForceCompute &>())
+			.def(py::init<System &>())
 			.def("mesh_to_jsonstr", &Dump::mesh_to_jsonstr)
 			;
 	}

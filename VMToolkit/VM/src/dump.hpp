@@ -55,17 +55,17 @@ namespace VMTutorial
 	class Dump
 	{
 	public:
-		Dump(System &sys, ForceCompute &fc) : _sys{sys}, _force_compute{fc} {}
+		Dump(System &sys) : _sys{sys} {}
 
 		std::string mesh_to_jsonstr();
 
 
 	private:
 		System &_sys;
-		ForceCompute &_force_compute;
+		// ForceCompute &_force_compute;
 	};
 
-	vector<string> split(const std::string &, char);
+	// vector<string> split(const std::string &, char);
 
 	void export_Dump(py::module &);
 

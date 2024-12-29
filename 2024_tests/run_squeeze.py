@@ -29,6 +29,9 @@ def do_stuff():
         simulation_settings={
             "friction_gamma": 0.1,
             "step_dt": 0.05,
+            
+            "checkpoint_step_size": 100,
+            "n_checkpoints": 25,
         },
     )
     

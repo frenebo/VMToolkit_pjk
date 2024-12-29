@@ -131,7 +131,6 @@ namespace VMTutorial
   
   void System::read_input_from_jsonstring(const string& json_contents, bool verbose)
   {
-    // if (verboe
     cout << "Reading json string into a json object" << endl;
     if (verbose)
     {
@@ -144,36 +143,7 @@ namespace VMTutorial
     input_from_jsonobj(j, verbose);
   }
   
-  // Read input from a JSON file
-  void System::read_input_from_json_fp(const string& json_file, bool verbose)
-  {
-    if (verbose) {
-      cout << "Reading input json into system" << endl;
-      
-      // log_debug_stats();
-    }
-    if (_mesh_set)
-    {
-      cout << "Warning! Mesh has already been set. Overwriting it." << endl;
-      _mesh.wipe();
-    }
-    ifstream inp(json_file.c_str());
-    json j;
-    inp >> j;
-    inp.close();
-    
-    input_from_jsonobj(j, verbose);
-  }
-
-
-  // Used to be able to make a map of MyoStore
-  bool operator<(const VertexHandle<Property>& lv, const VertexHandle<Property>& rv) 
-  {
-    return (lv->id < rv->id);
-  }
-
   // Python exports
-
   void export_VertexProperty(py::module& m)
   {
     py::class_<Property::VertexProperty>(m, "VertexProperty")
@@ -302,7 +272,6 @@ namespace VMTutorial
   {
     py::class_<System>(m, "System")
       .def(py::init<MyMesh&>())
-      .def("read_input_from_json_fp", &System::read_input_from_json_fp, py::arg("input_file"), py::arg("verbose")=false)
       .def("read_input_from_jsonstring", &System::read_input_from_jsonstring, py::arg("json_contents"), py::arg("verbose")=false)
       .def("mesh", &System::mesh)
       .def("time_step", &System::time_step)
