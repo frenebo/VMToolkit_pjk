@@ -59,7 +59,6 @@ namespace VMTutorial
       
       std::vector<Vec> compute_all_vertex_forces(bool verbose=false);
       
-      double tension(HalfEdge<Property>& he);
       
       void set_global_params(const string& force_id, const params_type& num_params, const map<string,string>& str_params,  bool verbose);
 

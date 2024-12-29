@@ -48,8 +48,6 @@ namespace VMTutorial
         bool enabled_for_faceidx(int fid, bool verbose);
     
     private:
-        // vector<Vec> _force_by_vidx;
-		// vector<Vec> _polygon_vertices;
 		PolygonZone _poly_zone;
 		double _E_x;
 		double _E_y;

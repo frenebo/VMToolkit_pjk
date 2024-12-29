@@ -14,11 +14,6 @@ namespace VMTutorial
   {
     for (auto e : _sys.mesh().edges())
     {
-      // if (
-      //   !(
-      //     e.he()->from()->data().constraint == "fixed" ||
-      //     e.he()->to()->data().constraint == "fixed")
-      // )
         if (!e.erased && _sys.mesh().len(e) < _min_edge_len)
           if (_sys.mesh().T1(e, _new_edge_len))
             _sys.set_topology_change(true);
@@ -29,7 +24,7 @@ namespace VMTutorial
   void export_Topology(py::module& m)
   {
     py::class_<Topology>(m, "Topology")
-      .def(py::init<System&, ForceCompute&, int>(), py::arg("sys"), py::arg("force_compute"), py::arg("seed") = 0)
+      .def(py::init<System&, int>(), py::arg("sys"),  py::arg("seed") = 0)
       .def("set_params", &Topology::set_params)
       ;
   }

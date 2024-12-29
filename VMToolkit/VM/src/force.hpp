@@ -17,7 +17,7 @@
 #include <chrono>
 
 #include "system.hpp"
-#include "rng.hpp"
+// #include "rng.hpp"
 
 double const SMALL_NUMBER = 1e-6;
 
@@ -35,11 +35,7 @@ namespace VMTutorial
   // Force on a vertex
   class Force 
   {
-    public:
-      // Orphaned model options
-      // const param_type& gammaLen, const param_type& l0, const param_type& counter
-      // _gammaLen(gammaLen), _l0(l0), _counter(counter)
-                                                                                                                                
+    public:                                                                                                 
       Force(const System& sys) : _sys{sys}
       { 
 
@@ -51,19 +47,6 @@ namespace VMTutorial
       {
         throw runtime_error("Unimplemented Force::compute_he_force - has not been overridden in child clas apparently.");
       }
-      
-      // compute edge tension for handling 4-vertices (and moves that computation out of integrator)
-      // takes care of correct type of force law that way
-      virtual double tension(const HalfEdge<Property>&)
-      {
-        throw runtime_error("Unimplemented Force::tension - has not been overridden in child clas apparently.");
-      }
-
-      // // computed energy on of a given face
-      // virtual double energy(const Face<Property>&) = 0;
-      
-      // // // set all parameters for a given type
-      // virtual void set_params(const string&, const params_type&) = 0;
       
       virtual void set_face_params_facewise(const vector<int>& fids, const vector<params_type>& params, bool verbose)
       {

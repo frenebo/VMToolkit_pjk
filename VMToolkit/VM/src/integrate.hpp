@@ -16,7 +16,7 @@
 #include "system.hpp"
 #include "force_compute.hpp"
 #include "integrator.hpp"
-#include "integrator_brownian.hpp"
+#include "integrator_euler.hpp"
 #include "integrator_runge_kutta.hpp"
 
 using std::runtime_error;
@@ -49,8 +49,8 @@ namespace VMTutorial
         if (verbose) {
           cout << "In Integrate::apply" << endl;
         }
-        for (const string& i : this->integ_order) {
-          if (this->factory_map[i]->is_enabled()) {
+        for (const string& i : this->_integ_order) {
+          if (this->_integrators_enabled.at(i)) {
             if (verbose) { cout << "Going to apply a step " << endl; }
             this->factory_map[i]->step(verbose);
           }
@@ -67,35 +67,19 @@ namespace VMTutorial
           throw runtime_error("set_params: Integrator type " + iname + " is not used in this simulation.");
       }
 
-
-      // void set_string_params(const string& iname, const string_params_type& params)
-      // {
-      //   if (this->factory_map.find(iname) != this->factory_map.end())
-      //     this->factory_map[iname]->set_string_params(params);
-      //   else
-      //     throw runtime_error("set_string_params: Integrator type " + iname + " is not used in this simulation.");
-      // }
-
-      // void set_flag(const string& iname, const string& flag)
-      // {
-      //   if (this->factory_map.find(iname) != this->factory_map.end())
-      //     this->factory_map[iname]->set_flag(flag);
-      //   else
-      //     throw runtime_error("set_flag: Integrator type " + iname + " is not used in this simulation.");
-      // }
-
       void enable(const string& iname)
       {
-        if (this->factory_map.find(iname) != this->factory_map.end())
-          this->factory_map[iname]->enable();
-        else
-          throw runtime_error("enable: Integrator type " + iname + " is not used in this simulation.");
+        if (this->factory_map.find(iname) != this->factory_map.end()) {
+          this->_integrators_enabled[iname] = true;
+        } else {
+          throw runtime_error("enable: Integrator type " + iname + " is not used in this simulation."); 
+        }
       }
 
       void disable(const string& iname)
       {
         if (this->factory_map.find(iname) != this->factory_map.end())
-          this->factory_map[iname]->disable();
+          this->_integrators_enabled[iname] = false;
         else
           throw runtime_error("disable: Integrator type " + iname + " is not used in this simulation.");
       }
@@ -109,27 +93,20 @@ namespace VMTutorial
           integ.second->set_dt(dt);
       }
 
-      // void enable_constraint(const string& iname, bool enable)
-      // {
-      //   if (this->factory_map.find(iname) != this->factory_map.end())
-      //     this->factory_map[iname]->enable_constraint(enable);
-      //   else
-      //     throw runtime_error("enable_constraint: Integrator type " + iname + " is not used in this simulation.");
-      // }
-
       
       void add_integrator(const string& iname)
       {
         string name = iname; 
         transform(name.begin(), name.end(), name.begin(), ::tolower);
-        if (name == "brownian") {
-          this->add<IntegratorBrownian, System&, ForceCompute&, int>(name, _sys, _force_compute, _seed);
+        if (name == "euler") {
+          this->add<IntegratorEuler, System&, ForceCompute&, int>(name, _sys, _force_compute, _seed);
         } else if (name == "runge_kutta") {
           this->add<IntegratorRungeKutta, System&, ForceCompute&, int>(name, _sys, _force_compute, _seed);
         } else  {
           throw runtime_error("Unknown integrator type : " + name + ".");
         }
-        integ_order.push_back(name);
+        _integ_order.push_back(name);
+        _integrators_enabled[iname] = true;
       }
 
     private: 
@@ -138,8 +115,8 @@ namespace VMTutorial
       ForceCompute& _force_compute;
       double _dt;
       int _seed;
-      vector<string> integ_order;  // Keeps track in which order integrators were added
-
+      vector<string> _integ_order;  // Keeps track in which order integrators were added
+      map<string,bool> _integrators_enabled;
   };
 
   void export_Integrate(py::module&);

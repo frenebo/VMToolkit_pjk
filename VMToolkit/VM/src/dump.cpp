@@ -13,41 +13,11 @@ namespace VMTutorial
 	{
 		
 		pt::ptree out;
-		pt::ptree rng;
+		// pt::ptree rng;
 		pt::ptree mesh;
 		pt::ptree vertices;
 		pt::ptree faces;
-		if (_sys.periodic())
-		{
-			pt::ptree box;
-			pt::ptree lx, ly;
-			pt::ptree A, B;
-			pt::ptree periodic;
-			pt::ptree mxx, mxy, myx, myy;
-			mxx.put("", _sys.mesh().box()->h._mxx);
-			myx.put("", _sys.mesh().box()->h._myx);
-			A.push_back(std::make_pair("", mxx));
-			A.push_back(std::make_pair("", myx));
-			mxy.put("", _sys.mesh().box()->h._mxy);
-			myy.put("", _sys.mesh().box()->h._myy);
-			B.push_back(std::make_pair("", mxy));
-			B.push_back(std::make_pair("", myy));
-			lx.put("", _sys.mesh().box()->h._mxx);
-			ly.put("", _sys.mesh().box()->h._myy);
-			if (fabs(_sys.mesh().box()->h._mxy) >= 1e-6 || fabs(_sys.mesh().box()->h._myx) >= 1e-6)
-			{
-				box.add_child("a", A);
-				box.add_child("b", B);
-			}
-			else
-			{
-				box.add_child("lx", lx);
-				box.add_child("ly", ly);
-			}
-			periodic.put("", "true");
-			box.add_child("periodic", periodic);
-			mesh.add_child("box", box);
-		}
+		
 		for (auto v : _sys.mesh().vertices())
 		{
 			pt::ptree vertex;
@@ -62,7 +32,6 @@ namespace VMTutorial
 			pt::ptree vx;
 			pt::ptree vy;
 			pt::ptree velocity;
-			pt::ptree constraint;
 			pt::ptree erased;
 			id.put("", v.id);
 			boundary.put("", v.boundary);
@@ -76,14 +45,12 @@ namespace VMTutorial
 			vy.put("", v.data().vel.y);
 			velocity.push_back(std::make_pair("", vx));
 			velocity.push_back(std::make_pair("", vy));
-			// constraint.put("", v.data().constraint);
 			erased.put("", v.erased);
 			vertex.add_child("id", id);
 			vertex.add_child("boundary", boundary);
 			vertex.add_child("r", r);
 			vertex.add_child("force", force);
 			vertex.add_child("velocity", velocity);
-			vertex.add_child("constraint", constraint);
 			vertex.add_child("erased", erased);
 			vertices.push_back(std::make_pair("", vertex));
 		}
@@ -92,13 +59,12 @@ namespace VMTutorial
 		for (auto f : _sys.mesh().faces())
 		{
 			vector<int> verts;
-			vector<double> tension;
+			
 			if (!f.erased)
 			{
 				for (auto he : f.circulator())
 				{
 					verts.push_back(he.from()->id);
-					tension.push_back(he.data().tension);
 				} 
 			}
 			

@@ -116,12 +116,11 @@ namespace VMTutorial
 
   };
 
-  void export_T1_stats(py::module&);
   void export_VertexProperty(py::module&);
   void export_EdgeProperty(py::module&);
   void export_HEProperty(py::module&);
   void export_FaceProperty(py::module&);
-  void export_Spoke(py::module &);
+  // void export_Spoke(py::module &);
   void export_Vertex(py::module &);
   void export_VertexCirculator(py::module &);
   void export_Edge(py::module&);

@@ -25,7 +25,6 @@ namespace VMTutorial
 		// computes force on vertex by a given edge
 		Vec compute_he_force(const Vertex<Property> &, const HalfEdge<Property> &, bool verbose=false) override;
 
-
 		void set_vertex_params_vertexwise(const vector<int>& vids, const vector<params_type>& params, bool verbose) override;
     
         bool enabled_for_vertexidx(int vid, bool verbose);

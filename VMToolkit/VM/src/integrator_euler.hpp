@@ -1,16 +1,12 @@
 /*!
- * \file integrator_brownian.hpp
+ * \file integrator_euler.hpp
  * \author Rastko Sknepnek, sknepnek@gmail.com
  * \date 30-Nov-2023
- * \brief IntegratorBrownian class 
+ * \brief IntegratorEuler class 
 */
 
-#ifndef __INTEGRATOR_BROWNIAN_HPP__
-#define __INTEGRATOR_BROWNIAN_HPP__
-
-// #include "constrainer.hpp"
-// #include "constraint_none.hpp"
-// #include "constraint_fixed.hpp"
+#ifndef __INTEGRATOR_EULER_HPP__
+#define __INTEGRATOR_EULER_HPP__
 
 
 #include "integrator.hpp"
@@ -30,12 +26,12 @@ namespace VMTutorial
 
   // using ConstrainerType = unique_ptr<Constrainer>;
 
-  class IntegratorBrownian : public Integrator 
+  class IntegratorEuler : public Integrator 
   {
 
     public:
 
-      IntegratorBrownian(System& sys, ForceCompute& fc, int seed) : Integrator{sys, fc, seed},
+      IntegratorEuler(System& sys, ForceCompute& fc, int seed) : Integrator{sys, fc, seed},
                                                                     _T{0.0},
                                                                     _gamma{1.0},
                                                                     _Dr{0.0}
@@ -59,16 +55,6 @@ namespace VMTutorial
           }
         }
       }
-      
-      
-      // void set_flag(const string& flag) override 
-      // {  
-      //   if (flag == "update_n")
-      //     _update_n = true;
-      //   else
-      //     throw runtime_error("Brownian integrator: Unknown flag : " + flag + ".");
-      // }
-
       
     private:
 

@@ -37,16 +37,16 @@ namespace VMTutorial
                                                                               _force_compute{f},
                                                                               _topology{t},
                                                                               print_freq{100},
-                                                                              num_zeros{8},
                                                                               bar_width{40},
                                                                               sim_step{0}                                                                              
     { 
 
     }
     void run(int, bool = true, bool = true, bool = false);
-    const string print_version() { return  "branch : "+static_cast<string>(XSTR(GIT_BRANCH))+" commit : "+static_cast<string>(XSTR(GIT_COMMIT_HASH)); }
+    const string print_version() {
+      return  "branch : "+static_cast<string>(XSTR(GIT_BRANCH))+" commit : "+static_cast<string>(XSTR(GIT_COMMIT_HASH));
+     }
     void progress_bar(double, const string&);
-    void store_rng_state();
 
     // variables and parameters
     System& _sys;
@@ -54,9 +54,7 @@ namespace VMTutorial
     ForceCompute& _force_compute;
     Topology& _topology;
 
-    //int rescale_freq;
     int print_freq;
-    int num_zeros;
     int bar_width;
     int sim_step;
     

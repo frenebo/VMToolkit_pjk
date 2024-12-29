@@ -112,20 +112,20 @@ namespace VMTutorial
       }
       
       Face<Property>& f = _mesh.faces().back();
-      f.data().unique_id = f.id;
+      // f.data().unique_id = f.id;
       
       if (!erased_face)
       {
         f.outer = j["mesh"]["faces"][i]["outer"];
         
-        if (j["mesh"]["faces"][i].find("n") != j["mesh"]["faces"][i].end())
-        {
-          double nx = j["mesh"]["faces"][i]["n"][0];
-          double ny = j["mesh"]["faces"][i]["n"][1];
-          f.data().n = Vec(nx, ny);
-        }
-        else  
-          f.data().n = Vec{0,0};
+        // if (j["mesh"]["faces"][i].find("n") != j["mesh"]["faces"][i].end())
+        // {
+        //   double nx = j["mesh"]["faces"][i]["n"][0];
+        //   double ny = j["mesh"]["faces"][i]["n"][1];
+        //   f.data().n = Vec(nx, ny);
+        // }
+        // else  
+        //   f.data().n = Vec{0,0};
       }
     }
     cout << "Finished reading faces." << endl;
@@ -194,21 +194,20 @@ namespace VMTutorial
   void export_EdgeProperty(py::module& m)
   {
     py::class_<Property::EdgeProperty>(m, "EdgeProperty")
-      .def_readwrite("tension", &Property::EdgeProperty::tension);
+      ;
   }
 
   void export_HEProperty(py::module& m)
   {
     py::class_<Property::HEProperty>(m, "HEProperty")
-      .def_readonly("tension", &Property::HEProperty::tension);
+      ;
   }
 
   
   void export_FaceProperty(py::module& m)
   {
     py::class_<Property::FaceProperty>(m, "CellProperty")
-      .def_readonly("unique_id", &Property::FaceProperty::unique_id)
-      .def_readwrite("n", &Property::FaceProperty::n);
+      ;
   }
 
 

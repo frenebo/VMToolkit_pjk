@@ -188,7 +188,7 @@ class VMToolkitWrapper:
         if verbose:
             print("constructing topology")
             sim_sys.log_debug_stats()
-        topology = Topology(sim_sys, forces)                             # handles all topology changes (T1, division, ingression)
+        topology = Topology(sim_sys)                             # handles all topology changes (T1, division, ingression)
         
         if verbose:
             print("constructing dumps")

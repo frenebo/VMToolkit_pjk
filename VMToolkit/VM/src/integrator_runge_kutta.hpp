@@ -9,9 +9,6 @@
 #define __INTEGRATOR_RUNGE_KUTTA_HPP__
 
 
-// #include "constrainer.hpp"
-// #include "constraint_none.hpp"
-// #include "constraint_fixed.hpp"
 #include "integrator.hpp"
 
 using namespace std::chrono;

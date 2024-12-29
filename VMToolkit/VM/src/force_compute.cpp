@@ -108,14 +108,6 @@ namespace VMTutorial
 	
 	
 
-	double ForceCompute::tension(HalfEdge<Property>& he)
-	{
-		double T = 0.0;
-		for (auto& f : this->factory_map)
-			T += f.second->tension(he);
-		return T;
-	}
-	
 	void ForceCompute::set_global_params(const string& force_id, const params_type& num_params, const map<string,string>& str_params,  bool verbose)
 	{
 		if (this->factory_map.find(force_id) != this->factory_map.end()) {

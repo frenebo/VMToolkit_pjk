@@ -4,6 +4,10 @@
  * \date 30-Nov-2023
  * \brief Topology class
  */
+ 
+#ifndef __TOPOLOGY_HPP__
+#define __TOPOLOGY_HPP__
+
 
 #include "system.hpp"
 #include "force_compute.hpp"
@@ -19,8 +23,8 @@ namespace VMTutorial
 	class Topology
 	{
 	public:
-		Topology(System &sys, ForceCompute &fc, int seed) : _sys{sys},
-															_force_compute{fc},
+		Topology(System &sys, int seed) : _sys{sys},
+															// _force_compute{fc},
 															_min_edge_len{0.02},
 															_new_edge_len{0.022}
 		{
@@ -49,7 +53,7 @@ namespace VMTutorial
 
 	private:
 		System &_sys;
-		ForceCompute &_force_compute;
+		// ForceCompute &_force_compute;
 		double _min_edge_len;
 		double _new_edge_len;
 	};
@@ -57,3 +61,6 @@ namespace VMTutorial
 	void export_Topology(py::module &);
 
 }
+
+
+#endif

@@ -19,19 +19,27 @@ namespace VMTutorial
     Vec l = he.to()->data().r - v.data().r;                    // vector along the junction pointing away from the vertex
     const Face<Property>& f   = *(he.face());         // cell to the right of the half edge
     const Face<Property>& fp = *(he.pair()->face()); // pair cell (opposite side of the same junction)
+    
+    bool enabled_for_f = enabled_for_faceidx(f.id, verbose);
+    bool enabled_for_fp = enabled_for_faceidx(fp.id, verbose);
+    
+    if ((!enabled_for_f) && (!enabled_for_fp)) {
+      return Vec(0.0,0.0);
+    }
+    
     double P1 = _sys.cmesh().perim(f);
     double P2 = _sys.cmesh().perim(fp);
     
     double gamma_1 = 0.0;
     double lambda_1 = 0.0;
-    if (enabled_for_faceidx(f.id, verbose))  {
+    if (enabled_for_f)  {
       gamma_1 = (f.outer)    ? 0.0 : _gamma.at(f.id);
       lambda_1 = (f.outer)   ? 0.0 : _lambda.at(f.id);
     }
     
     double gamma_2 = 0.0;
     double lambda_2 = 0.0;
-    if (enabled_for_faceidx(fp.id, verbose)) {
+    if (enabled_for_fp) {
       gamma_2 = (fp.outer)   ? 0.0 : _gamma.at(fp.id);
       lambda_2 = (fp.outer)  ? 0.0 : _lambda.at(fp.id);
     }
