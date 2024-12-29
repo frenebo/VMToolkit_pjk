@@ -16,7 +16,6 @@
 
 #include <pybind11/pybind11.h>
 
-#include "box.hpp"
 
 using std::cos;
 using std::cout;
@@ -35,40 +34,20 @@ namespace VMTutorial
 	{
 	public:
 		//! Default constructor
-		Vec() : box{nullptr}, 
-		        x{0.0}, 
+		Vec() : x{0.0}, 
 				y{0.0} 
 		{
 
 		}
 		//! Constructor for a vector object
-		Vec(double x, double y) : box{nullptr}, 
-								  x{x}, 
+		Vec(double x, double y) : x{x}, 
 								  y{y}  
 		{
 
 		}
-		//! Constructor for a vector object
-		Vec(double x, double y, const shared_ptr<Box> &box) : box{box}
-		{
-			if (box)
-			{
-				double s_x = box->inv_h._mxx * x + box->inv_h._mxy * y;
-				double s_y = box->inv_h._myx * x + box->inv_h._myy * y;
-				s_x -= rint(s_x);
-				s_y -= rint(s_y);
-				this->x = box->h._mxx * s_x + box->h._mxy * s_y;
-				this->y = box->h._myx * s_x + box->h._myy * s_y;
-			}
-			else
-			{
-				this->x = x;
-				this->y = y;
-			}
-		}
 		
 		//! Copy constructor
-		Vec(const Vec &v) : box(v.box)
+		Vec(const Vec &v)
 		{
 			x = v.x;
 			y = v.y;
@@ -78,7 +57,7 @@ namespace VMTutorial
 		{
 			x = rhs.x;
 			y = rhs.y;
-			box = rhs.box;
+			
 			return *this;
 		}
 
@@ -86,19 +65,8 @@ namespace VMTutorial
 		Vec operator+(const Vec &v)
 		{
 			double xx = x + v.x, yy = y + v.y;
-			if (box || v.box)
-			{
-				const shared_ptr<Box> &sim_box = (box) ? box : v.box;
-				Vec si = sim_box->inv_h * (*this);
-				Vec sj = sim_box->inv_h * v;
-				double sij_x = si.x + sj.x;
-				double sij_y = si.y + sj.y;
-				sij_x -= rint(sij_x);
-				sij_y -= rint(sij_y);
-				xx = sim_box->h._mxx * sij_x + sim_box->h._mxy * sij_y;
-				yy = sim_box->h._myx * sij_x + sim_box->h._myy * sij_y;
-			}
-			return Vec(xx, yy, box);
+			
+			return Vec(xx, yy);
 		}
 
 		//! Add two vectors (constant version)
@@ -108,19 +76,8 @@ namespace VMTutorial
 		Vec operator-(const Vec &v)
 		{
 			double xx = x - v.x, yy = y - v.y;
-			if (box || v.box)
-			{
-				const shared_ptr<Box> &sim_box = (box) ? box : v.box;
-				Vec si = sim_box->inv_h * (*this);
-				Vec sj = sim_box->inv_h * v;
-				double sij_x = si.x - sj.x;
-				double sij_y = si.y - sj.y;
-				sij_x -= rint(sij_x);
-				sij_y -= rint(sij_y);
-				xx = sim_box->h._mxx * sij_x + sim_box->h._mxy * sij_y;
-				yy = sim_box->h._myx * sij_x + sim_box->h._myy * sij_y;
-			}
-			return Vec(xx, yy, box);
+			
+			return Vec(xx, yy);
 		}
 
 		//! Subtract two vectors (constant version)
@@ -129,24 +86,15 @@ namespace VMTutorial
 		//! Negate a vector
 		Vec operator-()
 		{
-			return Vec(-x, -y, box);
+			return Vec(-x, -y);
 		}
 
 		//! Scale vector by a constant
 		Vec operator*(const double c)
 		{
 			double xx = c * x, yy = c * y;
-			if (box)
-			{
-				Vec s = box->inv_h * (*this);
-				double s_x = c * s.x;
-				double s_y = c * s.y;
-				s_x -= rint(s_x);
-				s_y -= rint(s_y);
-				xx = box->h._mxx * s_x + box->h._mxy * s_y;
-				yy = box->h._myx * s_x + box->h._myy * s_y;
-			}
-			return Vec(xx, yy, box);
+			
+			return Vec(xx, yy);
 		}
 
 		//! Scale vector by a constant (const version)
@@ -162,18 +110,7 @@ namespace VMTutorial
 		Vec &operator+=(const Vec &v)
 		{
 			double xx = x + v.x, yy = y + v.y;
-			if (box || v.box)
-			{
-				const shared_ptr<Box> &sim_box = (box) ? box : v.box;
-				Vec si = sim_box->inv_h * (*this);
-				Vec sj = sim_box->inv_h * v;
-				double sij_x = si.x + sj.x;
-				double sij_y = si.y + sj.y;
-				sij_x -= rint(sij_x);
-				sij_y -= rint(sij_y);
-				xx = sim_box->h._mxx * sij_x + sim_box->h._mxy * sij_y;
-				yy = sim_box->h._myx * sij_x + sim_box->h._myy * sij_y;
-			}
+			
 			x = xx;
 			y = yy;
 			return *this;
@@ -183,18 +120,7 @@ namespace VMTutorial
 		Vec &operator-=(const Vec &v)
 		{
 			double xx = x - v.x, yy = y - v.y;
-			if (box || v.box)
-			{
-				const shared_ptr<Box> &sim_box = (box) ? box : v.box;
-				Vec si = sim_box->inv_h * (*this);
-				Vec sj = sim_box->inv_h * v;
-				double sij_x = si.x - sj.x;
-				double sij_y = si.y - sj.y;
-				sij_x -= rint(sij_x);
-				sij_y -= rint(sij_y);
-				xx = sim_box->h._mxx * sij_x + sim_box->h._mxy * sij_y;
-				yy = sim_box->h._myx * sij_x + sim_box->h._myy * sij_y;
-			}
+			
 			x = xx;
 			y = yy;
 			return *this;
@@ -228,16 +154,16 @@ namespace VMTutorial
 		{
 			double len = this->len();
 			if (len != double(0))
-				return Vec(x / len, y / len, box);
-			return Vec(x, y, box);
+				return Vec(x / len, y / len);
+			return Vec(x, y);
 		}
 
 		Vec unit() const
 		{
 			double len = this->len();
 			if (len != double(0))
-				return Vec(x / len, y / len, box);
-			return Vec(x, y, box);
+				return Vec(x / len, y / len);
+			return Vec(x, y);
 		}
 
 		//! Rotate vector by \f$ \phi \f$
@@ -249,63 +175,25 @@ namespace VMTutorial
 			double xx = c * x - s * y;
 			double yy = s * x + c * y;
 
-			if (box)
-			{
-				Vec s = box->inv_h * (*this);
-				double s_x = s.x;
-				double s_y = s.y;
-				s_x -= rint(s_x);
-				s_y -= rint(s_y);
-				xx = box->h._mxx * s_x + box->h._mxy * s_y;
-				yy = box->h._myx * s_x + box->h._myy * s_y;
-			}
 
-			return Vec(xx, yy, box);
+			return Vec(xx, yy);
 		}
 
 		//! Compute e_z x v (used for force)
-		Vec ez_cross_v() { return Vec(-y, x, box); }
+		Vec ez_cross_v() { return Vec(-y, x); }
 
-		Vec ez_cross_v() const { return Vec(-y, x, box); }
+		Vec ez_cross_v() const { return Vec(-y, x); }
 
-		//! Fold back vector into the periodic box (used when changing simulation box to make sure all vertices are inside the box)
-		void fold_back()
-		{
-			if (box)
-			{
-				double s_x = box->inv_h._mxx * x + box->inv_h._mxy * y;
-				double s_y = box->inv_h._myx * x + box->inv_h._myy * y;
-				s_x -= rint(s_x);
-				s_y -= rint(s_y);
-				this->x = box->h._mxx * s_x + box->h._mxy * s_y;
-				this->y = box->h._myx * s_x + box->h._myy * s_y;
-			}
-		}
 
 		// Scale vector
 		void scale(double a, double b)
 		{
-			if (box)
-			{
-				Vec s = box->inv_h * (*this);
-				double s_x = a * s.x;
-				double s_y = b * s.y;
-				s_x -= rint(s_x);
-				s_y -= rint(s_y);
-				this->x = box->h._mxx * s_x + box->h._mxy * s_y;
-				this->y = box->h._myx * s_x + box->h._myy * s_y;
-			}
-			else
-			{
-				this->x = a * x;
-				this->y = b * y;
-			}
+			this->x = a * x;
+			this->y = b * y;
 		}
 
-		friend Vec operator*(const Matrix &, const Vec &);
+		// friend Vec operator*(const Matrix &, const Vec &);
 
-		///@{
-		shared_ptr<Box> box;
 		double x, y; //!< Position in the embedding 3d flat space
 
 	};
@@ -314,23 +202,14 @@ namespace VMTutorial
 	inline Vec operator*(const double c, const Vec &v)
 	{
 		double xx = c * v.x, yy = c * v.y;
-		if (v.box)
-		{
-			Vec s = v.box->inv_h * v;
-			double s_x = c * s.x;
-			double s_y = c * s.y;
-			s_x -= rint(s_x);
-			s_y -= rint(s_y);
-			xx = v.box->h._mxx * s_x + v.box->h._mxy * s_y;
-			yy = v.box->h._myx * s_x + v.box->h._myy * s_y;
-		}
-		return Vec(xx, yy, v.box);
+		
+		return Vec(xx, yy);
 	}
 
-	inline Vec operator*(const Matrix &m, const Vec &v)
-	{
-		return Vec(m._mxx * v.x + m._mxy * v.y, m._myx * v.x + m._myy * v.y, v.box);
-	}
+	// inline Vec operator*(const Matrix &m, const Vec &v)
+	// {
+	// 	return Vec(m._mxx * v.x + m._mxy * v.y, m._myx * v.x + m._myy * v.y);
+	// }
 
 	inline double dot(const Vec &v1, const Vec &v2)
 	{

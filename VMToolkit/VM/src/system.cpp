@@ -16,31 +16,13 @@ namespace VMTutorial
     {
       cout << "At start of System::input_from_jsonobj" << endl;
     }
-    // Check if simulation box exists
-    if (j["mesh"].find("box") != j["mesh"].end()) {
-      if (verbose) cout << "Found box specification" << endl;
+    // // Check if simulation box exists
+    // if (j["mesh"].find("box") != j["mesh"].end()) {
+    //   if (verbose) cout << "Found box specification" << endl;
       
-      if (j["mesh"]["box"]["periodic"])
-      {
-        if (j["mesh"]["box"].find("a") != j["mesh"]["box"].end() && j["mesh"]["box"].find("b") != j["mesh"]["box"].end())
-        {
-          vector<double> a = j["mesh"]["box"]["a"];
-          vector<double> b = j["mesh"]["box"]["b"];
-          this->set_box(make_shared<Box>(a[0], a[1], b[0], b[1]));
-        }
-        else if (j["mesh"]["box"].find("lx") != j["mesh"]["box"].end() && j["mesh"]["box"].find("ly") != j["mesh"]["box"].end())
-        {
-          double lx = j["mesh"]["box"]["lx"];
-          double ly = j["mesh"]["box"]["ly"];
-          this->set_box(make_shared<Box>(lx, ly));
-        }
-        else 
-          throw runtime_error("There is a problem with the box field in the input JSON file.");
-        cout << "Setting periodic simulation box." << endl;
-      }
-    } else {
-      if (verbose) cout << "no box found in mesh, continuing" << endl;
-    }
+    // } else {
+    //   if (verbose) cout << "no box found in mesh, continuing" << endl;
+    // }
 
     // Check for time step
     if (j["mesh"].find("time_step") != j["mesh"].end())
@@ -62,7 +44,7 @@ namespace VMTutorial
       double x = j["mesh"]["vertices"][i]["r"][0];
       double y = j["mesh"]["vertices"][i]["r"][1];
       bool boundary = j["mesh"]["vertices"][i]["boundary"];
-      _mesh.add_vertex(Vertex<Property>(id, Vec(x, y, _mesh.box()), boundary, _mesh));
+      _mesh.add_vertex(Vertex<Property>(id, Vec(x, y), boundary, _mesh));
       Vertex<Property> &v = _mesh.vertices().back();
       
       v.erased = j["mesh"]["vertices"][i]["erased"];

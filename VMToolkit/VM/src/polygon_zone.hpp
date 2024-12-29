@@ -13,9 +13,11 @@
 #include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
 #include <string>
-
+#include <vector>
 
 #include "vec.hpp"
+
+using std::vector;
 
 namespace VMTutorial
 {
@@ -40,18 +42,9 @@ namespace VMTutorial
             
             double cell_edge_intersection(const Vec& vec_from, const Vec& vec_to,  bool verbose=false) const;
             
-            double xmin() const
-            {
-                return _xmin;
-            }
-            double xmax() const
-            {
-                return _xmax;
-            }
-            double ymin() const
-            {
-                return _ymin;
-            }
+            double xmin() const { return _xmin; }
+            double xmax() const { return _xmax; }
+            double ymin() const { return _ymin; }
             double ymax() const { return _ymax; }
             
         private:

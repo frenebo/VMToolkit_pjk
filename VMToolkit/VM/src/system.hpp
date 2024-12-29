@@ -81,7 +81,6 @@ namespace VMTutorial
                              }
 
       // System setup
-      void set_box(const shared_ptr<Box>& box) { _mesh.set_box(box); }
       
       void read_input_from_jsonstring(const string& json_contents, bool verbose=false);
       void input_from_jsonobj(json& j, bool verbose);
@@ -99,9 +98,7 @@ namespace VMTutorial
       MyMesh& mesh()  { return _mesh; }
       const MyMesh& cmesh() const { return _mesh; }
       
-      const shared_ptr<Box> &box() const { return _mesh.box(); }
       int& time_step() { return _time_step; }
-      bool periodic() { return (_mesh.box() != nullptr); }
       double& simulation_time() { return _simulation_time; }
       bool topology_change() { return _topology_changed;  }
       

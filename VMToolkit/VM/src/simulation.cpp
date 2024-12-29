@@ -85,7 +85,6 @@ namespace VMTutorial
 PYBIND11_MODULE(vm, m)
 {
   VMTutorial::export_Vec(m);
-  VMTutorial::export_Box(m);
   VMTutorial::export_VertexProperty(m);
   VMTutorial::export_HEProperty(m);
   VMTutorial::export_EdgeProperty(m);

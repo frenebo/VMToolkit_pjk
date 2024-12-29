@@ -20,7 +20,6 @@
 #include <pybind11/stl.h>
 
 #include "types.hpp"
-#include "box.hpp"
 
 using std::find_if;
 using std::list;
@@ -40,18 +39,17 @@ namespace VMTutorial
 	{
 
 	public:
-		Mesh() :   _box(nullptr) {}
+		Mesh() {}
 
 		//! Mesh setup functions
 		void add_vertex(const Vertex<Property> &v)
 		{
 			_vertices.push_back(v);
-			if (v.erased)
-				_erased_vertices.push_back(v.id);
+			// if (v.erased)
+			// 	_erased_vertices.push_back(v.id);
 		}
 		void add_edge(const Edge<Property> &e) { _edges.push_back(e); }
 		void add_halfedge(const HalfEdge<Property> &he) { _halfedges.push_back(he); }
-		void set_box(const shared_ptr<Box> &box) { _box = box; }
 		void add_face(int face_id, const vector<int> &vert_ids, bool erased = false, bool verbose=false);
 
 
@@ -61,11 +59,9 @@ namespace VMTutorial
 			_vertices.clear();
 			_edges.clear();
 			_faces.clear();
-			_erased_edges.clear();
-			_erased_halfedges.clear();
-			_erased_vertices.clear();
-			// _n_faces = 0;
-			_box = nullptr;
+			// _erased_edges.clear();
+			// _erased_halfedges.clear();
+			// _erased_vertices.clear();
 		}
 
 		// accessor functions
@@ -122,21 +118,16 @@ namespace VMTutorial
 		Vec get_face_centroid(const Face<Property> &);
 		Vec get_face_direction(const Face<Property> &);
 
-		const shared_ptr<Box> &box() const { return _box; }
-
 	private:
 		vector<HalfEdge<Property>> _halfedges;
 		vector<Vertex<Property>> _vertices;
 		vector<Edge<Property>> _edges;
 		vector<Face<Property>> _faces;
 
-		list<int> _erased_vertices;
-		list<int> _erased_edges;
-		list<int> _erased_halfedges;
-		list<int> _erased_faces;
-
-		// int _n_faces;		  // number of faces;
-		shared_ptr<Box> _box; // simulation box
+		// list<int> _erased_vertices;
+		// list<int> _erased_edges;
+		// list<int> _erased_halfedges;
+		// list<int> _erased_faces;
 	};
 
 	template <typename Property>
@@ -303,8 +294,8 @@ namespace VMTutorial
 			fh->_he = _halfedges[first_he].idx(); // Make sure that the first half edge is the face half-edge. This makes life easier when reading in "per edge" data.
 			fh->nsides = this->face_sides(*fh);
 		}
-		else
-			_erased_faces.push_back(face_id);
+		// else
+			// _erased_faces.push_back(face_id);
 	}
 
 	// Mesh manipulation functions
@@ -480,7 +471,7 @@ namespace VMTutorial
 			rc += Vec(dr.x, dr.y);
 		}
 		Vec Rc = (1.0 / f.nsides) * rc + r0;
-		return Vec(Rc.x, Rc.y, this->_box);
+		return Vec(Rc.x, Rc.y);
 	}
 
 	// Compute position of the face centroid
@@ -501,7 +492,7 @@ namespace VMTutorial
 			rc.y += (ri.y + rj.y) * fact;
 		}
 		Vec Rc = (1.0 / (6 * this->area(f))) * rc + r0;
-		return Vec(Rc.x, Rc.y, this->_box);
+		return Vec(Rc.x, Rc.y);
 	}
 
 };
