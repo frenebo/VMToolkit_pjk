@@ -14,11 +14,11 @@
 #include <iterator>
 
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 #include "vec.hpp"
 
 namespace py = pybind11;
-using std::vector;
 
 namespace VMTutorial
 {
@@ -44,22 +44,22 @@ namespace VMTutorial
 
 	// Handles to mesh elements
 	template <typename Property>
-	using HEHandle = typename vector<HalfEdge<Property>>::iterator;
+	using HEHandle = typename std::vector<HalfEdge<Property>>::iterator;
 	template <typename Property>
-	using VertexHandle = typename vector<Vertex<Property>>::iterator;
+	using VertexHandle = typename std::vector<Vertex<Property>>::iterator;
 	template <typename Property>
-	using EdgeHandle = typename vector<Edge<Property>>::iterator;
+	using EdgeHandle = typename std::vector<Edge<Property>>::iterator;
 	template <typename Property>
-	using FaceHandle = typename vector<Face<Property>>::iterator;
+	using FaceHandle = typename std::vector<Face<Property>>::iterator;
 
 	template <typename Property>
-	using HECHandle = typename vector<HalfEdge<Property>>::const_iterator;
+	using HECHandle = typename std::vector<HalfEdge<Property>>::const_iterator;
 	template <typename Property>
-	using VertexCHandle = typename vector<Vertex<Property>>::const_iterator;
+	using VertexCHandle = typename std::vector<Vertex<Property>>::const_iterator;
 	template <typename Property>
-	using EdgeCHandle = typename vector<Edge<Property>>::const_iterator;
+	using EdgeCHandle = typename std::vector<Edge<Property>>::const_iterator;
 	template <typename Property>
-	using FaceCHandle = typename vector<Face<Property>>::const_iterator;
+	using FaceCHandle = typename std::vector<Face<Property>>::const_iterator;
 
 	//! HalfEdge class
 	template <typename Property>

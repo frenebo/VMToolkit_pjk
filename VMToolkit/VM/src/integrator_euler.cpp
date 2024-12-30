@@ -7,6 +7,9 @@
 
 #include "integrator_euler.hpp"
 
+using std::cout;
+using std::endl;
+
 namespace VMTutorial
 {
   void IntegratorEuler::step(bool verbose)
@@ -16,8 +19,8 @@ namespace VMTutorial
     }
     
     double mu = 1.0 / _gamma;    // mobility 
-    double B = sqrt(2.0*mu*_T);
-    double sqrt_dt = sqrt(_dt);
+    double B = std::sqrt(2.0*mu*_T);
+    double sqrt_dt = std::sqrt(_dt);
     
     // Compute force on each vertex
     if (verbose) {

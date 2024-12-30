@@ -11,20 +11,16 @@
 
 #include "integrator.hpp"
 
-#include <chrono>
 #include <utility>
 #include <map>
 #include <string> 
 #include <memory>
 
-using namespace std::chrono;
 using std::map;
-using std::make_unique;
+using std::runtime_error;
 
 namespace VMTutorial
 {
-
-  // using ConstrainerType = unique_ptr<Constrainer>;
 
   class IntegratorEuler : public Integrator 
   {

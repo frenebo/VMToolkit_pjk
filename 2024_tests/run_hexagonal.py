@@ -158,7 +158,7 @@ def do_stuff():
             f.write(json.dumps(vmstate_json))
         
         checkpoint_fps.append(ckpt_fp)
-        sim_model.run_steps(step_size)
+        sim_model.run_steps(step_size, do_time_force_computation=True)
 
 
 if __name__ == "__main__":

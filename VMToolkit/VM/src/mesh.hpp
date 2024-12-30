@@ -15,17 +15,11 @@
 #include <iostream>
 #include <exception>
 #include <memory>
-#include <list>
 
 
 #include "types.hpp"
 
-using std::find_if;
-using std::list;
-using std::next;
-using std::prev;
 using std::runtime_error;
-using std::shared_ptr;
 using std::vector;
 
 namespace VMTutorial
@@ -42,8 +36,6 @@ namespace VMTutorial
 		void add_vertex(const Vertex<Property> &v)
 		{
 			_vertices.push_back(v);
-			// if (v.erased)
-			// 	_erased_vertices.push_back(v.id);
 		}
 		void add_edge(const Edge<Property> &e) { _edges.push_back(e); }
 		void add_halfedge(const HalfEdge<Property> &he) { _halfedges.push_back(he); }
@@ -56,9 +48,6 @@ namespace VMTutorial
 			_vertices.clear();
 			_edges.clear();
 			_faces.clear();
-			// _erased_edges.clear();
-			// _erased_halfedges.clear();
-			// _erased_vertices.clear();
 		}
 
 		// accessor functions
@@ -154,7 +143,7 @@ namespace VMTutorial
 		if ((i < 0) || (i > _faces.size()))
 			throw runtime_error("Face index out of bounds.");
 		else
-			return *(find_if(_faces.begin(), _faces.end(), [i](const Face<Property> &f) -> bool
+			return *(std::find_if(_faces.begin(), _faces.end(), [i](const Face<Property> &f) -> bool
 							 { return (f.id == i); }));
 	}
 
@@ -216,21 +205,21 @@ namespace VMTutorial
 	template <typename Property>
 	void Mesh<Property>::add_face(int face_id, const vector<int> &vert_ids, bool erased, bool verbose)
 	{
-		if (verbose) { cout << "Adding face" << endl; }
+		if (verbose) { std::cout << "Adding face" << std::endl; }
 		_faces.push_back(Face<Property>(face_id, erased, *this));
 		if (!erased)
 		{
-			FaceHandle<Property> fh = prev(_faces.end());
+			FaceHandle<Property> fh = std::prev(_faces.end());
 			HEHandle<Property> he;
 			int prev_he;
 			int first_he;
 			if (verbose) {
-				cout << "Adding vertices" << endl;
-				cout << "  # of vertice in vert_ids: " << vert_ids.size() << endl;
+				std::cout << "Adding vertices" << std::endl;
+				std::cout << "  # of vertice in vert_ids: " << vert_ids.size() << std::endl;
 			}
 			for (int i = 0; i < vert_ids.size(); i++)
 			{
-				if (verbose) { cout << "  vtx idx " << i << endl; }
+				if (verbose) { std::cout << "  vtx idx " << i << std::endl; }
 				int v1_id = vert_ids[i], v2_id = vert_ids[(i == (vert_ids.size() - 1)) ? 0 : i + 1];
 				
 				VertexHandle<Property> vh_from = this->get_mesh_vertex(v1_id);
@@ -240,12 +229,10 @@ namespace VMTutorial
 				
 				HalfEdge<Property> he_new = HalfEdge<Property>(*this);
 				
-				// cout << "    in loc 4" << endl;
-				// cout << "      CURRENT size of _halfedges: " << _halfedges.size() << endl;
 				_halfedges.push_back(he_new);
-				// cout << "    in loc 5" << endl;
+				
 				_halfedges.back().set_idx(_halfedges.size() - 1);
-				// cout << "    in loc 6" << endl;
+				
 				he = this->get_mesh_he(_halfedges.size() - 1);
 				
 				if (i == 0) {
@@ -254,14 +241,14 @@ namespace VMTutorial
 				he->_from = vh_from->id;
 				he->_to = vh_to->id;
 				vh_from->_he = he->idx();
-				EdgeHandle<Property> eh = find_if(_edges.begin(), _edges.end(), [v1_id, v2_id](const Edge<Property> &e) -> bool
+				EdgeHandle<Property> eh = std::find_if(_edges.begin(), _edges.end(), [v1_id, v2_id](const Edge<Property> &e) -> bool
 												  { return (v1_id == e.i && v2_id == e.j) || (v1_id == e.j && v2_id == e.i); });
-				// cout << "    in loc 8" << endl;
+				
 				if (eh == _edges.end())
 				{
 					_edges.push_back(Edge<Property>(v1_id, v2_id, *this));
 					_edges.back().set_idx(_edges.size() - 1);
-					eh = prev(_edges.end());
+					eh = std::prev(_edges.end());
 					eh->_he = he->idx();
 				}
 				else
@@ -272,7 +259,7 @@ namespace VMTutorial
 				}
 				he->_edge = eh->idx();
 				he->_face = fh->id;
-				// cout << "    in loc 9" << endl;
+				
 				if (i > 0)
 				{
 					he->_prev = _halfedges[prev_he].idx();
@@ -285,8 +272,6 @@ namespace VMTutorial
 			fh->_he = _halfedges[first_he].idx(); // Make sure that the first half edge is the face half-edge. This makes life easier when reading in "per edge" data.
 			fh->nsides = this->face_sides(*fh);
 		}
-		// else
-			// _erased_faces.push_back(face_id);
 	}
 
 	// Mesh manipulation functions

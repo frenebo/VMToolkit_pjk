@@ -25,13 +25,14 @@
 using std::cout;
 using std::string;
 using std::endl;
-using std::to_string;
+// using std::to_string;
 
 namespace VMTutorial
 {
 
-  struct Simulation
+  class Simulation
   {
+  public:
     Simulation(System& sys, Integrate& integ, ForceCompute& f, Topology& t) : _sys{sys}, 
                                                                               _integ{integ}, 
                                                                               _force_compute{f},
@@ -48,15 +49,17 @@ namespace VMTutorial
      }
     void progress_bar(double, const string&);
 
+
+    int print_freq;
+    int bar_width;
+    int sim_step;
+    
+  private:
     // variables and parameters
     System& _sys;
     Integrate& _integ;
     ForceCompute& _force_compute;
     Topology& _topology;
-
-    int print_freq;
-    int bar_width;
-    int sim_step;
     
   };
 

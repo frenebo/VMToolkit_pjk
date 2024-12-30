@@ -20,13 +20,10 @@
 
 double const SMALL_NUMBER = 1e-6;
 
-using std::map;
 using std::vector;
 using std::string;
 using std::runtime_error;
-using std::cerr;
-using std::exception;
-using namespace std::chrono;
+
 
 namespace VMTutorial
 {
@@ -36,9 +33,9 @@ namespace VMTutorial
   {
     public:                                                                                                 
       Force(const System& sys) : _sys{sys}
-      { 
-
+      {
       }
+      
       virtual ~Force() { }
         
       // computes force on vertex by a given edge
@@ -57,19 +54,14 @@ namespace VMTutorial
         throw runtime_error("Unimplemented Force::set_vertex_params_vertexwise - has not been overridden in child class apparently.");
       }
       
-      virtual void set_global_params(const params_type& params,const map<string,string>& str_params, bool verbose)
+      virtual void set_global_params(const params_type& params,const std::map<string,string>& str_params, bool verbose)
       {
         throw runtime_error("Unimplemented Force::set_global_params - apparently has not been overriden in child class.");
       }
     
     protected:
-
-      const System& _sys;    // Mesh
-     
-      
+      const System& _sys;    // Mes
   };
-
-  
 }
 
 #endif

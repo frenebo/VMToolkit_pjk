@@ -11,9 +11,8 @@
 
 #include "integrator.hpp"
 
-using namespace std::chrono;
 using std::map;
-using std::make_unique;
+using std::runtime_error;
 
 namespace VMTutorial
 {

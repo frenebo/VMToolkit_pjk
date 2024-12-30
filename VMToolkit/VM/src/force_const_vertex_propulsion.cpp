@@ -7,6 +7,9 @@
 
 #include "force_const_vertex_propulsion.hpp"
 
+using std::cout;
+using std::endl;
+
 namespace VMTutorial
 {
   void ForceConstVertexPropulsion::set_vertex_params_vertexwise(const vector<int>& vids, const vector<params_type>& params, bool verbose)

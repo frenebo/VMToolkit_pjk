@@ -24,11 +24,6 @@
 #include "force_efield_on_cell_boundary.hpp"
 
  
-using std::runtime_error;
-using std::transform;
-using std::map;
-using std::string;
-
 
 namespace VMTutorial
 {
@@ -54,23 +49,23 @@ namespace VMTutorial
       
       void start_force_compute_timers(bool verbose);
       
-      map<string, double> get_force_compute_timers_millis(bool verbose);
+      map<std::string, double> get_force_compute_timers_millis(bool verbose);
       
       std::vector<Vec> compute_all_vertex_forces(bool verbose=false);
       
       
-      void set_global_params(const string& force_id, const params_type& num_params, const map<string,string>& str_params,  bool verbose);
+      void set_global_params(const std::string& force_id, const params_type& num_params, const std::map<string,string>& str_params,  bool verbose);
 
       
-      void set_face_params_facewise(const string& force_id, const vector<int>& fids, const vector<params_type>& params, bool verbose);
+      void set_face_params_facewise(const std::string& force_id, const vector<int>& fids, const vector<params_type>& params, bool verbose);
       
-      void set_vertex_params_vertexwise(const string& force_id, const vector<int>& vids, const vector<params_type>& params, bool verbose);
+      void set_vertex_params_vertexwise(const std::string& force_id, const vector<int>& vids, const vector<params_type>& params, bool verbose);
 
-      void add_force(const string& force_id, const string& force_type, bool verbose);
+      void add_force(const std::string& force_id, const std::string& force_type, bool verbose);
 
     private:
       const System& _sys;
-      map<string, timer_duration> _force_timers;
+      std::map<std::string, timer_duration> _force_timers;
   };
 
   void export_ForceCompute(py::module&);

@@ -7,6 +7,10 @@
 
 #include "simulation.hpp"
 
+using std::runtime_error;
+using std::cout;
+using std::endl;
+
 namespace VMTutorial
 {
   void Simulation::run(int steps, bool topological_change, bool old_style, bool verbose)
@@ -18,7 +22,7 @@ namespace VMTutorial
     if (verbose) { cout << "Simulation::run - Running simulation for " << steps << " steps" << endl; }
     for (int i = sim_step; i < sim_step + steps; i++)
     {
-      if (verbose) { std::cout << "doing step #" << i << endl; }
+      if (verbose) { cout << "doing step #" << i << endl; }
       if (topological_change)
       {
           _topology.T1();
@@ -48,25 +52,25 @@ namespace VMTutorial
     }
     sim_step += steps;
     if (this->print_freq > 0 && !old_style) {
-      std::cout << " --> Completed " << sim_step << " simulation steps " << std::endl;  
+      cout << " --> Completed " << sim_step << " simulation steps " << endl;  
     }
   }
 
   void Simulation::progress_bar(double progress, const string& end_of_line)
   {
-    std::cout << "[";
+    cout << "[";
     int pos = static_cast<int>(round(bar_width * progress));
     for (int i = 0; i < bar_width; ++i) 
     {
       if (i < pos) 
-        std::cout << "=";
+        cout << "=";
       else if (i == pos) 
-        std::cout << ">";
+        cout << ">";
       else 
-        std::cout << " ";
+        cout << " ";
     }
-    std::cout << "] "  << static_cast<int>(round(progress * 100.0)) << "%" << end_of_line;
-    std::cout.flush();
+    cout << "] "  << static_cast<int>(round(progress * 100.0)) << "%" << end_of_line;
+    cout.flush();
   }
 
 

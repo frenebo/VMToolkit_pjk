@@ -7,6 +7,9 @@
 
 #include "polygon_zone.hpp"
 
+using std::cout;
+using std::endl;
+
 namespace VMTutorial
 {
     void PolygonZone::set_points(const vector<Vec>& polygon_vertices, bool verbose)
@@ -16,8 +19,6 @@ namespace VMTutorial
         }
         boost::geometry::clear(_btpoly);
         
-        // doubl
-        // if ()
         _xmin = polygon_vertices.at(0).x;
         _xmax = _xmin;
         

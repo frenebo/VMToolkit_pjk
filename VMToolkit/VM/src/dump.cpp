@@ -7,6 +7,32 @@
 
 #include "dump.hpp"
 
+
+#include <string>
+#include <sstream>
+#include <fstream>
+#include <map>
+#include <exception>
+#include <memory>
+#include <vector>
+#include <utility>
+#include <algorithm>
+#include <cctype>
+#include <sys/stat.h>
+#include <regex>
+
+
+using std::cerr;
+using std::copy;
+using std::map;
+using std::runtime_error;
+using std::string;
+using std::stringstream;
+using std::to_string;
+using std::tolower;
+using std::transform;
+using std::vector;
+
 namespace VMTutorial
 {
 	std::string Dump::mesh_to_jsonstr()

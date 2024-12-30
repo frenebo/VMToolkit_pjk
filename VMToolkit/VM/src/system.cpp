@@ -7,6 +7,12 @@
 
 #include "system.hpp"
 
+using json = nlohmann::json;
+
+
+using std::cout;
+using std::endl;
+
 namespace VMTutorial
 {
   
@@ -16,14 +22,7 @@ namespace VMTutorial
     {
       cout << "At start of System::input_from_jsonobj" << endl;
     }
-    // // Check if simulation box exists
-    // if (j["mesh"].find("box") != j["mesh"].end()) {
-    //   if (verbose) cout << "Found box specification" << endl;
-      
-    // } else {
-    //   if (verbose) cout << "no box found in mesh, continuing" << endl;
-    // }
-
+    
     // Check for time step
     if (j["mesh"].find("time_step") != j["mesh"].end())
     {
@@ -119,7 +118,7 @@ namespace VMTutorial
       cout << json_contents << endl;
     }
     json j;
-    istringstream s(json_contents);
+    std::istringstream s(json_contents);
     s >> j;
     cout << "Finished parsing jon object, now starting to input into the system" << endl;
     input_from_jsonobj(j, verbose);

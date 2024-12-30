@@ -7,6 +7,8 @@
 
 #include  "integrator_runge_kutta.hpp"
 
+using std::cout;
+using std::endl;
 
 namespace VMTutorial
 {

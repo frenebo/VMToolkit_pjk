@@ -1,6 +1,9 @@
 
 #include "force_efield_on_cell_boundary.hpp"
 
+using std::runtime_error;
+using std::cout;
+using std::endl;
 
 namespace VMTutorial
 {

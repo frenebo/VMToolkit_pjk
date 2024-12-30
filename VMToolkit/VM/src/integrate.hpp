@@ -20,7 +20,6 @@
 #include "integrator_runge_kutta.hpp"
 
 using std::runtime_error;
-using std::transform;
 using std::vector;
 using std::string;
 using std::map;
@@ -47,12 +46,12 @@ namespace VMTutorial
       void apply(bool verbose=false)
       {
         if (verbose) {
-          cout << "In Integrate::apply" << endl;
+          std::cout << "In Integrate::apply" << std::endl;
         }
         for (const string& i : this->_integ_order) {
           if (this->_integrators_enabled.at(i)) {
             if (verbose) {
-              cout << "Going to apply a step for " << i << endl;
+              std::cout << "Going to apply a step for " << i << std::endl;
             }
             this->factory_map[i]->step(verbose);
           }
@@ -99,7 +98,7 @@ namespace VMTutorial
       void add_integrator(const string& iname)
       {
         string name = iname; 
-        transform(name.begin(), name.end(), name.begin(), ::tolower);
+        std::transform(name.begin(), name.end(), name.begin(), ::tolower);
         if (name == "euler") {
           this->add<IntegratorEuler, System&, ForceCompute&, int>(name, _sys, _force_compute, _seed);
         } else if (name == "runge_kutta") {

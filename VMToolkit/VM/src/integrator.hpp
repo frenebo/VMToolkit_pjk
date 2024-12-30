@@ -15,12 +15,12 @@
 
 #include "force_compute.hpp"
 
-#include <chrono>
 #include <utility>
+#include <chrono>
 #include <map>
 
-using namespace std::chrono;
 using std::map;
+using std::runtime_error;
 
 namespace VMTutorial
 {
@@ -32,7 +32,7 @@ namespace VMTutorial
     
       Integrator(System& sys, ForceCompute& fc, int seed) : _sys{sys}, 
                                                             _force_compute{fc}, 
-                                                            _rng{RNG((seed >= 0) ? seed : system_clock::now().time_since_epoch().count())},
+                                                            _rng{RNG((seed >= 0) ? seed : std::chrono::system_clock::now().time_since_epoch().count())},
                                                             _dt{0.01}
       { 
         

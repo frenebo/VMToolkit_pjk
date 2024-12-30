@@ -21,7 +21,7 @@ namespace VMTutorial
           .def("__mul__", [](const Vec& v, double c) { return c*v; })
           .def("__rmul__", [](const Vec& v, double c) { return c*v; })
           .def("__repr__", [](const Vec& v) { return "("+std::to_string(v.x)+","+std::to_string(v.y)+")";  })
-          .def("unit", [](const Vec& v) { return Vec(v.x/v.len(), v.y/v.len()); });
-
+          .def("unit", [](const Vec& v) { return Vec(v.x/v.len(), v.y/v.len()); })
+          ;
   }
 }

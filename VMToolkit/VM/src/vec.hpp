@@ -15,15 +15,8 @@
 #include <iomanip>
 
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
-
-using std::cos;
-using std::cout;
-using std::endl;
-using std::ostream;
-using std::shared_ptr;
-using std::sin;
-using std::sqrt;
 
 namespace py = pybind11;
 
@@ -133,7 +126,7 @@ namespace VMTutorial
 		}
 
 		//! Vector length
-		double len() const { return sqrt(x * x + y * y); }
+		double len() const { return std::sqrt(x * x + y * y); }
 
 		//! Vector length squared
 		double len2() { return x * x + y * y; }
@@ -169,8 +162,8 @@ namespace VMTutorial
 		//! Rotate vector by \f$ \phi \f$
 		Vec rotate(const double phi)
 		{
-			double s = sin(phi);
-			double c = cos(phi);
+			double s = std::sin(phi);
+			double c = std::cos(phi);
 
 			double xx = c * x - s * y;
 			double yy = s * x + c * y;
@@ -211,17 +204,17 @@ namespace VMTutorial
 	// 	return Vec(m._mxx * v.x + m._mxy * v.y, m._myx * v.x + m._myy * v.y);
 	// }
 
-	inline double dot(const Vec &v1, const Vec &v2)
-	{
-		return (v1.x * v2.x + v1.y * v2.y);
-	}
+	// inline double dot(const Vec &v1, const Vec &v2)
+	// {
+	// 	return (v1.x * v2.x + v1.y * v2.y);
+	// }
 
-	inline double cross(const Vec &v1, const Vec &v2)
-	{
-		return (v1.x * v2.y) - (v1.y * v2.x);
-	}
+	// inline double cross(const Vec &v1, const Vec &v2)
+	// {
+	// 	return (v1.x * v2.y) - (v1.y * v2.x);
+	// }
 
-	inline ostream &operator<<(ostream &os, const Vec &v)
+	inline std::ostream &operator<<(std::ostream &os, const Vec &v)
 	{
 		os << std::setprecision(22) << "(" << v.x << "," << v.y << ")";
 		return os;

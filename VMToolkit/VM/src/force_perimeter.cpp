@@ -7,6 +7,9 @@
 
 #include "force_perimeter.hpp"
 
+using std::cout;
+using std::endl;
+
 namespace VMTutorial
 {
   Vec ForcePerimeter::compute_he_force(const Vertex<Property>& v, const HalfEdge<Property>& he, bool verbose)

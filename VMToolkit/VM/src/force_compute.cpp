@@ -7,6 +7,12 @@
 
 #include "force_compute.hpp"
 
+#include <stdexcept>
+
+using std::runtime_error;
+using std::cout;
+using std::endl;
+
 namespace VMTutorial
 {
 	
@@ -63,41 +69,40 @@ namespace VMTutorial
 			std::string force_id = fit.first;
 			if (verbose)
 			{
-			cout << "  computing force '" << force_id << "'" << endl;
+				cout << "  computing force '" << force_id << "'" << endl;
 			}
 			
 			auto& force = fit.second;
 			
-			// 
 			time_pt t1;
 			time_pt t2;
 			bool do_time_this_force = (do_time_computations && _force_timers.count(force_id));
 			
 			if (do_time_this_force) {
-			t1 = std::chrono::high_resolution_clock::now();
+				t1 = std::chrono::high_resolution_clock::now();
 			}
 			
 			for (auto& vertex : _sys.cmesh().cvertices())
 			{
-			if (vertex.erased) {
-				continue;
-			}
-			
-			for (auto& he : vertex.circulator()) {
-				if (verbose)
-				{
-				cout << "    computing force on vertex " << vertex.id << " by halfedge " << he.idx() << endl;
+				if (vertex.erased) {
+					continue;
 				}
-				
-				v_forces.at(vertex.id) += force->compute_he_force(vertex, he, verbose);
-			}
+			
+				for (auto& he : vertex.circulator()) {
+					if (verbose)
+					{
+						cout << "    computing force on vertex " << vertex.id << " by halfedge " << he.idx() << endl;
+					}
+						
+					v_forces.at(vertex.id) += force->compute_he_force(vertex, he, verbose);
+				}
 			}
 			
 			if (do_time_this_force) {
-			t2 = std::chrono::high_resolution_clock::now();
-			auto elapsed = t2 - t1;
-			
-			_force_timers.at(force_id) += elapsed;
+				t2 = std::chrono::high_resolution_clock::now();
+				auto elapsed = t2 - t1;
+				
+				_force_timers.at(force_id) += elapsed;
 			}
 		}
 		

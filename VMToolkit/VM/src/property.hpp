@@ -15,10 +15,6 @@
 #include "vec.hpp"
 
 
-using std::map;
-using std::string;
-using std::vector;
-
 namespace VMTutorial
 {
 

@@ -13,7 +13,6 @@
 #include <fstream>
 #include <map>
 #include <exception>
-#include <iomanip>
 #include <memory>
 #include <cmath>
 // #include <sstream>
@@ -32,25 +31,10 @@
 
 
 using std::string;
-using std::istringstream;
-using std::istream_iterator;
-using std::copy;
-using std::back_inserter;
-using std::stoi;
-using std::stod;
-using std::ifstream;
 using std::map;
-using std::cerr;
-using std::runtime_error;
-using std::setw;
-using std::to_string;
-using std::shared_ptr;
-using std::make_shared;
-using std::ofstream;
-using std::sqrt;
+// using std::to_string;
 
 namespace pt = boost::property_tree;
-using json = nlohmann::json;
 
 namespace VMTutorial
 {
@@ -83,14 +67,14 @@ namespace VMTutorial
       // System setup
       
       void read_input_from_jsonstring(const string& json_contents, bool verbose=false);
-      void input_from_jsonobj(json& j, bool verbose);
+      void input_from_jsonobj(nlohmann::json& j, bool verbose);
       
       void set_simulation_time_step(int time_step) { _time_step = time_step; }
       
       void log_debug_stats()
       {
-        cout << "   System::log_debug_stats:" << endl;
-        cout << "     CURRENT size of _halfedges: " << _mesh.halfedges().size() << endl; 
+        std::cout << "   System::log_debug_stats:" << std::endl;
+        std::cout << "     CURRENT size of _halfedges: " << _mesh.halfedges().size() << std::endl; 
       }
       void set_topology_change(bool flag) { _topology_changed = flag; }
 

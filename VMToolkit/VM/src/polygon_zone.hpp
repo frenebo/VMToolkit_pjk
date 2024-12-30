@@ -18,6 +18,7 @@
 #include "vec.hpp"
 
 using std::vector;
+using std::map;
 
 namespace VMTutorial
 {

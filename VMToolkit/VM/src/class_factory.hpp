@@ -14,12 +14,6 @@
 #include <string>
 #include <stdexcept>
 
-using std::invalid_argument;
-using std::make_unique;
-using std::map;
-using std::string;
-using std::unique_ptr;
-
 /*
 
 	A simple implementation of a class factory.
@@ -54,8 +48,8 @@ namespace VMTutorial
 	class ClassFactory
 	{
 
-		typedef unique_ptr<BaseType> ptrBaseType;
-		typedef map<string, ptrBaseType> factory_type;
+		typedef std::unique_ptr<BaseType> ptrBaseType;
+		typedef std::map<std::string, ptrBaseType> factory_type;
 
 	public:
 		ClassFactory() = default;
@@ -63,24 +57,24 @@ namespace VMTutorial
 
 		// Adds a new object to the factory. The constructor of the DerivedType is invoked.
 		template <typename DerivedType, typename... Args>
-		void add(const string &key, const Args &...args);
+		void add(const std::string &key, const Args &...args);
 
 		// Remove
-		void remove(const string &key)
+		void remove(const std::string &key)
 		{
 			if (factory_map.find(key) != factory_map.end())
 				factory_map.erase(key);
 			else
-				throw invalid_argument(key + " is not in the class factory.");
+				throw std::invalid_argument(key + " is not in the class factory.");
 		}
 
 		// Retrun pointer to the object associated with the key
-		ptrBaseType &get(const string &key)
+		ptrBaseType &get(const std::string &key)
 		{
 			if (factory_map.find(key) != factory_map.end())
 				return factory_map[key];
 			else
-				throw invalid_argument(key + " is not in the class factory.");
+				throw std::invalid_argument(key + " is not in the class factory.");
 		}
 
 		// Return the entire factory
@@ -92,11 +86,11 @@ namespace VMTutorial
 
 	template <typename BaseType>
 	template <typename DerivedType, typename... Args>
-	void ClassFactory<BaseType>::add(const string &key, const Args &...args)
+	void ClassFactory<BaseType>::add(const std::string &key, const Args &...args)
 	{
 		if (factory_map.find(key) != factory_map.end()) // Add only if the key is not already in the class factory.
-			throw invalid_argument(key + " is already in the class factory.");
-		factory_map[key] = make_unique<DerivedType>(args...);
+			throw std::invalid_argument(key + " is already in the class factory.");
+		factory_map[key] = std::make_unique<DerivedType>(args...);
 	}
 }
 #endif

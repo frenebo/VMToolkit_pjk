@@ -7,6 +7,9 @@
 
 #include "force_area.hpp"
 
+using std::cout;
+using std::endl;
+
 namespace VMTutorial
 {
 	Vec ForceArea::compute_he_force(const Vertex<Property> &v, const HalfEdge<Property> &he, bool verbose)
