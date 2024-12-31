@@ -12,19 +12,41 @@ using std::endl;
 
 namespace VMTutorial
 {
+  
+  void ForceConstVertexPropulsion::compute_all_vertex_forces(vector<Vec>& res, bool verbose)
+  {
+		if (verbose) {
+			cout << "   ForceConstVertexPropulsion::compute_all_vertex_forces - starting" << endl;
+    }
+		size_t n_vertices = _sys.cmesh().cvertices().size();	
+		res.resize(n_vertices, Vec(0.0,0.0));
+			
+		for (auto& vertex : _sys.cmesh().cvertices())
+		{
+      Vec v_force(0.0,0.0);
+			for (auto& he : vertex.circulator()) {
+				if (verbose) {
+					cout << "    computing force on vertex " << vertex.id << " by halfedge " << he.idx() << endl;
+				}
+				
+				v_force += compute_he_force(vertex, he, verbose);
+			}
+      res.at(vertex.id) = v_force;
+		}
+  }
+  
   void ForceConstVertexPropulsion::set_vertex_params_vertexwise(const vector<int>& vids, const vector<params_type>& params, bool verbose)
   {
     // Expand the params if necessary
     int max_vid = 0;
     for (const auto& vid : vids) {
-              if (vid > max_vid) max_vid = vid;
+      if (vid > max_vid) max_vid = vid;
     }
     
     if (max_vid >= _force_enabled_mask_by_vertex_index.size()) {
       _force_enabled_mask_by_vertex_index.resize(max_vid + 1, false);
       
-              // Vec blank_vec = ;
-              _force_by_vidx.resize(max_vid + 1, Vec(0.0,0.0));
+      _force_by_vidx.resize(max_vid + 1, Vec(0.0,0.0));
       
     }
     
@@ -32,12 +54,12 @@ namespace VMTutorial
     for (size_t i = 0; i < vids.size(); ++i) {
       int vid = vids[i];
       const params_type& vparam = params.at(i);
-              
-              _force_enabled_mask_by_vertex_index.at(vid) = true;
-              _force_by_vidx.at(vid) = Vec(
-                  vparam.at("f_x"),
-                  vparam.at("f_y")
-              );
+      
+      _force_enabled_mask_by_vertex_index.at(vid) = true;
+      _force_by_vidx.at(vid) = Vec(
+          vparam.at("f_x"),
+          vparam.at("f_y")
+      );
     }
   }
   
@@ -53,7 +75,7 @@ namespace VMTutorial
     return is_enabled;
   }
   
-  Vec  ForceConstVertexPropulsion::compute_he_force(const Vertex<Property>& v, const HalfEdge<Property>& he, bool verbose)
+  Vec  ForceConstVertexPropulsion::compute_he_force(const Vertex& v, const HalfEdge& he, bool verbose)
   {
     if (verbose)
     {

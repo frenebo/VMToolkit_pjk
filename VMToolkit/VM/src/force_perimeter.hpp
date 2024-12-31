@@ -23,13 +23,14 @@ namespace VMTutorial
 		virtual ~ForcePerimeter() {}
 
 		// computes force on vertex by a given edge
-		Vec compute_he_force(const Vertex<Property> &, const HalfEdge<Property> &, bool verbose=false) override;
-
+		void compute_all_vertex_forces(vector<Vec>& res, bool verbose) override;
 		void set_face_params_facewise(const vector<int>& fids, const vector<params_type>& params, bool verbose) override;
       
 		bool enabled_for_faceidx(int fid, bool verbose);
     
     private:
+		Vec _compute_he_force(const Vertex &, const HalfEdge &, bool verbose=false);
+		
 		vector<bool> _force_enabled_mask_by_cell_index;
 		vector<double> _gamma;
 		vector<double> _lambda;

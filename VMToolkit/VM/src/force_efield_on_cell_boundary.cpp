@@ -1,16 +1,95 @@
+/*!
+ * \file force_const_vertex_propulsion.cpp
+ * \author Paul Kreymborg, frenebo@gmail.com
+ * \date 20-Dec-2024
+ * \brief ForceEFieldOnCellBoundary class 
+*/ 
 
 #include "force_efield_on_cell_boundary.hpp"
+
+#include <limits> // std::numeric_limits<double>::signaling_NaN
 
 using std::runtime_error;
 using std::cout;
 using std::endl;
 
+
 namespace VMTutorial
 {
-    Vec ForceEFieldOnCellBoundary::compute_he_force_for_face(
-        const Vertex<Property>& vert,
-        const HalfEdge<Property>& he,
-        const Face<Property>& f,
+    
+	void ForceEFieldOnCellBoundary::compute_all_vertex_forces(vector<Vec>& res, bool verbose)
+	{
+		if (verbose) {
+			cout << "   ForceEFieldOnCellBoundary::compute_all_vertex_forces - starting" << endl;
+        }
+        
+		_clear_compute_cache(verbose);
+		_cache_mesh_computations(verbose);
+		
+		size_t n_vertices = _sys.cmesh().cvertices().size();	
+		res.resize(n_vertices, Vec(0.0,0.0));
+			
+		for (auto& vertex : _sys.cmesh().cvertices())
+		{
+            Vec v_force(0.0,0.0);
+			for (auto& he : vertex.circulator()) {
+				if (verbose) {
+					cout << "    computing force on vertex " << vertex.id << " by halfedge " << he.idx() << endl;
+				}
+				
+				v_force += _compute_he_force(vertex, he, verbose);
+			}
+            res.at(vertex.id) = v_force;
+		}
+	}
+    
+    void ForceEFieldOnCellBoundary::_clear_compute_cache(bool verbose)
+    {
+        if (verbose) { cout << "     ForceEFieldOnCellBoundary::_clear_compute_cache - clearing cache" << endl; }
+        _cached_vertices_outside_bbox.clear();
+        _cached_enabled_for_fid.clear();
+        _cached_face_perims.clear();
+        _cached_edgelength_intersecting_polygon_by_vtx_ids.clear();
+    }
+    
+    void ForceEFieldOnCellBoundary::_cache_mesh_computations(bool verbose)
+    {        
+        if (verbose) { cout << "     ForceEFieldOnCellBoundary::_cache_mesh_computations - precalculating some reused values to speed stuff up " << endl; }
+
+        if (verbose) { cout << "         caching vertex values" << endl; }
+        size_t n_vertices = _sys.cmesh().cvertices().size();
+        _cached_vertices_outside_bbox.resize(n_vertices, false);
+        size_t vid = 0;
+        for (const auto& vtx : _sys.cmesh().cvertices()) {
+            
+            // cout
+            _cached_vertices_outside_bbox.at(vid) = _vec_outside_polygon_bbox(vtx.data().r, verbose);
+            
+            vid++;
+        }
+        
+        if (verbose) { cout << "         caching face values" << endl; }
+        // Calculate stuff relating to the faces
+        size_t n_faces = _sys.cmesh().cfaces().size();
+        
+        _cached_enabled_for_fid.resize(n_faces, false);
+        
+        double sNaN = std::numeric_limits<double>::signaling_NaN();
+        _cached_face_perims.resize(n_faces, sNaN);
+        
+        size_t fid = 0;
+        for (const auto& face : _sys.cmesh().cfaces()) {
+            _cached_enabled_for_fid.at(fid) = _enabled_for_faceidx(fid, verbose);
+            _cached_face_perims.at(fid) = _sys.cmesh().perim(face);
+            
+            fid++;
+        }
+    }
+    
+    Vec ForceEFieldOnCellBoundary::_compute_he_force_for_face(
+        const Vertex& vert,
+        const HalfEdge& he,
+        const Face& f,
         double edge_len_within_polygon,
         bool verbose
     ) {
@@ -18,15 +97,16 @@ namespace VMTutorial
             cout << "          force enabled for fid " << f.id << ", calculating electric force" << endl;
         }
         double Q1 = _cell_charges_by_face_index.at(f.id);
-        double P1 = _sys.cmesh().perim(f);
+        double P1 = _cached_face_perims.at(f.id);
         double F1_charge_within_poly = Q1 * (edge_len_within_polygon / P1);
+        
         if (verbose) {
             cout << "          edge length inside polygon: " << edge_len_within_polygon << " total perim: " << P1 << " charge within poly " << Q1 << endl;
         }
         
         return Vec(
-            F1_charge_within_poly * _E_x,
-            F1_charge_within_poly * _E_y
+            F1_charge_within_poly * _E_x_param,
+            F1_charge_within_poly * _E_y_param
         );
     }
     
@@ -54,13 +134,15 @@ namespace VMTutorial
             polygon_vertices.push_back(Vec(pvert_x, pvert_y));
         }
         
-        _E_y = E_y;
-        _E_x = E_x;
+        _E_y_param = E_y;
+        _E_x_param = E_x;
         
         _poly_zone.set_points(polygon_vertices, verbose);
     }
     
-    bool ForceEFieldOnCellBoundary::vec_outside_polygon_bbox(const Vec& v)
+    
+    
+    bool ForceEFieldOnCellBoundary::_vec_outside_polygon_bbox(const Vec& v, bool verbose)
     {
         bool vec_inside_bounding_box = (
             v.x <= _poly_zone.xmax() &&
@@ -72,7 +154,7 @@ namespace VMTutorial
         return ! vec_inside_bounding_box;
     }
     
-    bool ForceEFieldOnCellBoundary::enabled_for_faceidx(int fid, bool verbose)
+    bool ForceEFieldOnCellBoundary::_enabled_for_faceidx(int fid, bool verbose)
     {
         if (fid >= _force_enabled_mask_by_face_index.size()) return false;
         
@@ -105,55 +187,78 @@ namespace VMTutorial
             _cell_charges_by_face_index.at(fid) = 1.0;
         }
     }
-     
-    Vec ForceEFieldOnCellBoundary::compute_he_force(const Vertex<Property>& vert, const HalfEdge<Property>& he, bool verbose)
-    {
+    
+    double ForceEFieldOnCellBoundary::_lazy_load_cell_edge_intersection(int vid_from, int vid_to, bool verbose) {
+        std::pair<int, int> edge_vid_pair(vid_from, vid_to);
         
-        if (verbose) {
-            cout << "        ForceEFieldOnCellBoundary::compute_he_force - finding force by he " << he.idx() << endl;
+        map<std::pair<int,int>,double>::iterator it_cached = _cached_edgelength_intersecting_polygon_by_vtx_ids.find(edge_vid_pair);
+        // If this edge has been cached, return
+        if(it_cached != _cached_edgelength_intersecting_polygon_by_vtx_ids.end())
+        {
+            return it_cached->second;
         }
+        
+        const Vec& v_r = _sys.cmesh().cvertices().at(vid_from).data().r;
+        const Vec& vto_r = _sys.cmesh().cvertices().at(vid_to).data().r;
+        
+        // otherwise calculate the intersection to remember, then return value
+        double edge_len_within_polygon = _poly_zone.cell_edge_intersection(v_r, vto_r, verbose);
+        
+        std::pair<int, int> rev_edge_vid_pair(vid_to, vid_from);
+        _cached_edgelength_intersecting_polygon_by_vtx_ids[edge_vid_pair] = edge_len_within_polygon;
+        _cached_edgelength_intersecting_polygon_by_vtx_ids[rev_edge_vid_pair] = edge_len_within_polygon;
+        
+        return edge_len_within_polygon;
+    }
+     
+    Vec ForceEFieldOnCellBoundary::_compute_he_force(const Vertex& vert, const HalfEdge& he, bool verbose)
+    {
+        if (verbose) {
+            cout << "        ForceEFieldOnCellBoundary::_compute_he_force - finding force by he " << he.idx() << endl;
+        }
+        
+        int vfrom_id = vert.id;
+        int vto_id = he.to()->id;
         
         Vec v_r = vert.data().r;
         Vec vto_r = he.to()->data().r;
         
-        if (vec_outside_polygon_bbox(v_r) && vec_outside_polygon_bbox(vto_r)) {
+        // If both ends of this half edge lie outside the rectangle containing the electric field,
+        // then the edge cannot possibly be experiencing any force.
+        if (
+            _cached_vertices_outside_bbox[vfrom_id] &&
+            _cached_vertices_outside_bbox[vto_id]
+        ) {
             return Vec(0.0, 0.0);
         }
         
-        double edge_len_within_polygon = _poly_zone.cell_edge_intersection(v_r, vto_r, verbose);
+        double edge_len_within_polygon = _lazy_load_cell_edge_intersection(vfrom_id, vto_id, verbose);
         
-        const Face<Property>& f   = *(he.face());         // cell to the right of the half edge
-        const Face<Property>& fp  = *(he.pair()->face()); // pair cell (opposite side of the same junction)
+        const Face& f   = *(he.face());         // cell to the right of the half edge
+        const Face& fp  = *(he.pair()->face()); // pair cell (opposite side of the same junction)
         
         // Total force on vertex by the half edge, x and y
-        // double hev_force_x = 0.0; 
         Vec hev_force(0.0,0.0);
         
-        if (enabled_for_faceidx(f.id, verbose)) {
+        if (_cached_enabled_for_fid.at(f.id)) {
             if (verbose) {
                 cout << "          force enabled for fid " << f.id << ", calculating electric force" << endl;
             }
             
-            hev_force += compute_he_force_for_face(vert, he, f, edge_len_within_polygon, verbose);
+            hev_force += _compute_he_force_for_face(vert, he, f, edge_len_within_polygon, verbose);
         } else {
-            if (verbose) {
-                cout << "          force not enabled for fid " << f.id << ", skipping..." << endl;
-            }
+            if (verbose) { cout << "          force not enabled for fid " << f.id << ", skipping..." << endl; }
         }
-        if (enabled_for_faceidx(fp.id, verbose)) {
-            if (verbose) {
-                cout << "          force enabled for fid " << fp.id << ", calculating electric force" << endl;
-            }
+        if (_cached_enabled_for_fid.at(fp.id)) {
+            if (verbose) { cout << "          force enabled for fid " << fp.id << ", calculating electric force" << endl; }
             
-            hev_force += compute_he_force_for_face(vert, he, fp, edge_len_within_polygon, verbose);
+            hev_force += _compute_he_force_for_face(vert, he, fp, edge_len_within_polygon, verbose);
         } else {
-            if (verbose) {
-                cout << "          force not enabled for fid " << fp.id << ", skipping..." << endl;
-            }
+            if (verbose) { cout << "          force not enabled for fid " << fp.id << ", skipping..." << endl; }
         }
         
         if (verbose) {
-            cout << "        ForceEFieldOnCellBoundary::compute_he_force - force on vertex " << vert.id << " by he " << he.idx() << " is :" << hev_force.x << ", " << hev_force.y << endl;
+            cout << "        ForceEFieldOnCellBoundary::_compute_he_force - force on vertex " << vert.id << " by he " << he.idx() << " is :" << hev_force.x << ", " << hev_force.y << endl;
         }
         
         return hev_force;

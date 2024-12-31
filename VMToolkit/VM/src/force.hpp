@@ -10,11 +10,8 @@
 #define __FORCE_HPP__
 
 #include <vector>
-#include <algorithm>
 #include <string>
 #include <map>
-#include <exception>
-#include <chrono>
 
 #include "system.hpp"
 
@@ -27,7 +24,6 @@ using std::runtime_error;
 
 namespace VMTutorial
 {
-
   // Force on a vertex
   class Force 
   {
@@ -37,11 +33,11 @@ namespace VMTutorial
       }
       
       virtual ~Force() { }
-        
-      // computes force on vertex by a given edge
-      virtual Vec compute_he_force(const Vertex<Property>&, const HalfEdge<Property>&, bool verbose=false)
+      
+      // virtual void 
+      virtual void compute_all_vertex_forces(vector<Vec>& res, bool verbose)
       {
-        throw runtime_error("Unimplemented Force::compute_he_force - has not been overridden in child clas apparently.");
+        throw runtime_error("Unimpllemented Force::compute_al_vertex_forces - has not been overriden in child class");
       }
       
       virtual void set_face_params_facewise(const vector<int>& fids, const vector<params_type>& params, bool verbose)

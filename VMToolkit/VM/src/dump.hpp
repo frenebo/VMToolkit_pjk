@@ -11,10 +11,8 @@
 #include <string>
 #include <vector>
 
-#include "json.hpp"
 
 #include "system.hpp"
-#include "force_compute.hpp"
 
 
 namespace VMTutorial
@@ -27,13 +25,9 @@ namespace VMTutorial
 
 		std::string mesh_to_jsonstr();
 
-
 	private:
 		System &_sys;
-		// ForceCompute &_force_compute;
 	};
-
-	// vector<string> split(const std::string &, char);
 
 	void export_Dump(py::module &);
 

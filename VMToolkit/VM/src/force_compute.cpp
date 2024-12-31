@@ -52,16 +52,16 @@ namespace VMTutorial
 		return millis_for_forces;
 	}
 	
-	// void compute_and_ap
-	std::vector<Vec> ForceCompute::compute_all_vertex_forces(bool verbose)
+	void ForceCompute::compute_all_vertex_forces(vector<Vec>& tot_vertex_forces, bool verbose)
 	{
 		if (verbose) {
 			cout << "ForceCompute::compute_and_apply_vertex_force - computing all forces" << endl;
 		}
-		
-		std::vector<Vec> v_forces(_sys.cmesh().cvertices().size(), Vec(0.0,0.0));
+		tot_vertex_forces.resize(_sys.cmesh().cvertices().size(), Vec(0.0,0.0));
 		
 		bool do_time_computations = (_force_timers.size() > 1);
+		
+		vector<Vec> tmp_component_forces;
 		
 		// Vector forces start at zero, we add force as w iterate through forces, vectors, halfedges
 		for (auto& fit : this->factory_map)
@@ -82,20 +82,15 @@ namespace VMTutorial
 				t1 = std::chrono::high_resolution_clock::now();
 			}
 			
-			for (auto& vertex : _sys.cmesh().cvertices())
-			{
-				if (vertex.erased) {
-					continue;
-				}
+			// cout << "   ca"
+			// vector<Vec>& 
+			force->compute_all_vertex_forces(tmp_component_forces, verbose);
 			
-				for (auto& he : vertex.circulator()) {
-					if (verbose)
-					{
-						cout << "    computing force on vertex " << vertex.id << " by halfedge " << he.idx() << endl;
-					}
-						
-					v_forces.at(vertex.id) += force->compute_he_force(vertex, he, verbose);
-				}
+			size_t vid = 0;
+			for (const auto& v : tmp_component_forces)
+			{
+				tot_vertex_forces.at(vid) += v;
+				vid++;
 			}
 			
 			if (do_time_this_force) {
@@ -105,10 +100,6 @@ namespace VMTutorial
 				_force_timers.at(force_id) += elapsed;
 			}
 		}
-		
-		// @TOOD should this keep a vector inside it allocated and just return a reference, instead of allocating a new vector of forces
-		// every time the function is run?
-		return v_forces;
 	}
 	
 	

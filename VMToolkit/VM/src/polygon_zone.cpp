@@ -17,6 +17,7 @@ namespace VMTutorial
         if (verbose) {
             cout << "PolygonZone::set_points - setting up" << endl;
         }
+        
         boost::geometry::clear(_btpoly);
         
         _xmin = polygon_vertices.at(0).x;

@@ -11,6 +11,9 @@
 
 #include "integrator.hpp"
 
+#include <map>
+#include <stdexcept>
+
 using std::map;
 using std::runtime_error;
 
@@ -50,7 +53,7 @@ namespace VMTutorial
       
       
     private:
-      std::vector<Vec> instantaneous_velocities(bool verbose) const;
+      vector<Vec> instantaneous_velocities(bool verbose) const;
       
       double _gamma;             // friction 
   };

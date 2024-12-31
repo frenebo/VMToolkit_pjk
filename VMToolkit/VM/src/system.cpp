@@ -7,6 +7,10 @@
 
 #include "system.hpp"
 
+
+
+#include "json.hpp"
+
 using json = nlohmann::json;
 
 
@@ -15,13 +19,20 @@ using std::endl;
 
 namespace VMTutorial
 {
-  
-  void System::input_from_jsonobj(json& j, bool verbose)
+  void System::read_input_from_jsonstring(const string& json_contents, bool verbose)
   {
+    cout << "Reading json string into a json object" << endl;
     if (verbose)
     {
-      cout << "At start of System::input_from_jsonobj" << endl;
+      cout << json_contents << endl;
     }
+    
+    json j;
+    std::istringstream s(json_contents);
+    s >> j;
+    
+    cout << "Finished parsing jon object, now starting to input into the system" << endl;
+    
     
     // Check for time step
     if (j["mesh"].find("time_step") != j["mesh"].end())
@@ -43,10 +54,10 @@ namespace VMTutorial
       double x = j["mesh"]["vertices"][i]["r"][0];
       double y = j["mesh"]["vertices"][i]["r"][1];
       bool boundary = j["mesh"]["vertices"][i]["boundary"];
-      _mesh.add_vertex(Vertex<Property>(id, Vec(x, y), boundary, _mesh));
-      Vertex<Property> &v = _mesh.vertices().back();
+      _mesh.add_vertex(Vertex(id, Vec(x, y), boundary, _mesh));
+      Vertex &v = _mesh.vertices().back();
       
-      v.erased = j["mesh"]["vertices"][i]["erased"];
+      // v.erased = j["mesh"]["vertices"][i]["erased"];
       
       if (j["mesh"]["vertices"][i].find("velocity") != j["mesh"]["vertices"][i].end())
       {
@@ -57,7 +68,7 @@ namespace VMTutorial
     cout << "Finished reading vertices." << endl;
     
     // Populate faces
-    bool erased_face = false;
+    // bool erased_face = false;
     if (verbose)
     {
       cout << "vertices populated" << endl;
@@ -75,29 +86,29 @@ namespace VMTutorial
       
       if (j["mesh"]["faces"][i].find("erased") != j["mesh"]["faces"][i].end())
       {
-        erased_face = j["mesh"]["faces"][i]["erased"];
-        if (erased_face) {
-          _mesh.add_face(face_id, vector<int>(),  true, verbose);
-        } else {
+        // erased_face = j["mesh"]["faces"][i]["erased"];
+        // if (erased_face) {
+        //   _mesh.add_face(face_id, vector<int>(),  true, verbose);
+        // } else {
           const vector<int>& vert_ids = j["mesh"]["faces"][i]["vertices"];
           
-          _mesh.add_face(face_id, vert_ids, false, verbose);
-        }
+          _mesh.add_face(face_id, vert_ids, verbose);
+        // }
       }
       else 
       {
         if(verbose) {
           cout << "No erased attribute found, adding face." << endl;
         }
-        _mesh.add_face(face_id, j["mesh"]["faces"][i]["vertices"], false, verbose);
+        _mesh.add_face(face_id, j["mesh"]["faces"][i]["vertices"], verbose);
       }
       
-      Face<Property>& f = _mesh.faces().back();
+      Face& f = _mesh.faces().back();
       
-      if (!erased_face)
-      {
+      // if (!erased_face)
+      // {
         f.outer = j["mesh"]["faces"][i]["outer"];
-      }
+      // }
     }
     cout << "Finished reading faces." << endl;
     _mesh.tidyup();
@@ -110,142 +121,128 @@ namespace VMTutorial
     
   }
   
-  void System::read_input_from_jsonstring(const string& json_contents, bool verbose)
-  {
-    cout << "Reading json string into a json object" << endl;
-    if (verbose)
-    {
-      cout << json_contents << endl;
-    }
-    json j;
-    std::istringstream s(json_contents);
-    s >> j;
-    cout << "Finished parsing jon object, now starting to input into the system" << endl;
-    input_from_jsonobj(j, verbose);
-  }
-  
   // Python exports
   void export_VertexProperty(py::module& m)
   {
-    py::class_<Property::VertexProperty>(m, "VertexProperty")
-      .def_readonly("vel", &Property::VertexProperty::vel)
+    py::class_<VertexProperty>(m, "VertexProperty")
+      .def_readonly("vel", &VertexProperty::vel)
       ;
   }
 
   void export_EdgeProperty(py::module& m)
   {
-    py::class_<Property::EdgeProperty>(m, "EdgeProperty")
+    py::class_<EdgeProperty>(m, "EdgeProperty")
       ;
   }
 
   void export_HEProperty(py::module& m)
   {
-    py::class_<Property::HEProperty>(m, "HEProperty")
+    py::class_<HEProperty>(m, "HEProperty")
       ;
   }
 
   
   void export_FaceProperty(py::module& m)
   {
-    py::class_<Property::FaceProperty>(m, "CellProperty")
+    py::class_<FaceProperty>(m, "CellProperty")
       ;
   }
 
 
   void export_Vertex(py::module& m)
   {
-    py::class_<Vertex<Property>>(m, "Vertex")
-      .def(py::init<Mesh<Property>&>())
-      .def_readonly("id", &Vertex<Property>::id)
-      .def_readonly("erased", &Vertex<Property>::erased)
-      .def_readwrite("boundary", &Vertex<Property>::boundary)
-      .def_readonly("coordination", &Vertex<Property>::coordination)
-      .def("he", [](Vertex<Property>& v) { return *(v.he()); })
-      .def("vel", [](Vertex<Property>& v) { return v.data().vel; })
-      .def("property", (Property::VertexProperty& (Vertex<Property>::*)()) &Vertex<Property>::data, py::return_value_policy::reference);
+    py::class_<Vertex>(m, "Vertex")
+      .def(py::init<Mesh&>())
+      .def_readonly("id", &Vertex::id)
+      // .def_readonly("erased", &Vertex::erased)
+      .def_readwrite("boundary", &Vertex::boundary)
+      .def_readonly("coordination", &Vertex::coordination)
+      .def("he", [](Vertex& v) { return *(v.he()); })
+      .def("vel", [](Vertex& v) { return v.data().vel; })
+      .def("property", (VertexProperty& (Vertex::*)()) &Vertex::data, py::return_value_policy::reference);
   }
 
   void export_VertexCirculator(py::module& m)
   {
-    py::class_<VertexCirculator<Property>>(m, "VertexCirculator")
-        .def(py::init<Vertex<Property>>())
-        .def("__iter__", &VertexCirculator<Property>::__iter__)
-        .def("__next__", &VertexCirculator<Property>::__next__)
+    py::class_<VertexCirculator>(m, "VertexCirculator")
+        .def(py::init<Vertex>())
+        .def("__iter__", &VertexCirculator::__iter__)
+        .def("__next__", &VertexCirculator::__next__)
         ;
   }
 
   void export_Edge(py::module& m)
   {
-    py::class_<Edge<Property>>(m, "Edge")
-      .def(py::init<Mesh<Property>&>())
-      .def_readonly("i", &Edge<Property>::i)
-      .def_readonly("j", &Edge<Property>::j)
-      .def_readonly("erased", &Edge<Property>::erased)
-      .def_readonly("boundary", &Edge<Property>::boundary)
-      .def_property_readonly("id", &Edge<Property>::idx)
-      .def("he", [](Edge<Property>& e) { return *(e.he()); })
-      .def("property", (Property::EdgeProperty& (Edge<Property>::*)()) &Edge<Property>::data, py::return_value_policy::reference)
+    py::class_<Edge>(m, "Edge")
+      .def(py::init<Mesh&>())
+      .def_readonly("i", &Edge::i)
+      .def_readonly("j", &Edge::j)
+      // .def_readonly("erased", &Edge::erased)
+      .def_readonly("boundary", &Edge::boundary)
+      .def_property_readonly("id", &Edge::idx)
+      .def("he", [](Edge& e) { return *(e.he()); })
+      .def("property", (EdgeProperty& (Edge::*)()) &Edge::data, py::return_value_policy::reference)
       ;
   }
 
   void export_HalfEdge(py::module& m)
   {
-    py::class_<HalfEdge<Property>>(m, "Junction")
-      .def(py::init<Mesh<Property>&>())
-      .def("vfrom", [](HalfEdge<Property>& he) { return *(he.from()); })
-      .def("vto", [](HalfEdge<Property>& he) { return *(he.to()); })
-      .def("edge", [](HalfEdge<Property>& he) { return *(he.edge()); })
-      .def("id", &HalfEdge<Property>::idx)
-      .def("next", [](HalfEdge<Property>& he) { return *(he.next()); })
-      .def("prev", [](HalfEdge<Property>& he) { return *(he.prev()); })
-      .def("pair", [](HalfEdge<Property>& he) { return *(he.pair()); })
-      .def("face", [](HalfEdge<Property>& he) { return *(he.face()); })
-      .def("property", (Property::HEProperty& (HalfEdge<Property>::*)()) &HalfEdge<Property>::data, py::return_value_policy::reference)
+    py::class_<HalfEdge>(m, "Junction")
+      .def(py::init<Mesh&>())
+      .def("vfrom", [](HalfEdge& he) { return *(he.from()); })
+      .def("vto", [](HalfEdge& he) { return *(he.to()); })
+      .def("edge", [](HalfEdge& he) { return *(he.edge()); })
+      .def("id", &HalfEdge::idx)
+      .def("next", [](HalfEdge& he) { return *(he.next()); })
+      .def("prev", [](HalfEdge& he) { return *(he.prev()); })
+      .def("pair", [](HalfEdge& he) { return *(he.pair()); })
+      .def("face", [](HalfEdge& he) { return *(he.face()); })
+      .def("property", (HEProperty& (HalfEdge::*)()) &HalfEdge::data, py::return_value_policy::reference)
       ;
   }
 
   void export_Face(py::module& m)
   {
-    py::class_<Face<Property>>(m, "Cell")
-      .def(py::init<Mesh<Property>&>())
-      .def_readonly("id", &Face<Property>::id)
-      .def_readonly("neighbours", &Face<Property>::nsides)
-      .def_readonly("outer", &Face<Property>::outer)
-      .def_readonly("erased", &Face<Property>::erased)
-      .def("he", [](Face<Property>& f) { return *(f.he()); })
-      .def("property", (Property::FaceProperty& (Face<Property>::*)()) &Face<Property>::data, py::return_value_policy::reference)
+    py::class_<Face>(m, "Cell")
+      .def(py::init<Mesh&>())
+      .def_readonly("id", &Face::id)
+      .def_readonly("neighbours", &Face::nsides)
+      .def_readonly("outer", &Face::outer)
+      // .def_readonly("erased", &Face::erased)
+      .def("he", [](Face& f) { return *(f.he()); })
+      .def("property", (FaceProperty& (Face::*)()) &Face::data, py::return_value_policy::reference)
       ;
   }
 
   void export_FaceCirculator(py::module& m)
   {
-    py::class_<FaceCirculator<Property>>(m, "FaceCirculator")
-        .def(py::init<Face<Property>>())
-        .def("__iter__", &FaceCirculator<Property>::__iter__)
-        .def("__next__", &FaceCirculator<Property>::__next__)
+    py::class_<FaceCirculator>(m, "FaceCirculator")
+        .def(py::init<Face>())
+        .def("__iter__", &FaceCirculator::__iter__)
+        .def("__next__", &FaceCirculator::__next__)
         ;
   }
 
   void export_Mesh(py::module& m)
   {
-    py::class_<Mesh<Property>>(m, "Tissue")
+    py::class_<Mesh>(m, "Tissue")
       .def(py::init<>())
-      .def("num_vert", &Mesh<Property>::num_vert)
-      .def("num_cells", &Mesh<Property>::num_faces)
-      .def("tidyup", &Mesh<Property>::tidyup)
-      .def("get_vertex", &Mesh<Property>::get_vertex , py::return_value_policy::reference)
-      .def("get_junction", &Mesh<Property>::get_halfedge, py::return_value_policy::reference)
-      .def("get_cell", &Mesh<Property>::get_face, py::return_value_policy::reference)
-      .def("vertices", &Mesh<Property>::vertices, py::return_value_policy::reference)
-      .def("junctions", &Mesh<Property>::edges, py::return_value_policy::reference)
-      .def("halfedges", &Mesh<Property>::halfedges, py::return_value_policy::reference)
-      .def("cells", &Mesh<Property>::faces, py::return_value_policy::reference)
-      .def("get_cell_centre", [](Mesh<Property>& m, int i) -> Vec { return m.get_face_centre(*(m.get_mesh_face(i))); })
-      .def("get_cell_centroid", [](Mesh<Property>& m, int i) -> Vec { return m.get_face_centroid(*(m.get_mesh_face(i))); })
-      .def("get_centre", &Mesh<Property>::get_centre)
-      .def("cell_area", [](Mesh<Property> &m, int i) -> double { return m.area(*(m.get_mesh_face(i))); })
-      .def("cell_perim", [](Mesh<Property> &m, int i) -> double { return m.perim(*(m.get_mesh_face(i))); })
-      .def("get_vertex_positions", &Mesh<Property>::get_vertex_positions)
+      .def("num_vert", &Mesh::num_vert)
+      .def("num_cells", &Mesh::num_faces)
+      .def("tidyup", &Mesh::tidyup)
+      .def("get_vertex", &Mesh::get_vertex , py::return_value_policy::reference)
+      .def("get_junction", &Mesh::get_halfedge, py::return_value_policy::reference)
+      .def("get_cell", &Mesh::get_face, py::return_value_policy::reference)
+      .def("vertices", &Mesh::vertices, py::return_value_policy::reference)
+      .def("junctions", &Mesh::edges, py::return_value_policy::reference)
+      .def("halfedges", &Mesh::halfedges, py::return_value_policy::reference)
+      .def("cells", &Mesh::faces, py::return_value_policy::reference)
+      .def("get_cell_centre", [](Mesh& m, int i) -> Vec { return m.get_face_centre(*(m.get_mesh_face(i))); })
+      .def("get_cell_centroid", [](Mesh& m, int i) -> Vec { return m.get_face_centroid(*(m.get_mesh_face(i))); })
+      .def("get_centre", &Mesh::get_centre)
+      .def("cell_area", [](Mesh &m, int i) -> double { return m.area(*(m.get_mesh_face(i))); })
+      .def("cell_perim", [](Mesh &m, int i) -> double { return m.perim(*(m.get_mesh_face(i))); })
+      .def("get_vertex_positions", &Mesh::get_vertex_positions)
       ;
   }
 

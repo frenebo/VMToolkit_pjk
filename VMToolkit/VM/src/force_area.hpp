@@ -10,6 +10,9 @@
 
 #include "force.hpp"
 
+#include <vector>
+#include <string>
+
 
 namespace VMTutorial
 {
@@ -23,19 +26,22 @@ namespace VMTutorial
       }
       virtual ~ForceArea() { }
         
-      // computes force on vertex by a given edge
-      Vec compute_he_force(const Vertex<Property>&, const HalfEdge<Property>&, bool verbose) override;  
+      void compute_all_vertex_forces(vector<Vec>& res, bool verbose) override;
       
-      
-      void set_face_params_facewise(const vector<int>& fids, const vector<params_type>& params, bool verbose) override;
-
-      
-      bool enabled_for_faceidx(int fid, bool verbose);
-    
+      void set_face_params_facewise(const std::vector<int>& fids, const std::vector<params_type>& params, bool verbose) override;
     private:
-      vector<bool> _force_enabled_mask_by_cell_index;
-      vector<double> _kappa;
-      vector<double> _A0;
+      Vec compute_he_force(const Vertex&, const HalfEdge&, bool verbose);
+      bool _enabled_for_faceidx(int fid, bool verbose);
+      
+      void _clear_compute_cache(bool verbose);
+      void _cache_mesh_computations(bool verbose);
+      
+      std::vector<bool> _force_enabled_mask_by_cell_index;
+      std::vector<double> _kappa_params;
+      std::vector<double> _A0_params;
+      
+      std::vector<double> _cached_face_areas;
+      std::vector<bool> _cached_face_enabled;
   };
 
   

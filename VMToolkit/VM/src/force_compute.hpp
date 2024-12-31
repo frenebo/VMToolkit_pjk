@@ -8,11 +8,8 @@
 #ifndef __FORCE_COMPUTE_HPP__
 #define __FORCE_COMPUTE_HPP__
 
-#include <exception>
-#include <algorithm>
 #include <map>
 #include <string>
-#include <optional>
 #include <chrono>
 
 #include "system.hpp"
@@ -51,7 +48,7 @@ namespace VMTutorial
       
       map<std::string, double> get_force_compute_timers_millis(bool verbose);
       
-      std::vector<Vec> compute_all_vertex_forces(bool verbose=false);
+      void compute_all_vertex_forces(vector<Vec>& res_forces, bool verbose);
       
       
       void set_global_params(const std::string& force_id, const params_type& num_params, const std::map<string,string>& str_params,  bool verbose);

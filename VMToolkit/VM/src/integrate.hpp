@@ -8,8 +8,6 @@
 #ifndef __INTEGRATE_COMPUTE_HPP__
 #define __INTEGRATE_COMPUTE_HPP__
 
-#include <exception>
-#include <algorithm>
 #include <vector>
 #include <string>
 

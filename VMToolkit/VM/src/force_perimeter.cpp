@@ -12,7 +12,32 @@ using std::endl;
 
 namespace VMTutorial
 {
-  Vec ForcePerimeter::compute_he_force(const Vertex<Property>& v, const HalfEdge<Property>& he, bool verbose)
+  
+	void ForcePerimeter::compute_all_vertex_forces(vector<Vec>& res, bool verbose)
+	{
+    
+		if (verbose) {
+			cout << "   ForcePerimeter::compute_all_vertex_forces - starting" << endl;
+    }
+		
+		size_t n_vertices = _sys.cmesh().cvertices().size();	
+		res.resize(n_vertices, Vec(0.0,0.0));
+			
+		for (auto& vertex : _sys.cmesh().cvertices())
+		{
+      Vec v_force(0.0,0.0);
+			for (auto& he : vertex.circulator()) {
+				if (verbose) {
+					cout << "    computing force on vertex " << vertex.id << " by halfedge " << he.idx() << endl;
+				}
+        
+				v_force += _compute_he_force(vertex, he, verbose);
+			}
+      res.at(vertex.id) = v_force;
+		}
+	}
+  
+  Vec ForcePerimeter::_compute_he_force(const Vertex& v, const HalfEdge& he, bool verbose)
   {
     if (verbose)
     {
@@ -20,8 +45,8 @@ namespace VMTutorial
     }
     
     Vec l = he.to()->data().r - v.data().r;                    // vector along the junction pointing away from the vertex
-    const Face<Property>& f   = *(he.face());         // cell to the right of the half edge
-    const Face<Property>& fp = *(he.pair()->face()); // pair cell (opposite side of the same junction)
+    const Face& f   = *(he.face());         // cell to the right of the half edge
+    const Face& fp = *(he.pair()->face()); // pair cell (opposite side of the same junction)
     
     bool enabled_for_f = enabled_for_faceidx(f.id, verbose);
     bool enabled_for_fp = enabled_for_faceidx(fp.id, verbose);

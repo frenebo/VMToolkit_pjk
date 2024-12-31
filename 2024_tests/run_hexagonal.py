@@ -49,6 +49,7 @@ def do_stuff():
     parser.add_argument("--fpull", default=-0.2,type=float, help="Force to squeeze/stretch")
     parser.add_argument("--box_lx", default=30.0,type=float, help="X size of tissue")
     parser.add_argument("--box_ly", default=30.0,type=float, help="Y size of tissue")
+    parser.add_argument("--field_strength", default=0.00, type=float, help="field strength")
     
     args = parser.parse_args()
     
@@ -82,22 +83,22 @@ def do_stuff():
     tiss_init_state.forces()["perim_f_all"] = CellPerimeterForce(gamma=gamma, lam=P0_model*gamma)
     tiss_init_state.forces()["area_f_all"] = CellAreaForce(A0=A0_model, kappa=kappa)
     
-    field_size_multiplier = 0.3
+    field_size_multiplier = 0.2
     tiss_init_state.forces()["left_forcing_field"] = make_forcing_field_rectangular(
-        xmin=field_size_multiplier*(-args.box_lx),
-        xmax=0,
+        xmin=2*field_size_multiplier*(-args.box_lx),
+        xmax=2*field_size_multiplier*(-args.box_lx)/3,
         ymin=field_size_multiplier*(-args.box_ly),
         ymax=field_size_multiplier*(args.box_ly),
-        field_x=0.00,
-        field_y=0.01,
+        field_x=0.000,
+        field_y=args.field_strength,
     )
     tiss_init_state.forces()["right_forcing_field"] = make_forcing_field_rectangular(
-        xmin=0,
-        xmax=field_size_multiplier*(args.box_lx),
+        xmin=2*field_size_multiplier*(args.box_lx)/3,
+        xmax=2*field_size_multiplier*(args.box_lx),
         ymin=field_size_multiplier*(-args.box_ly),
         ymax=field_size_multiplier*(args.box_ly),
-        field_x=0.00,
-        field_y=-0.01,
+        field_x=0.000,
+        field_y=-args.field_strength,
     )
     
     tiss_init_state.cell_groups()["all"].force_ids().extend([
@@ -113,7 +114,7 @@ def do_stuff():
         sim_settings=SimulationSettings(
             integrator_settings=IntegratorSettings(
                 vertex_friction_gamma=0.1,
-                step_dt=0.1,
+                step_dt=0.08,
             ),
         )
     )
@@ -148,7 +149,7 @@ def do_stuff():
         if (fn.startswith("res") or fn.startswith("vmst_")) and fn.endswith(".json"):
             os.remove(os.path.join(ckpt_dir, fn))
     
-    step_size = 500     # Step counter in terms of time units
+    step_size = 1000     # Step counter in terms of time units
     N_checkpoints = 50
     
     for i in range(N_checkpoints):

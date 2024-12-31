@@ -12,8 +12,7 @@
 #include "system.hpp"
 #include "force_compute.hpp"
 
-
-#include <exception>
+#include <stdexcept>
 
 
 using std::exception;

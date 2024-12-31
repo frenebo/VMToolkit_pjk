@@ -18,38 +18,38 @@
 namespace VMTutorial
 {
 
-	struct Property
+	// struct Property
+	// {
+	struct HEProperty
 	{
-		struct HEProperty
-		{
-		};
-		struct VertexProperty
-		{
-			Vec vel;
-			Vec r;
-			
-			// VertexProperty &operator=(const VertexProperty &p)
-			// {
-			// 	if (this == &p)
-			// 		return *this;
-				
-			// 	return *this;
-			// }
-		};
-		struct EdgeProperty //: public BaseProperty::EdgeProperty
-		{
-		};
-		struct FaceProperty //: public BaseProperty::FaceProperty
-		{
-			// FaceProperty &operator=(const FaceProperty &p)
-			// {
-			// 	if (this == &p)
-			// 		return *this;
-				
-			// 	return *this;
-			// }
-		};
 	};
+	struct VertexProperty
+	{
+		Vec vel;
+		Vec r;
+		
+		// VertexProperty &operator=(const VertexProperty &p)
+		// {
+		// 	if (this == &p)
+		// 		return *this;
+			
+		// 	return *this;
+		// }
+	};
+	struct EdgeProperty
+	{
+	};
+	struct FaceProperty
+	{
+		// FaceProperty &operator=(const FaceProperty &p)
+		// {
+		// 	if (this == &p)
+		// 		return *this;
+			
+		// 	return *this;
+		// }
+	};
+	// };
 
 }
 

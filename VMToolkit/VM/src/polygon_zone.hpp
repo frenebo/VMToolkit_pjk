@@ -8,10 +8,10 @@
 #ifndef __POLYGON_ZONE_HPP__
 #define __POLYGON_ZONE_HPP__
 
-
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
+
 #include <string>
 #include <vector>
 

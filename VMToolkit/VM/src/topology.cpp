@@ -14,9 +14,14 @@ namespace VMTutorial
   {
     for (auto e : _sys.mesh().edges())
     {
-        if (!e.erased && _sys.mesh().len(e) < _min_edge_len)
-          if (_sys.mesh().T1(e, _new_edge_len))
+        if (
+          // !e.erased &&
+          _sys.mesh().len(e) < _min_edge_len
+        ) {
+          if (_sys.mesh().T1(e, _new_edge_len)) {
             _sys.set_topology_change(true);
+          }
+        }
     }
   }
 

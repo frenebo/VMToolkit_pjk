@@ -5,14 +5,17 @@
  * \brief IntegratorRungeKutta class 
 */
 
+#include <vector>
+
 #include  "integrator_runge_kutta.hpp"
 
 using std::cout;
+using std::vector;
 using std::endl;
 
 namespace VMTutorial
 {
-  std::vector<Vec> IntegratorRungeKutta::instantaneous_velocities(bool verbose) const
+  vector<Vec> IntegratorRungeKutta::instantaneous_velocities(bool verbose) const
   {
     double mu = 1.0 / _gamma;    // mobility 
     if (verbose) {
@@ -21,7 +24,8 @@ namespace VMTutorial
     
     // verbose = false;
     
-    std::vector<Vec> vertex_vels = _force_compute.compute_all_vertex_forces(verbose);
+    vector<Vec> vertex_vels;
+    _force_compute.compute_all_vertex_forces(vertex_vels, verbose);
     
     // v = F/gamma
     for (auto& vel : vertex_vels)

@@ -11,10 +11,8 @@
 
 #include "integrator.hpp"
 
-#include <utility>
 #include <map>
-#include <string> 
-#include <memory>
+#include <string>
 
 using std::map;
 using std::runtime_error;

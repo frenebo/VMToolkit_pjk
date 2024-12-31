@@ -21,16 +21,15 @@ namespace VMTutorial
 		}
         
 		virtual ~ForceConstVertexPropulsion() {}
-
-		// computes force on vertex by a given edge
-		Vec compute_he_force(const Vertex<Property> &, const HalfEdge<Property> &, bool verbose=false) override;
+		
+		void compute_all_vertex_forces(vector<Vec>& res, bool verbose) override;
 
 		void set_vertex_params_vertexwise(const vector<int>& vids, const vector<params_type>& params, bool verbose) override;
-    
-        bool enabled_for_vertexidx(int vid, bool verbose);
-    
     private:
-        vector<Vec> _force_by_vidx;
+		Vec compute_he_force(const Vertex &, const HalfEdge &, bool verbose=false);
+        bool enabled_for_vertexidx(int vid, bool verbose);
+        
+		vector<Vec> _force_by_vidx;
         vector<bool> _force_enabled_mask_by_vertex_index;
 	};
 

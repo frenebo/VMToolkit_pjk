@@ -9,21 +9,9 @@
 #define __SYSTEM_HPP__
 
 #include <string>
-#include <sstream>
-#include <fstream>
 #include <map>
-#include <exception>
 #include <memory>
 #include <cmath>
-// #include <sstream>
-
-#include <boost/algorithm/string.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/property_tree/info_parser.hpp>
-
-#include "json.hpp"
 
 #include "rng.hpp"
 #include "mesh.hpp"
@@ -32,14 +20,10 @@
 
 using std::string;
 using std::map;
-// using std::to_string;
-
-namespace pt = boost::property_tree;
 
 namespace VMTutorial
 {
-
-  typedef Mesh<Property> MyMesh;
+  typedef Mesh MyMesh;
   
 
   typedef map<string, double> params_type;         // Used when we set a numerical value to a parameter, e.g., kappa = 1.0
@@ -47,7 +31,7 @@ namespace VMTutorial
   typedef map<string, vector<double>> multi_params_type;   // Used when we need to at least two values to set a parameter, e.g., a parameters is drawn from a random distribution 
   typedef map<string, string> string_params_type;         // Used when we set a string value to a parameter, e.g., force_type = "nematic_vm"
   
-  bool operator<(const VertexHandle<Property>&, const VertexHandle<Property>&);
+  bool operator<(const VertexHandle&, const VertexHandle&);
 
   class System
   {
@@ -67,7 +51,6 @@ namespace VMTutorial
       // System setup
       
       void read_input_from_jsonstring(const string& json_contents, bool verbose=false);
-      void input_from_jsonobj(nlohmann::json& j, bool verbose);
       
       void set_simulation_time_step(int time_step) { _time_step = time_step; }
       
