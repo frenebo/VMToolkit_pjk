@@ -13,9 +13,9 @@
 
 #include "system.hpp"
 #include "force_compute.hpp"
-#include "integrator.hpp"
-#include "integrator_euler.hpp"
-#include "integrator_runge_kutta.hpp"
+#include "./integrators/integrator.hpp"
+#include "./integrators/integrator_euler.hpp"
+#include "./integrators/integrator_runge_kutta.hpp"
 
 using std::runtime_error;
 using std::vector;

@@ -14,11 +14,11 @@
 
 #include "system.hpp"
 #include "class_factory.hpp"
-#include "force.hpp"
-#include "force_area.hpp"
-#include "force_perimeter.hpp"
-#include "force_const_vertex_propulsion.hpp"
-#include "force_efield_on_cell_boundary.hpp"
+#include "forces/force.hpp"
+#include "forces/force_area.hpp"
+#include "forces/force_perimeter.hpp"
+#include "forces/force_const_vertex_propulsion.hpp"
+#include "forces/force_efield_on_cell_boundary.hpp"
 
  
 

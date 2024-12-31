@@ -13,7 +13,7 @@
 #include <string>
 #include <map>
 
-#include "system.hpp"
+#include "../system.hpp"
 
 double const SMALL_NUMBER = 1e-6;
 

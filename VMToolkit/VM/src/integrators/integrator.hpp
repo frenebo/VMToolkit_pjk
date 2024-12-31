@@ -8,12 +8,10 @@
 #ifndef __INTEGRATOR_HPP__
 #define __INTEGRATOR_HPP__
 
-#include "rng.hpp"
-#include "system.hpp"
-#include "force.hpp"
+#include "../rng.hpp"
+#include "../system.hpp"
 
-
-#include "force_compute.hpp"
+#include "../force_compute.hpp"
 
 #include <stdexcept>
 #include <chrono>

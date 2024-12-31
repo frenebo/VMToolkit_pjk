@@ -15,7 +15,7 @@
 #include <string>
 #include <vector>
 
-#include "vec.hpp"
+#include "../vec.hpp"
 
 using std::vector;
 using std::map;
