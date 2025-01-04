@@ -15,7 +15,7 @@ using std::endl;
 
 namespace VMTutorial
 {
-  vector<Vec> IntegratorRungeKutta::instantaneous_velocities(bool verbose) const
+  vector<Vec> IntegratorRungeKutta::_instantaneous_velocities(bool verbose) const
   {
     double mu = 1.0 / _gamma;    // mobility 
     if (verbose) {
@@ -64,9 +64,7 @@ namespace VMTutorial
       Vec dr_fork2 = h * k1.at(vidx) * 0.5;
       v.data().r = init_vertex_positions.at(vidx) + dr_fork2;
       
-      if (verbose && vidx==0){
-        cout << "    dr_fork2[0]="<<dr_fork2<<endl;
-      }
+      if (verbose && vidx==0){ cout << "    dr_fork2[0]="<<dr_fork2<<endl; }
       
       vidx++;
     }
@@ -78,9 +76,7 @@ namespace VMTutorial
       Vec dr_fork3 = h * k2.at(vidx) * 0.5;
       v.data().r = init_vertex_positions.at(vidx) + dr_fork3;
       
-      if (verbose && vidx==0){
-        cout << "    dr_fork3[0]="<<dr_fork3<<endl;
-      }
+      if (verbose && vidx==0){ cout << "    dr_fork3[0]="<<dr_fork3<<endl; }
       
       vidx++;
     }
@@ -93,9 +89,7 @@ namespace VMTutorial
       v.data().r = init_vertex_positions.at(vidx) + dr_fork4;
       
       
-      if (verbose && vidx==0){
-        cout << "    dr_fork4[0]="<<dr_fork4<<endl;
-      }
+      if (verbose && vidx==0){ cout << "    dr_fork4[0]="<<dr_fork4<<endl; }
       
       vidx++;
     }
@@ -108,9 +102,6 @@ namespace VMTutorial
       Vec dr = (h/6) * (
         k1.at(vidx) + 2.0*k2.at(vidx) + 2.0*k3.at(vidx) + k4.at(vidx)
       );
-      // Vec dr = (h) * (
-      //   k1.at(vidx)
-      // );
       
       Vec vel_new = dr * dt_inv;
       

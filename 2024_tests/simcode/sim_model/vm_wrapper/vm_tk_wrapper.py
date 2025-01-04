@@ -373,8 +373,8 @@ class VMToolkitWrapper:
         
         if verbose:
             print("Setting dt={}, friction_gamma={}".format(dt, friction_gam))
-        self._integrators.set_dt(dt) # set time step
-        self._integrators.set_params("runge_kutta", {"gamma": friction_gam})
+        # self._integrators.set_dt(dt) # set time step
+        self._integrators.set_params("runge_kutta", {"gamma": friction_gam, "dt": dt})
         
         if verbose:
             print("Done configuring integrators")

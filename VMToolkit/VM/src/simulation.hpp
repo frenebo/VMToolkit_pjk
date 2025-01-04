@@ -17,7 +17,7 @@
 
 #include "system.hpp"
 #include "force_compute.hpp"
-#include "integrate.hpp"
+#include "integrators/integrate.hpp"
 #include "topology.hpp"
 #include "dump.hpp"
 #include "version.hpp"
@@ -25,7 +25,6 @@
 using std::cout;
 using std::string;
 using std::endl;
-// using std::to_string;
 
 namespace VMTutorial
 {

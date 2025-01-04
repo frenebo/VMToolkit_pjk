@@ -8,9 +8,8 @@
 #ifndef __INTEGRATOR_HPP__
 #define __INTEGRATOR_HPP__
 
-#include "../rng.hpp"
+// #include "../rng.hpp"
 #include "../system.hpp"
-
 #include "../force_compute.hpp"
 
 #include <stdexcept>
@@ -30,7 +29,7 @@ namespace VMTutorial
     
       Integrator(System& sys, ForceCompute& fc, int seed) : _sys{sys}, 
                                                             _force_compute{fc}, 
-                                                            _rng{RNG((seed >= 0) ? seed : std::chrono::system_clock::now().time_since_epoch().count())},
+                                                            // _rng{RNG((seed >= 0) ? seed : std::chrono::system_clock::now().time_since_epoch().count())},
                                                             _dt{0.01}
       { 
         
@@ -47,16 +46,16 @@ namespace VMTutorial
         throw runtime_error("Child has not implemented Integrator::set_params");
       }
       
-      void set_dt(double dt) { _dt = dt; }
-      void rng_set(const RNGState& state) { _rng.set(state); }
-      RNGState get_rng_state() { return _rng.get_state(); }
+      // void set_dt(double dt) { _dt = dt; }
+      // void rng_set(const RNGState& state) { _rng.set(state); }
+      // RNGState get_rng_state() { return _rng.get_state(); }
 
     protected:
 
-      RNG _rng;
+      // RNG _rng;
       System& _sys;              // system
       ForceCompute&   _force_compute;
-      double _dt; // time step
+      // double _dt; // time step
   };
 
 }

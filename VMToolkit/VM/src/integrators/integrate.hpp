@@ -11,11 +11,9 @@
 #include <vector>
 #include <string>
 
-#include "system.hpp"
-#include "force_compute.hpp"
-#include "./integrators/integrator.hpp"
-#include "./integrators/integrator_euler.hpp"
-#include "./integrators/integrator_runge_kutta.hpp"
+#include "../system.hpp"
+#include "../force_compute.hpp"
+#include "integrator.hpp"
 
 using std::runtime_error;
 using std::vector;
@@ -25,14 +23,13 @@ using std::map;
 
 namespace VMTutorial
 {
-
   class Integrate : public ClassFactory<Integrator>
   {
     public:
 
       Integrate(System& sys, ForceCompute& fc, int seed) : _sys{sys},
                                                            _force_compute{fc},
-                                                           _dt{0.01}, 
+                                                          //  _dt{0.01}, 
                                                            _seed{seed}
                                                            { 
           
@@ -83,36 +80,23 @@ namespace VMTutorial
           throw runtime_error("disable: Integrator type " + iname + " is not used in this simulation.");
       }
 
-      void set_dt(double dt) 
-      { 
-        if (this->factory_map.size() < 1)
-          throw runtime_error("There are no integrators defined. Time step cannot be changed.");
-        _dt = dt; 
-        for (auto& integ : this->factory_map)
-          integ.second->set_dt(dt);
-      }
+      // void set_dt(double dt) 
+      // { 
+      //   if (this->factory_map.size() < 1)
+      //     throw runtime_error("There are no integrators defined. Time step cannot be changed.");
+      //   _dt = dt; 
+      //   for (auto& integ : this->factory_map)
+      //     integ.second->set_dt(dt);
+      // }
 
       
-      void add_integrator(const string& iname)
-      {
-        string name = iname; 
-        std::transform(name.begin(), name.end(), name.begin(), ::tolower);
-        if (name == "euler") {
-          this->add<IntegratorEuler, System&, ForceCompute&, int>(name, _sys, _force_compute, _seed);
-        } else if (name == "runge_kutta") {
-          this->add<IntegratorRungeKutta, System&, ForceCompute&, int>(name, _sys, _force_compute, _seed);
-        } else  {
-          throw runtime_error("Unknown integrator type : " + name + ".");
-        }
-        _integ_order.push_back(name);
-        _integrators_enabled[iname] = true;
-      }
+      void add_integrator(const string& iname);
 
     private: 
 
       System& _sys;
       ForceCompute& _force_compute;
-      double _dt;
+      // double _dt;
       int _seed;
       vector<string> _integ_order;  // Keeps track in which order integrators were added
       map<string,bool> _integrators_enabled;

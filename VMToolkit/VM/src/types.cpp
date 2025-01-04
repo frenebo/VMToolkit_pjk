@@ -11,7 +11,6 @@ namespace VMTutorial
   FaceCirculator Face::circulator() { return FaceCirculator(this->he()); }
   FaceCCirculator Face::circulator() const { return FaceCCirculator(this->he()); }
 
-  
   // HalfEdge class =====================================================
   VertexHandle HalfEdge::from() { return _mesh.get_mesh_vertex(_from); }
   VertexHandle HalfEdge::to() { return _mesh.get_mesh_vertex(_to); }
