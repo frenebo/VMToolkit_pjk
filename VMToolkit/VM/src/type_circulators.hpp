@@ -154,7 +154,7 @@ namespace VMTutorial
 			return temp;
 		}
 
-		const reference operator*() const
+		reference operator*() const
 		{
 			return *_current;
 		}
@@ -259,7 +259,7 @@ namespace VMTutorial
 			return *this;
 		}
 
-		const reference __next__() 
+		reference __next__() 
 		{
 			if (_isEnd) 
 			{
@@ -321,7 +321,7 @@ namespace VMTutorial
 			return temp;
 		}
 
-		const reference operator*() const
+		reference operator*() const
 		{
 			return *_current;
 		}

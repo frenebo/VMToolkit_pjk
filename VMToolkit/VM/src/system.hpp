@@ -38,21 +38,13 @@ namespace VMTutorial
     public:
 
       System(MyMesh& mesh) : _mesh{mesh}, 
-                             _time_step{0},
-                             _simulation_time{0.0},
-                            //  _num_cell_types{0},
-                            //  _num_vert_types{0},
-                            //  _num_junction_types{0},
                              _mesh_set{false},
                              _topology_changed{true}
                              {
                              }
 
       // System setup
-      
       void read_input_from_jsonstring(const string& json_contents, bool verbose=false);
-      
-      void set_simulation_time_step(int time_step) { _time_step = time_step; }
       
       void log_debug_stats()
       {
@@ -65,15 +57,15 @@ namespace VMTutorial
       MyMesh& mesh()  { return _mesh; }
       const MyMesh& cmesh() const { return _mesh; }
       
-      int& time_step() { return _time_step; }
-      double& simulation_time() { return _simulation_time; }
+      // int& time_step() { return _time_step; }
+      // double& simulation_time() { return _simulation_time; }
       bool topology_change() { return _topology_changed;  }
       
     private:
   
       MyMesh &_mesh;
-      int _time_step;
-      double _simulation_time;
+      // int _time_step;
+      // double _simulation_time;
       bool _mesh_set;
       bool _topology_changed;  // If true, mesh topology has changed
 

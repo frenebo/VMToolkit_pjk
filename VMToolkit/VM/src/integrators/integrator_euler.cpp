@@ -17,6 +17,14 @@ namespace VMTutorial
     if (verbose) {
       cout << "IntegratorEuler::step" << endl;
     }
+    if (_dt <= 0)
+    {
+      throw runtime_error("Invalid _dt value - has this parameter been set yet?");
+    }
+    if (_gamma <= 0)
+    {
+      throw runtime_error("Invalid _gamma value - has this parameter been set yet?");
+    }
     
     double mu = 1.0 / _gamma;    // mobility 
     double B = std::sqrt(2.0*mu*_T);

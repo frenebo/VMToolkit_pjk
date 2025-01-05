@@ -50,9 +50,7 @@ namespace VMTutorial
       
       void compute_all_vertex_forces(vector<Vec>& res_forces, bool verbose);
       
-      
       void set_global_params(const std::string& force_id, const params_type& num_params, const std::map<string,string>& str_params,  bool verbose);
-
       
       void set_face_params_facewise(const std::string& force_id, const vector<int>& fids, const vector<params_type>& params, bool verbose);
       

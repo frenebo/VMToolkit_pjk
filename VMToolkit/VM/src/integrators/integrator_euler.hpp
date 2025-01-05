@@ -27,9 +27,9 @@ namespace VMTutorial
 
       IntegratorEuler(System& sys, ForceCompute& fc, int seed) : Integrator{sys, fc, seed},
                                                                     _T{0.0},
-                                                                    _gamma{1.0},
+                                                                    _gamma{-1.0},
                                                                     _Dr{0.0},
-                                                                    _dt{1.0}
+                                                                    _dt{-1.0}
                                                                     
       {
       }
@@ -54,9 +54,9 @@ namespace VMTutorial
       }
       
     private:
-
-      double _T;                 // temperature
       double _dt;
+      double _T;                 // temperature
+      // double _dt;
       double _gamma;             // friction 
       double _Dr;                // rotational diffusion constant
       // bool _update_n;            // If true, update direction of the cell self-propulsion direction

@@ -59,6 +59,12 @@ For example, if VTK 9.2 is installed in $HOME/software/VTK/9.2, one would set VT
 
 This should significantly speed up the build process.
 
+### Offline install
+For offline build, make sure all build system dependencies from pyproject.toml are installed, and run:
+```
+python -m pip install . --no-deps --no-build-isolation
+```
+
 ## Structure
 
 - examples - contains several examples on how to run a simulation

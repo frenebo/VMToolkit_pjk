@@ -28,9 +28,9 @@ namespace VMTutorial
     public:
     
       Integrator(System& sys, ForceCompute& fc, int seed) : _sys{sys}, 
-                                                            _force_compute{fc}, 
+                                                            _force_compute{fc}
                                                             // _rng{RNG((seed >= 0) ? seed : std::chrono::system_clock::now().time_since_epoch().count())},
-                                                            _dt{0.01}
+                                                            // _dt{0.01}
       { 
         
       }
@@ -51,7 +51,7 @@ namespace VMTutorial
       // RNGState get_rng_state() { return _rng.get_state(); }
 
     protected:
-
+      // double _dt;
       // RNG _rng;
       System& _sys;              // system
       ForceCompute&   _force_compute;

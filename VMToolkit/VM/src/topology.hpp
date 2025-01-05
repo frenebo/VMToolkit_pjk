@@ -14,7 +14,6 @@
 
 #include <stdexcept>
 
-
 using std::exception;
 using std::runtime_error;
 

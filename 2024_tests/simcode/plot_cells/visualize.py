@@ -7,7 +7,6 @@ import json
 import math
 
 import os
-# import plotly.graph_objects as go
 import numpy as np
 
 
@@ -309,6 +308,10 @@ def build_fields_data(vmstate_fp):
         zone_center = shapely.centroid(shapely.Polygon(elec_f_spec["zone_bounds"]["polygon_vertices"]))
         E_x = elec_f_spec["E_x"]
         E_y = elec_f_spec["E_y"]
+        
+        if E_x == 0 and E_y == 0:
+            continue
+            
         E_amp = math.sqrt(E_x**2 + E_y**2)
         
         E_n_x = E_x / E_amp

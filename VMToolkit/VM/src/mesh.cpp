@@ -303,30 +303,30 @@ namespace VMTutorial
 		return false;
 	}
 
-	// Compute geometric centre of the mesh by tracing positions of boundary vertices
-	Vec Mesh::get_centre()
-	{
-		Vec cm(0.0, 0.0);
-		for (auto v : _vertices)
-			cm += v.data().r;
-		return static_cast<double>(1.0 / _vertices.size()) * cm;
-	}
+	// // Compute geometric centre of the mesh by tracing positions of boundary vertices
+	// Vec Mesh::get_centre()
+	// {
+	// 	Vec cm(0.0, 0.0);
+	// 	for (auto v : _vertices)
+	// 		cm += v.data().r;
+	// 	return static_cast<double>(1.0 / _vertices.size()) * cm;
+	// }
 
-	// Compute centre of a face
-	Vec Mesh::get_face_centre(const Face &f)
-	{
-		if (f.outer)
-			return Vec(0.0, 0.0);
-		Vec r0 = f.he()->from()->data().r;
-		Vec rc(0.0, 0.0);
-		for (auto he : f.circulator())
-		{
-			Vec dr = he.from()->data().r - r0;
-			rc += Vec(dr.x, dr.y);
-		}
-		Vec Rc = (1.0 / f.nsides) * rc + r0;
-		return Vec(Rc.x, Rc.y);
-	}
+	// // Compute centre of a face
+	// Vec Mesh::get_face_centre(const Face &f)
+	// {
+	// 	if (f.outer)
+	// 		return Vec(0.0, 0.0);
+	// 	Vec r0 = f.he()->from()->data().r;
+	// 	Vec rc(0.0, 0.0);
+	// 	for (auto he : f.circulator())
+	// 	{
+	// 		Vec dr = he.from()->data().r - r0;
+	// 		rc += Vec(dr.x, dr.y);
+	// 	}
+	// 	Vec Rc = (1.0 / f.nsides) * rc + r0;
+	// 	return Vec(Rc.x, Rc.y);
+	// }
 
 	// Compute position of the face centroid
 	Vec Mesh::get_face_centroid(const Face &f)

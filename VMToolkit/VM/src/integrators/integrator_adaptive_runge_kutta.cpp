@@ -7,14 +7,16 @@
 
 #include "integrator_adaptive_runge_kutta.hpp"
 
+using std::cout;
+using std::endl;
 
 namespace VMTutorial
 {
   vector<Vec> IntegratorAdaptiveRungeKutta::_instantaneous_velocities(bool verbose) const
   {
-    double mu = 1.0 / _gamma;    // mobility 
+    double mu = 1.0 / _gamma_param;    // mobility 
     if (verbose) {
-      cout << "  calculating instantaneous velocities with mu=1.0/_gamma=" << mu << endl;
+      cout << "  calculating instantaneous velocities with mu=1.0/_gamma_param=" << mu << endl;
     }
     
     vector<Vec> vertex_vels;

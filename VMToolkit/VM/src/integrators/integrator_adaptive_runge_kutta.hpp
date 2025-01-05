@@ -33,8 +33,8 @@ namespace VMTutorial
         ForceCompute& fc,
         int seed
       ) : Integrator{sys, fc, seed},
-          _gamma{-1.0},
-          _error_allowed{-1.0}
+          _gamma_param{-1.0},
+          _error_allowed_param{-1.0}
       {
       }
       
@@ -46,9 +46,9 @@ namespace VMTutorial
         {
           if (p.first == "gamma")
           {
-            _gamma = p.second;
+            _gamma_param = p.second;
           } else if (p.first == "error_allowed") {
-            _error_allowed = p.second;
+            _error_allowed_param = p.second;
           } else {
             throw runtime_error("Unknown parameter name - " + p.first);
           }

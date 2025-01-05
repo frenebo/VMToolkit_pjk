@@ -76,7 +76,6 @@ def do_stuff():
         side_length=rest_side_length,
         box_lx=args.box_lx,
         box_ly=args.box_ly,
-        # verbose=True,
     )
     tiss_topology, tiss_init_state = cm.build_vm_state()#verbose=True)
     
@@ -89,7 +88,7 @@ def do_stuff():
         xmax=2*field_size_multiplier*(-args.box_lx)/3,
         ymin=field_size_multiplier*(-args.box_ly),
         ymax=field_size_multiplier*(args.box_ly),
-        field_x=0.000,
+        field_x=0.003,
         field_y=args.field_strength,
     )
     tiss_init_state.forces()["right_forcing_field"] = make_forcing_field_rectangular(
@@ -97,7 +96,7 @@ def do_stuff():
         xmax=2*field_size_multiplier*(args.box_lx),
         ymin=field_size_multiplier*(-args.box_ly),
         ymax=field_size_multiplier*(args.box_ly),
-        field_x=0.000,
+        field_x=0.003,
         field_y=-args.field_strength,
     )
     

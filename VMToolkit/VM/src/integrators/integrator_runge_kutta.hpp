@@ -32,8 +32,8 @@ namespace VMTutorial
         ForceCompute& fc,
         int seed
       ) : Integrator{sys, fc, seed},
-          _gamma{1.0},
-          _dt{1.0}
+          _gamma{-1.0},
+          _dt{-1.0}
       {
       }
       

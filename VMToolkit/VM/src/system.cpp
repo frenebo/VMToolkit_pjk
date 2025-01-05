@@ -7,8 +7,7 @@
 
 #include "system.hpp"
 
-
-
+#include <sstream>
 #include "json.hpp"
 
 using json = nlohmann::json;
@@ -31,17 +30,17 @@ namespace VMTutorial
     std::istringstream s(json_contents);
     s >> j;
     
-    cout << "Finished parsing jon object, now starting to input into the system" << endl;
+    cout << "Finished parsing json object, now starting to input into the system" << endl;
     
     
     // Check for time step
-    if (j["mesh"].find("time_step") != j["mesh"].end())
-    {
-      if (verbose) cout << "Found time step, setting value from json" << endl;
-      _time_step = j["mesh"]["time_step"];
-    } else {
-      if (verbose) cout << "No time_step found, continuing" << endl;
-    }
+    // if (j["mesh"].find("time_step") != j["mesh"].end())
+    // {
+    //   if (verbose) cout << "Found time step, setting value from json" << endl;
+    //   // _time_step = j["mesh"]["time_step"];
+    // } else {
+    //   if (verbose) cout << "No time_step found, continuing" << endl;
+    // }
     
     if (verbose) {
       cout << "Beginning to read vertices" << endl;
@@ -231,15 +230,15 @@ namespace VMTutorial
       .def("num_cells", &Mesh::num_faces)
       .def("tidyup", &Mesh::tidyup)
       .def("get_vertex", &Mesh::get_vertex , py::return_value_policy::reference)
-      .def("get_junction", &Mesh::get_halfedge, py::return_value_policy::reference)
+      // .def("get_junction", &Mesh::get_halfedge, py::return_value_policy::reference)
       .def("get_cell", &Mesh::get_face, py::return_value_policy::reference)
       .def("vertices", &Mesh::vertices, py::return_value_policy::reference)
       .def("junctions", &Mesh::edges, py::return_value_policy::reference)
       .def("halfedges", &Mesh::halfedges, py::return_value_policy::reference)
       .def("cells", &Mesh::faces, py::return_value_policy::reference)
-      .def("get_cell_centre", [](Mesh& m, int i) -> Vec { return m.get_face_centre(*(m.get_mesh_face(i))); })
+      // .def("get_cell_centre", [](Mesh& m, int i) -> Vec { return m.get_face_centre(*(m.get_mesh_face(i))); })
       .def("get_cell_centroid", [](Mesh& m, int i) -> Vec { return m.get_face_centroid(*(m.get_mesh_face(i))); })
-      .def("get_centre", &Mesh::get_centre)
+      // .def("get_centre", &Mesh::get_centre)
       .def("cell_area", [](Mesh &m, int i) -> double { return m.area(*(m.get_mesh_face(i))); })
       .def("cell_perim", [](Mesh &m, int i) -> double { return m.perim(*(m.get_mesh_face(i))); })
       .def("get_vertex_positions", &Mesh::get_vertex_positions)
@@ -252,9 +251,9 @@ namespace VMTutorial
       .def(py::init<MyMesh&>())
       .def("read_input_from_jsonstring", &System::read_input_from_jsonstring, py::arg("json_contents"), py::arg("verbose")=false)
       .def("mesh", &System::mesh)
-      .def("time_step", &System::time_step)
-      .def("simulation_time", &System::simulation_time)
-      .def("set_simulation_time_step", &System::set_simulation_time_step)
+      // .def("time_step", &System::time_step)
+      // .def("simulation_time", &System::simulation_time)
+      // .def("set_simulation_time_step", &System::set_simulation_time_step)
       .def("log_debug_stats", &System::log_debug_stats)
       ;
   }

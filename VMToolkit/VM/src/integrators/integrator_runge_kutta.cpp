@@ -43,6 +43,14 @@ namespace VMTutorial
     {
         cout << "IntegratorRungeKutta::step - executing with dt=" << _dt << endl;
     }
+    if (_dt <= 0)
+    {
+      throw runtime_error("Invalid _dt value - has this parameter been set yet?");
+    }
+    if (_gamma <= 0)
+    {
+      throw runtime_error("Invalid _gamma value - has this parameter been set yet?");
+    }
     
     double h = _dt;
     
@@ -56,7 +64,7 @@ namespace VMTutorial
       vidx++;
     }
     
-    vector<Vec> k1 = instantaneous_velocities(verbose); // Vertex velocities starting from init conditionss
+    vector<Vec> k1 = _instantaneous_velocities(verbose); // Vertex velocities starting from init conditionss
     
     // k2 = f(y_n + h*k1*1/2)
     vidx = 0;
@@ -68,7 +76,7 @@ namespace VMTutorial
       
       vidx++;
     }
-    vector<Vec> k2 = instantaneous_velocities(verbose);
+    vector<Vec> k2 = _instantaneous_velocities(verbose);
     
     // k3 = f(y_n + h*k2 * 1/2)
     vidx = 0;
@@ -80,7 +88,7 @@ namespace VMTutorial
       
       vidx++;
     }
-    vector<Vec> k3 = instantaneous_velocities(verbose);
+    vector<Vec> k3 = _instantaneous_velocities(verbose);
     
     // k4 = f(y_n + h*k3)
     vidx = 0;
@@ -93,7 +101,7 @@ namespace VMTutorial
       
       vidx++;
     }
-    vector<Vec> k4 = instantaneous_velocities(verbose);
+    vector<Vec> k4 = _instantaneous_velocities(verbose);
     
     // y_(n+1) = y_n + (h/6)*( k1 + 2*k2 + 2*k3 + k4 )
     vidx = 0;

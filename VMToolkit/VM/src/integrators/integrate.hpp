@@ -43,16 +43,17 @@ namespace VMTutorial
         if (verbose) {
           std::cout << "In Integrate::apply" << std::endl;
         }
+        // int n_integrators = 0;
         for (const string& i : this->_integ_order) {
-          if (this->_integrators_enabled.at(i)) {
-            if (verbose) {
-              std::cout << "Going to apply a step for " << i << std::endl;
-            }
-            this->factory_map[i]->step(verbose);
+          // if (this->_integrators_enabled.at(i)) {
+          if (verbose) {
+            std::cout << "Going to apply a step for " << i << std::endl;
           }
+          this->factory_map[i]->step(verbose);
+          // }
+          
+          // n_integrators++;
         }
-        _sys.time_step()++;
-        _sys.simulation_time() += _dt;
       }
 
       void set_params(const string& iname, const params_type& params)
@@ -63,32 +64,22 @@ namespace VMTutorial
           throw runtime_error("set_params: Integrator type " + iname + " is not used in this simulation.");
       }
 
-      void enable(const string& iname)
-      {
-        if (this->factory_map.find(iname) != this->factory_map.end()) {
-          this->_integrators_enabled[iname] = true;
-        } else {
-          throw runtime_error("enable: Integrator type " + iname + " is not used in this simulation."); 
-        }
-      }
-
-      void disable(const string& iname)
-      {
-        if (this->factory_map.find(iname) != this->factory_map.end())
-          this->_integrators_enabled[iname] = false;
-        else
-          throw runtime_error("disable: Integrator type " + iname + " is not used in this simulation.");
-      }
-
-      // void set_dt(double dt) 
-      // { 
-      //   if (this->factory_map.size() < 1)
-      //     throw runtime_error("There are no integrators defined. Time step cannot be changed.");
-      //   _dt = dt; 
-      //   for (auto& integ : this->factory_map)
-      //     integ.second->set_dt(dt);
+      // void enable(const string& iname)
+      // {
+      //   if (this->factory_map.find(iname) != this->factory_map.end()) {
+      //     this->_integrators_enabled[iname] = true;
+      //   } else {
+      //     throw runtime_error("enable: Integrator type " + iname + " is not used in this simulation."); 
+      //   }
       // }
 
+      // void disable(const string& iname)
+      // {
+      //   if (this->factory_map.find(iname) != this->factory_map.end())
+      //     this->_integrators_enabled[iname] = false;
+      //   else
+      //     throw runtime_error("disable: Integrator type " + iname + " is not used in this simulation.");
+      // }
       
       void add_integrator(const string& iname);
 

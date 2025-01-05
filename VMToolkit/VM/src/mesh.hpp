@@ -95,8 +95,7 @@ namespace VMTutorial
 		bool is_boundary_face(const Face &);
 
 		void tidyup();	  // get the mesh in order (set boundary edges, outer faces, etc. )
-		Vec get_centre(); // compute geometric centre of the mesh
-		Vec get_face_centre(const Face &);
+		// Vec get_centre(); // compute geomes
 		Vec get_face_centroid(const Face &);
 
 	private:
