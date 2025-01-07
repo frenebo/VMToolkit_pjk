@@ -197,8 +197,8 @@ namespace VMTutorial
 		
 		// print()
 
-		v1->he() = he;
-		v2->he() = hep;
+		v1->set_he(he->idx());
+		v2->set_he(hep->idx());
 
 		HEHandle he1 = he->prev();
 		HEHandle he2 = he->next();
@@ -217,37 +217,37 @@ namespace VMTutorial
 		cout << "he4: " << he4->idx() << endl;
 		cout << "he3: " << he3->idx() << endl;
 
-		he1->next() = he2;
-		he2->prev() = he1;
-		he3->next() = he4;
-		he4->prev() = he3;
+		he1->set_next(he2->idx());
+		he2->set_prev(he1->idx());
+		he3->set_next(he4->idx());
+		he4->set_prev(he3->idx());
 		cout << "After topo change: " << endl;
 		cout << "he1->next(): " << he1->next()->idx() << endl;
 		cout << "he2->prev(): " << he2->prev()->idx() << endl;
 		cout << "he3->next(): " << he3->next()->idx() << endl;
 		cout << "he4->prev(): " << he4->prev()->idx() << endl;
 
-		he->next() = he1->pair();
-		he->prev() = he4->pair();
-		hep->next() = he3->pair();
-		hep->prev() = he2->pair();
+		he->set_next(he1->pair()->idx());
+		he->set_prev(he4->pair()->idx());
+		hep->set_next(he3->pair()->idx());
+		hep->set_prev(he2->pair()->idx());
 
-		he1->pair()->prev() = he;
-		he2->pair()->next() = hep;
-		he3->pair()->prev() = hep;
-		he4->pair()->next() = he;
+		he1->pair()->set_prev(he->idx());
+		he2->pair()->set_next(hep->idx());
+		he3->pair()->set_prev(hep->idx());
+		he4->pair()->set_next(he->idx());
 
-		he1->to() = v2;
-		he1->pair()->from() = v2;
+		he1->set_to(v2->id);
+		he1->pair()->set_from(v2->id);
 
-		he3->to() = v1;
-		he3->pair()->from() = v1;
+		he3->set_to(v1->id);
+		he3->pair()->set_from(v1->id);
 
-		he->face()->he() = he2;
-		hep->face()->he() = he4;
+		he->face()->set_he(he2->idx());
+		hep->face()->set_he(he4->idx());
 
-		he->face() = he1->pair()->face();
-		hep->face() = he2->pair()->face();
+		he->set_face(he1->pair()->face()->id);
+		hep->set_face(he2->pair()->face()->id);
 
 		he->face()->nsides = this->face_sides(*(he->face()));
 		hep->face()->nsides = this->face_sides(*(hep->face()));

@@ -28,6 +28,7 @@ namespace VMTutorial
   HEHandle HalfEdge::next() { return _mesh.get_mesh_he(_next); }
   HEHandle HalfEdge::prev() { return _mesh.get_mesh_he(_prev); }
 
+
   HECHandle HalfEdge::pair() const { return _mesh.get_mesh_he(_pair); }
   HECHandle HalfEdge::next() const { return _mesh.get_mesh_he(_next); }
   HECHandle HalfEdge::prev() const { return _mesh.get_mesh_he(_prev); }

@@ -105,6 +105,15 @@ namespace VMTutorial
 		HECHandle pair() const;
 		HECHandle next() const;
 		HECHandle prev() const;
+		
+		void set_pair(int he_idx) { _pair = he_idx; }
+		void set_next(int he_idx) { _next = he_idx; }
+		void set_prev(int he_idx) { _prev = he_idx; }
+		
+		void set_from(int vtx_idx) { _from = vtx_idx; }
+		void set_to(int vtx_idx) { _to = vtx_idx; }
+		
+		void set_face(int face_idx) { _face = face_idx; }
 
 		Vec direction();
 
@@ -166,6 +175,10 @@ namespace VMTutorial
 
 		HEHandle he();
 		HECHandle he() const;
+		
+		void set_he(int he_idx) { _he = he_idx; }
+		
+		// void idx() { return id;}
 
 		VertexCirculator circulator();
 		VertexCCirculator circulator() const;
@@ -257,6 +270,8 @@ namespace VMTutorial
 
 		HEHandle he();
 		HECHandle he() const;
+		
+		void set_he(int he_idx) { _he = he_idx; }
 
 		FaceCirculator circulator();
 		FaceCCirculator circulator() const;
