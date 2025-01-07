@@ -3,6 +3,8 @@
 
 using std::runtime_error;
 using std::vector;
+using std::endl;
+using std::cout;
 
 namespace VMTutorial
 {
@@ -162,10 +164,14 @@ namespace VMTutorial
 
 	// Mesh manipulation functions
 	//! Implements actual T1
-	bool Mesh::T1(Edge &e, double edge_len)
+	bool Mesh::T1(Edge &e, double edge_len, bool verbose)
 	{
-		if (e.boundary)
+		if (e.boundary) {
+			if (verbose) {
+				cout << "    Mesh::T1 - edge is boundary, skipping T1 transition" << endl;
+			}
 			return false;
+		}
 
 		HEHandle he = e.he();		 // Half-edge belonging to the end
 		HEHandle hep = he->pair(); // Half-edge pair to he
@@ -178,9 +184,18 @@ namespace VMTutorial
 		Vec rc = v1->data().r + l;
 
 		Vec rot_l = Vec(-l.y, l.x).unit();
-
-		v1->data().r = rc - 0.5 * edge_len * rot_l;
-		v2->data().r = rc + 0.5 * edge_len * rot_l;
+		
+		Vec new_v1_r = rc - 0.5 * edge_len * rot_l;
+		Vec new_v2_r = rc + 0.5 * edge_len * rot_l;
+		
+		cout << "Old v1,v2 r : " << v1->data().r << ", " << v2->data().r << endl;
+		
+		v1->data().r = new_v1_r;
+		v2->data().r = new_v2_r;
+		
+		cout << "New v1,v2 r : " << v1->data().r << ", " << v2->data().r << endl;
+		
+		// print()
 
 		v1->he() = he;
 		v2->he() = hep;
@@ -189,11 +204,28 @@ namespace VMTutorial
 		HEHandle he2 = he->next();
 		HEHandle he3 = hep->prev();
 		HEHandle he4 = hep->next();
+		
+		cout << "Before topo change: " << endl;
+		cout << "he1->next(): " << he1->next()->idx() << endl;
+		cout << "he2->prev(): " << he2->prev()->idx() << endl;
+		cout << "he3->next(): " << he3->next()->idx() << endl;
+		cout << "he4->prev(): " << he4->prev()->idx() << endl;
+		
+		cout << "Target values: " << endl;
+		cout << "he2: " << he2->idx() << endl;
+		cout << "he1: " << he1->idx() << endl;
+		cout << "he4: " << he4->idx() << endl;
+		cout << "he3: " << he3->idx() << endl;
 
 		he1->next() = he2;
 		he2->prev() = he1;
 		he3->next() = he4;
 		he4->prev() = he3;
+		cout << "After topo change: " << endl;
+		cout << "he1->next(): " << he1->next()->idx() << endl;
+		cout << "he2->prev(): " << he2->prev()->idx() << endl;
+		cout << "he3->next(): " << he3->next()->idx() << endl;
+		cout << "he4->prev(): " << he4->prev()->idx() << endl;
 
 		he->next() = he1->pair();
 		he->prev() = he4->pair();
@@ -219,6 +251,12 @@ namespace VMTutorial
 
 		he->face()->nsides = this->face_sides(*(he->face()));
 		hep->face()->nsides = this->face_sides(*(hep->face()));
+		
+		if (he->face()->nsides != 6) {
+			cout << "    nsides changed " << endl;
+		}
+		
+		cout << "  successfully completed a t1 transition!" << endl;
 
 		return true;
 	}

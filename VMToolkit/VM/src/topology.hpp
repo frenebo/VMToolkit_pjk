@@ -23,8 +23,10 @@ namespace VMTutorial
     {
     public:
         Topology(System &sys, int seed) : _sys{sys},
-                                          _min_edge_len{0.02},
-                                          _new_edge_len{0.022}
+                                          _min_edge_len{-1.0},
+                                          _new_edge_len{-1.0}
+                                        //   _min_edge_len{0.02},
+                                        //   _new_edge_len{0.022}
         {
         }
         ~Topology() = default;
@@ -38,13 +40,13 @@ namespace VMTutorial
                 } else if (p.first == "new_edge_len") {
                     _new_edge_len = p.second;
                 } else {
-                    throw runtime_error("Unknown topoloy flag.");
+                    throw runtime_error("Unknown topology flag - " + p.first);
                 }
             }
         };
 
 
-        void T1();
+        void T1(bool verbose);
 
     private:
         System &_sys;

@@ -134,7 +134,7 @@ def make_animated_tissue_plot(frame_data, fields_data):
             y=frame_data["plotly_cell_coords"][0][1],
             mode="lines", 
             marker_size=8,
-            fill="toself",
+            # fill="toself",
             marker_color=frame_data["f_vtx_colors"][0],
             # line=dict(color="red", width=2)
         ),
@@ -204,7 +204,7 @@ def make_animated_tissue_plot(frame_data, fields_data):
     #     list_of_all_arrows.append(arrow)
     
     arrow_annotations = []
-    field_colors = ["rgb(245, 84, 66)", "rgb(255, 5, 176)"]
+    field_colors = ["rgb(245, 84, 66)", "rgb(255, 5, 176)", "green", "purple"]
     if len(fields_data) > len(field_colors):
         raise Exception("Need to add more colorss")
     for field_i, field_dat in enumerate(fields_data):

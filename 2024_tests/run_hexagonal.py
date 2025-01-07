@@ -15,6 +15,7 @@ from simcode.sim_model.vm_state import (
     VMState, SimulationSettings, IntegratorSettings, 
     CellAreaForce, CellPerimeterForce, ConstantVertexForce,  CellGroup, VertexGroup,
     ElectricForceOnCellBoundary, EFieldSpecConstantPolygonRegion, PolygonSpec,
+    TopologySettings, T1TransitionSettings,
     
 )
 from simcode.sim_model.box_selector import BoxSelector
@@ -46,17 +47,17 @@ def make_forcing_field_rectangular(
 @profile
 def do_stuff():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--fpull", default=-0.2,type=float, help="Force to squeeze/stretch")
-    parser.add_argument("--box_lx", default=30.0,type=float, help="X size of tissue")
-    parser.add_argument("--box_ly", default=30.0,type=float, help="Y size of tissue")
-    parser.add_argument("--field_strength", default=0.00, type=float, help="field strength")
+    
+    parser.add_argument("--box_nsides_x", default=20,type=float, help="X size of tissue")
+    parser.add_argument("--box_nsides_y", default=20,type=float, help="Y size of tissue")
+    parser.add_argument("--field_strength", default=0.8, type=float, help="field strength")
     
     args = parser.parse_args()
     
-    A0_model = 5
-    P0_model = 6.0
-    gamma = 0.1
-    kappa = 0.1  
+    A0_model = 9
+    P0_model = 5
+    gamma = 1.0
+    kappa = 1.0
     
     analytical_predictions = HexagonalModel().find_rest_size_of_hexagon(
         A_0=A0_model,
@@ -68,36 +69,55 @@ def do_stuff():
     rest_side_length = analytical_predictions["rest_side_length"]
     theoretical_rest_width = rest_side_length*2
     theoretical_rest_height = rest_side_length*2*np.sqrt(3)/2
-    
+    print(analytical_predictions)
     print("Theoretical rest width, height: {}, {}".format(theoretical_rest_width, theoretical_rest_height))
     
-    
+    box_lx = args.box_nsides_x*rest_side_length
+    box_ly = args.box_nsides_y*rest_side_length
     cm = HexagonalCellMesh(
         side_length=rest_side_length,
-        box_lx=args.box_lx,
-        box_ly=args.box_ly,
+        box_lx=box_lx,
+        box_ly=box_ly,
     )
     tiss_topology, tiss_init_state = cm.build_vm_state()#verbose=True)
     
     tiss_init_state.forces()["perim_f_all"] = CellPerimeterForce(gamma=gamma, lam=P0_model*gamma)
     tiss_init_state.forces()["area_f_all"] = CellAreaForce(A0=A0_model, kappa=kappa)
     
-    field_size_multiplier = 0.2
+    field_size_multiplier = 0.1
     tiss_init_state.forces()["left_forcing_field"] = make_forcing_field_rectangular(
-        xmin=2*field_size_multiplier*(-args.box_lx),
-        xmax=2*field_size_multiplier*(-args.box_lx)/3,
-        ymin=field_size_multiplier*(-args.box_ly),
-        ymax=field_size_multiplier*(args.box_ly),
-        field_x=0.003,
-        field_y=args.field_strength,
+        xmin=2*field_size_multiplier*(-box_lx),
+        xmax=2*field_size_multiplier*(-box_lx)*0.1,
+        ymin=2*field_size_multiplier*(-box_ly),
+        ymax=2*field_size_multiplier*(box_ly),
+        field_x=args.field_strength,
+        field_y=0,
+        # field_y=args.field_strength,
     )
     tiss_init_state.forces()["right_forcing_field"] = make_forcing_field_rectangular(
-        xmin=2*field_size_multiplier*(args.box_lx)/3,
-        xmax=2*field_size_multiplier*(args.box_lx),
-        ymin=field_size_multiplier*(-args.box_ly),
-        ymax=field_size_multiplier*(args.box_ly),
-        field_x=0.003,
-        field_y=-args.field_strength,
+        xmin=2*field_size_multiplier*(box_lx)*0.1,
+        xmax=2*field_size_multiplier*(box_lx),
+        ymin=2*field_size_multiplier*(-box_ly),
+        ymax=2*field_size_multiplier*(box_ly),
+        field_x=-args.field_strength,
+        field_y=0,
+    )
+    tiss_init_state.forces()["top_forcing_field"] = make_forcing_field_rectangular(
+        ymin=2*field_size_multiplier*(-box_lx),
+        ymax=2*field_size_multiplier*(-box_lx)*0.1,
+        xmin=2*field_size_multiplier*(-box_ly),
+        xmax=2*field_size_multiplier*(box_ly),
+        field_x=0,
+        field_y=-args.field_strength*2.0,
+        # field_y=args.field_strength,
+    )
+    tiss_init_state.forces()["bottom_forcing_field"] = make_forcing_field_rectangular(
+        ymin=2*field_size_multiplier*(box_lx)*0.1,
+        ymax=2*field_size_multiplier*(box_lx),
+        xmin=2*field_size_multiplier*(-box_ly),
+        xmax=2*field_size_multiplier*(box_ly),
+        field_x=0,
+        field_y=args.field_strength*2.0,
     )
     
     tiss_init_state.cell_groups()["all"].force_ids().extend([
@@ -105,6 +125,8 @@ def do_stuff():
         "area_f_all",
         "left_forcing_field",
         "right_forcing_field",
+        "top_forcing_field",
+        "bottom_forcing_field",
     ])
     
     vm_initial_state = VMState(
@@ -113,8 +135,17 @@ def do_stuff():
         sim_settings=SimulationSettings(
             integrator_settings=IntegratorSettings(
                 vertex_friction_gamma=0.1,
-                step_dt=0.08,
+                step_dt=0.004,
             ),
+            topology_settings=TopologySettings(
+                T1_transition_settings=T1TransitionSettings(
+                    enabled=True,
+                    min_edge_len=rest_side_length*0.2,
+                    new_edge_len=rest_side_length*0.21,
+                    # min_edge_len=0.2,
+                    # new_edge_len=0.22,
+                )
+            )
         )
     )
     
@@ -148,8 +179,8 @@ def do_stuff():
         if (fn.startswith("res") or fn.startswith("vmst_")) and fn.endswith(".json"):
             os.remove(os.path.join(ckpt_dir, fn))
     
-    step_size = 1000     # Step counter in terms of time units
-    N_checkpoints = 50
+    step_size = 10     # Step counter in terms of time units
+    N_checkpoints = 100
     
     for i in range(N_checkpoints):
         ckpt_fp = "scratch/res{}.json".format(str(i).zfill(3))
@@ -159,7 +190,11 @@ def do_stuff():
         
         checkpoint_fps.append(ckpt_fp)
         sim_model.run_steps(step_size, do_time_force_computation=True)
-
+        if sim_model._check_topology_changed():
+            print("TOP CHANGED _ changing step size")
+            step_size = 1
+            # break
+    
 
 if __name__ == "__main__":
     do_stuff()

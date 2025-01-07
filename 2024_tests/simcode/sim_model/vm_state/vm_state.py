@@ -9,10 +9,14 @@ class CellTopology:
             is_outer=jobj["is_outer"]
         )
         
-    def __init__(self, vertices, is_outer):#, is_boundary):
+    def __init__(self, vertices, is_outer):
+        """
+        vertices - a list of strings, the ids of vertices belonging to this cell
+        is_outer - boolean, whether or not this 'cell' is a boundary cell that exists for sake of 
+                   half-edge model
+        """
         self._vertex_ids=vertices
         self._is_outer=is_outer
-        # self._is_boundary = is_boundary
     
     def vertex_ids(self):
         return self._vertex_ids
@@ -25,7 +29,6 @@ class CellTopology:
         return {
             "vertex_ids": list(self._vertex_ids),
             "is_outer": self._is_outer,
-            # "is_boundary": self._is_boundary,
         }
 
 class VertexTopology:
@@ -81,10 +84,10 @@ class TissueTopology:
             vertex_topologies=vertex_topologies_parsed
         )
     
-    def cells(self):
+    def cell_topologies(self):
         return self._cell_topologies
     
-    def vertices(self):
+    def vertex_topologies(self):
         return self._vertex_topologies
         
     def __init__(self, cell_topologies, vertex_topologies):
@@ -319,6 +322,70 @@ class IntegratorSettings:
             "step_dt": self._step_dt,
         }
 
+class T1TransitionSettings:
+    @staticmethod
+    def from_json(jobj):
+        # if 
+        T1_enabled = jobj["enabled"]
+        
+        if not T1_enabled:
+            return T1TransitionSettings(
+                enabled=False,
+                min_edge_len=None,
+                new_edge_len=None,
+            )
+        else:
+            return T1TransitionSettings(
+                enabled=True,
+                min_edge_len=jobj["min_edge_len"],
+                new_edge_len=jobj["new_edge_len"],
+            )
+        
+    def __init__(self, enabled, min_edge_len, new_edge_len):
+        self._enabled = enabled
+        self._min_edge_len = min_edge_len
+        self._new_edge_len = new_edge_len
+    
+    def enabled(self):
+        return self._enabled
+    
+    def min_edge_len(self):
+        return self._min_edge_len
+    
+    def new_edge_len(self):
+        return self._new_edge_len
+    
+    def to_json(self):
+        if not self._enabled:
+            return {
+                "enabled": False,
+            }
+        else:
+            return {
+                "enabled": True,
+                "min_edge_len": self._min_edge_len,
+                "new_edge_len": self._new_edge_len,
+            }
+
+class TopologySettings:
+    @staticmethod
+    def from_json(jobj):
+        t1_sets = T1TransitionSettings.from_json(jobj["T1_transition"])
+        
+        return TopologySettings(
+            T1_transition_settings=t1_sets,
+        )
+    
+    def __init__(self, T1_transition_settings):
+        self._T1_transition_settings = T1_transition_settings
+    
+    def T1_transition_settings(self):
+        return self._T1_transition_settings
+    
+    def to_json(self):
+        return {
+            "T1_transition": self._T1_transition_settings.to_json(),
+        }
 
 
 class SimulationSettings:
@@ -326,23 +393,25 @@ class SimulationSettings:
     def from_json(jobj):
         return SimulationSettings(
             integrator_settings=IntegratorSettings.from_json(jobj["integrator"]),
+            topology_settings=TopologySettings.from_json(jobj["topology_settings"]),
         )
     
-    def __init__(self, integrator_settings):
+    def __init__(self, integrator_settings, topology_settings):
         self._integrator_settings = integrator_settings
+        self._topology_settings = topology_settings
         
     def integrator_settings(self):
         return self._integrator_settings
     
-        
-        
+    def topology_settings(self):
+        return self._topology_settings
+    
     def to_json(self):
         return {
             "integrator": self._integrator_settings.to_json(),
+            "topology_settings": self._topology_settings.to_json(),
         }
     
-
-
 
 class VMState:
     @staticmethod

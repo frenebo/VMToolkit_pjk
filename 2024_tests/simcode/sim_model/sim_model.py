@@ -30,6 +30,9 @@ class SimModel:
             print("Force computation times (milliseconds):")
             print(self._vm_wrapper.get_force_compute_timers_millis(verbose=verbose))
         
+    def _check_topology_changed(self):
+        return self._vm_wrapper._check_topology_changed()
+        
     
     def process_model_change_req(self, model_change_req):
         assert isinstance(model_change_req, ModelChangeRequest)

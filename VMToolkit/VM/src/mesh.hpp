@@ -68,9 +68,10 @@ namespace VMTutorial
 		int num_faces() const { return _faces.size(); }
 
 		// mesh manipulation functions
-		bool T1(Edge &, double);
+		bool T1(Edge &, double, bool verbose);
 
 		// mesh info functions
+		// @TODO move to Dumps class
 		vector<vector<double>> get_vertex_positions() const
 		{
 			vector<vector<double>> vpositions(num_vert(), vector<double>{0.0,0.0});
@@ -85,6 +86,25 @@ namespace VMTutorial
 			}
 			
 			return vpositions;
+		}
+		
+		// @TODO move to Dumps class
+		vector<vector<int>> get_face_member_vertex_ids() const
+		{
+			vector<vector<int>> faces_members;
+			
+			size_t fidx = 0;
+			for (const auto& f : _faces)
+			{
+				vector<int> vids;
+				for (auto he : f.circulator())
+				{
+					vids.push_back(he.from()->id);
+				}
+				faces_members.push_back(vids);
+			}
+			
+			return faces_members;
 		}
 
 		double area(const Face &) const;

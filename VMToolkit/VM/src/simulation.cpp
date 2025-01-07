@@ -15,9 +15,9 @@ namespace VMTutorial
 {
   void Simulation::run(int steps, bool topological_change, bool old_style, bool verbose)
   {
-    if (topological_change) {
-      throw runtime_error("Simulation::run - topological_change is not guaranteed to work, this code has changed a lot since that was last used.");
-    }
+    // if (topological_change) {
+    //   throw runtime_error("Simulation::run - topological_change is not guaranteed to work, this code has changed a lot since that was last used.");
+    // }
     
     double progress = 0.0;
     if (verbose) { cout << "Simulation::run - Running simulation for " << steps << " steps" << endl; }
@@ -25,14 +25,14 @@ namespace VMTutorial
     for (int i = sim_step; i < sim_step + steps; i++)
     {
       if (verbose) { cout << "doing step #" << i << endl; }
+      // _sys.set_topology_change(false);
       if (topological_change)
       {
-          _topology.T1();
+          _topology.T1(verbose);
       }
       
       if (verbose) { cout << "doing integration" << endl; }
       _integ.apply(verbose);
-      _sys.set_topology_change(false);
 
       if (this->print_freq > 0) 
       {

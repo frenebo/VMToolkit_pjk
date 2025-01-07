@@ -39,7 +39,7 @@ namespace VMTutorial
 
       System(MyMesh& mesh) : _mesh{mesh}, 
                              _mesh_set{false},
-                             _topology_changed{true}
+                             _topology_changed{false}
                              {
                              }
 
@@ -59,7 +59,7 @@ namespace VMTutorial
       
       // int& time_step() { return _time_step; }
       // double& simulation_time() { return _simulation_time; }
-      bool topology_change() { return _topology_changed;  }
+      bool topology_changed() const { return _topology_changed;  }
       
     private:
   

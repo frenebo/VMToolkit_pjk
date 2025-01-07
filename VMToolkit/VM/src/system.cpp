@@ -242,6 +242,7 @@ namespace VMTutorial
       .def("cell_area", [](Mesh &m, int i) -> double { return m.area(*(m.get_mesh_face(i))); })
       .def("cell_perim", [](Mesh &m, int i) -> double { return m.perim(*(m.get_mesh_face(i))); })
       .def("get_vertex_positions", &Mesh::get_vertex_positions)
+      .def("get_face_member_vertex_ids", &Mesh::get_face_member_vertex_ids)
       ;
   }
 
@@ -255,6 +256,7 @@ namespace VMTutorial
       // .def("simulation_time", &System::simulation_time)
       // .def("set_simulation_time_step", &System::set_simulation_time_step)
       .def("log_debug_stats", &System::log_debug_stats)
+      .def("topology_changed", &System::topology_changed)
       ;
   }
 

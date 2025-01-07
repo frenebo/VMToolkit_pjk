@@ -15,6 +15,7 @@ from ..vm_state import (
     ElectricForceOnCellBoundary,
     EFieldSpecConstantPolygonRegion,
     PolygonSpec,
+    CellTopology,
 )
 
 class CppJsonTissueBuilder:
@@ -24,7 +25,7 @@ class CppJsonTissueBuilder:
         cpp_vertex_objs = [None] * (1+max(list(vertex_id_to_cpp_idx.values())))
         cpp_face_objs = [None] * (1+max(list(cell_id_to_cpp_face_idx.values())))
         
-        for cell_id, cell_top in vm_state.topology().cells().items():
+        for cell_id, cell_top in vm_state.topology().cell_topologies().items():
             face_index = cell_id_to_cpp_face_idx[cell_id]
             
             cpp_vids = [ vertex_id_to_cpp_idx[vid] for vid in cell_top.vertex_ids() ]
@@ -37,7 +38,7 @@ class CppJsonTissueBuilder:
                 "outer": cell_top.is_outer(),
             }
         
-        for vertex_id, vertex_top in vm_state.topology().vertices().items():
+        for vertex_id, vertex_top in vm_state.topology().vertex_topologies().items():
             vertex_index = vertex_id_to_cpp_idx[vertex_id]
             
             v_geometry = vm_state.current_state().geometry().vertices()[vertex_id]
@@ -72,17 +73,20 @@ class VMToolkitWrapper:
     @staticmethod
     def _make_ids_to_cpp_index_maps(vm_state):
         cell_ids_to_idx = {}
-        for cell_idx, cell_id in enumerate(vm_state.topology().cells().keys()):
-            cell_ids_to_idx[cell_id] = cell_idx
+        cell_indices_to_ids = {}
+        for cell_idx, c_id in enumerate(vm_state.topology().cell_topologies().keys()):
+            cell_ids_to_idx[c_id] = cell_idx
+            cell_indices_to_ids[cell_idx] = c_id
         
         vtx_ids_to_idx = {}
         vtx_indices_to_ids = {}
-        for v_idx, vertex_id in enumerate(vm_state.topology().vertices().keys()):
+        for v_idx, vertex_id in enumerate(vm_state.topology().vertex_topologies().keys()):
             vtx_ids_to_idx[vertex_id] = v_idx
             vtx_indices_to_ids[v_idx] = vertex_id
         
         return {
             "cell_ids_to_idx": cell_ids_to_idx,
+            "cell_indices_to_ids": cell_indices_to_ids,
             "vtx_ids_to_idx": vtx_ids_to_idx,
             "vtx_indices_to_ids": vtx_indices_to_ids,
         }
@@ -91,10 +95,12 @@ class VMToolkitWrapper:
         self._sim_sys = None
         self._forces = None
         self._integrators = None
+        self._topology = None
         self._dumps = None
         self._simulation = None
         
         self._tissue_initialized = False
+        self._topological_changes_enabled = False
         self._ids_to_cpp_index_maps = None
         
         self._last_vm_state = None
@@ -126,8 +132,26 @@ class VMToolkitWrapper:
         )
         self._configure_forces(vm_state, verbose=verbose)
         
+        self._configure_topology_settings(vm_state, verbose=True)
+        
         self._tissue_initialized = True
         self._last_vm_state = VMState.from_json(vm_state.to_json())
+    
+    def _configure_topology_settings(self, vm_state, verbose=False):
+        t1_settings = vm_state.sim_settings().topology_settings().T1_transition_settings()
+        if t1_settings.enabled():
+            print("T1 transition enabled in topology settings - configuring now")
+            self._topological_changes_enabled = True
+            self._topology.set_params({
+                "min_edge_len": t1_settings.min_edge_len(),
+                "new_edge_len": t1_settings.new_edge_len(),
+            })
+        else:
+            self._topological_changes_enabled = False
+    
+    def _check_topology_changed(self):
+        print("Checking if topology changed")
+        return self._sim_sys.topology_changed()
     
     def run_steps(
         self,
@@ -139,7 +163,7 @@ class VMToolkitWrapper:
         if verbose:
             print("About to run simulation for {} steps".format(n_steps))
         
-        self._simulation.run(n_steps, topological_change=False, verbose=verbose)
+        self._simulation.run(n_steps, topological_change=self._topological_changes_enabled, verbose=verbose)
         self._update_vm_state_from_cpp_vm()
         
     def _update_vm_state_from_cpp_vm(self):
@@ -148,10 +172,11 @@ class VMToolkitWrapper:
         
         new_vmstate = VMState.from_json(self._last_vm_state.to_json())
         
-        vtx_positions = self._get_cpp_vertex_positions()
+        vtx_positions = self._sim_sys.mesh().get_vertex_positions()
         
+        
+        # Update vertex positions
         state_vertex_geos = new_vmstate.current_state().geometry().vertices()
-        
         for vtx_idx, vtx_pos in enumerate(vtx_positions):
             vtx_id = self._ids_to_cpp_index_maps["vtx_indices_to_ids"][vtx_idx]
             
@@ -160,10 +185,34 @@ class VMToolkitWrapper:
                 y=vtx_pos[1],
             )
         
+        # Update which vertices are members of which faces
+        vertex_ids_by_face = self._sim_sys.mesh().get_face_member_vertex_ids()
+        # state_cell_topologies = {}
+        # new_vmstate.topology().cell_topologies()
+        for cell_idx, cell_member_vindices in enumerate(vertex_ids_by_face):
+            cell_id = self._ids_to_cpp_index_maps["cell_indices_to_ids"][cell_idx]
+            member_vtx_ids = []
+            for vidx in cell_member_vindices:
+                member_vtx_ids.append(self._ids_to_cpp_index_maps["vtx_indices_to_ids"][vidx])
+            
+            old_topology = new_vmstate.topology().cell_topologies()[cell_id]
+            
+            # new_top = 
+            # if len(member_vtx_ids) != 6 and len(member_vtx_ids) < 20:
+            #     print(cell_member_vindices)
+            #     raise Exception()
+            new_vmstate.topology().cell_topologies()[cell_id] = CellTopology(
+                vertices=member_vtx_ids,
+                is_outer=old_topology.is_outer(),
+            )
+            # if new_vmstate.topology().cell_topologies()[cell_id] == old_topology:
+            #     raise Exception()
+            # if new_vmstate.topology().cell_topologies()[cell_id] != new_top:
+            #     raise Exception()
+            
+        
         self._last_vm_state = new_vmstate
     
-    def _get_cpp_vertex_positions(self):
-        return self._sim_sys.mesh().get_vertex_positions()
     
     def _initialize_cpp(self, verbose=False):
         ##### Running sim
@@ -197,7 +246,7 @@ class VMToolkitWrapper:
         
         
         """
-        IMPORTANT! All these need to be held as CLASS variables python, otherwise their memory will be freed,
+        IMPORTANT! All these need to be stored as CLASS variables python, otherwise their memory will be freed (?),
         and they'll try to talk to each other, and just read whatever is in that memory now. Will cause problems
         """
         self._tissue = tissue
@@ -207,6 +256,9 @@ class VMToolkitWrapper:
         self._topology = topology
         self._dumps = dumps
         self._simulation = simulation
+        """
+        """
+        
         
         if verbose:
             print("Finished intializing cpp...")
