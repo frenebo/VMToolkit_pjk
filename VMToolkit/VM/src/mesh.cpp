@@ -231,26 +231,40 @@ namespace VMTutorial
 		he->set_prev(he4->pair()->idx());
 		hep->set_next(he3->pair()->idx());
 		hep->set_prev(he2->pair()->idx());
+		
+		cout << "Finished setting he, hep next & prev" << endl;
 
 		he1->pair()->set_prev(he->idx());
 		he2->pair()->set_next(hep->idx());
 		he3->pair()->set_prev(hep->idx());
 		he4->pair()->set_next(he->idx());
+		
+		cout << "Finished ssetting he1, he2, he3, he4 pair prev and next" << endl;
 
 		he1->set_to(v2->id);
 		he1->pair()->set_from(v2->id);
+		
+		cout << "finished setting he1 to & he1 pair from" << endl;
 
 		he3->set_to(v1->id);
 		he3->pair()->set_from(v1->id);
+		
+		cout << "finished setting he3 to & he3 pair from" << endl;
 
 		he->face()->set_he(he2->idx());
 		hep->face()->set_he(he4->idx());
+		
+		cout << "finihed setting he & hep face he" << endl;
 
 		he->set_face(he1->pair()->face()->id);
 		hep->set_face(he2->pair()->face()->id);
+		
+		cout << "finished setting he & hep face" << endl;
 
 		he->face()->nsides = this->face_sides(*(he->face()));
 		hep->face()->nsides = this->face_sides(*(hep->face()));
+		
+		cout << "finished setting nsides" << endl;
 		
 		if (he->face()->nsides != 6) {
 			cout << "    nsides changed " << endl;

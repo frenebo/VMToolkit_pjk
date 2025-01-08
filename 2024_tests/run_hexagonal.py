@@ -48,9 +48,9 @@ def make_forcing_field_rectangular(
 def do_stuff():
     parser = argparse.ArgumentParser()
     
-    parser.add_argument("--box_nsides_x", default=20,type=float, help="X size of tissue")
-    parser.add_argument("--box_nsides_y", default=20,type=float, help="Y size of tissue")
-    parser.add_argument("--field_strength", default=0.8, type=float, help="field strength")
+    parser.add_argument("--box_nsides_x", default=40,type=float, help="X size of tissue")
+    parser.add_argument("--box_nsides_y", default=40,type=float, help="Y size of tissue")
+    parser.add_argument("--field_strength", default=1.6, type=float, help="field strength")
     
     args = parser.parse_args()
     
@@ -84,49 +84,50 @@ def do_stuff():
     tiss_init_state.forces()["perim_f_all"] = CellPerimeterForce(gamma=gamma, lam=P0_model*gamma)
     tiss_init_state.forces()["area_f_all"] = CellAreaForce(A0=A0_model, kappa=kappa)
     
-    field_size_multiplier = 0.1
+    field_size_multiplier = 0.08
     tiss_init_state.forces()["left_forcing_field"] = make_forcing_field_rectangular(
         xmin=2*field_size_multiplier*(-box_lx),
-        xmax=2*field_size_multiplier*(-box_lx)*0.1,
+        xmax=2*field_size_multiplier*(-box_lx)*0.0,
         ymin=2*field_size_multiplier*(-box_ly),
         ymax=2*field_size_multiplier*(box_ly),
-        field_x=args.field_strength,
-        field_y=0,
+        # field_x=args.field_strength,
+        field_x=0,
+        field_y=args.field_strength,
         # field_y=args.field_strength,
     )
     tiss_init_state.forces()["right_forcing_field"] = make_forcing_field_rectangular(
-        xmin=2*field_size_multiplier*(box_lx)*0.1,
+        xmin=2*field_size_multiplier*(box_lx)*0.0,
         xmax=2*field_size_multiplier*(box_lx),
         ymin=2*field_size_multiplier*(-box_ly),
         ymax=2*field_size_multiplier*(box_ly),
-        field_x=-args.field_strength,
-        field_y=0,
-    )
-    tiss_init_state.forces()["top_forcing_field"] = make_forcing_field_rectangular(
-        ymin=2*field_size_multiplier*(-box_lx),
-        ymax=2*field_size_multiplier*(-box_lx)*0.1,
-        xmin=2*field_size_multiplier*(-box_ly),
-        xmax=2*field_size_multiplier*(box_ly),
         field_x=0,
-        field_y=-args.field_strength*2.0,
-        # field_y=args.field_strength,
+        field_y=-args.field_strength,
     )
-    tiss_init_state.forces()["bottom_forcing_field"] = make_forcing_field_rectangular(
-        ymin=2*field_size_multiplier*(box_lx)*0.1,
-        ymax=2*field_size_multiplier*(box_lx),
-        xmin=2*field_size_multiplier*(-box_ly),
-        xmax=2*field_size_multiplier*(box_ly),
-        field_x=0,
-        field_y=args.field_strength*2.0,
-    )
+    # tiss_init_state.forces()["top_forcing_field"] = make_forcing_field_rectangular(
+    #     ymin=2*field_size_multiplier*(-box_lx),
+    #     ymax=2*field_size_multiplier*(-box_lx)*0.1,
+    #     xmin=2*field_size_multiplier*(-box_ly),
+    #     xmax=2*field_size_multiplier*(box_ly),
+    #     field_x=0,
+    #     field_y=-args.field_strength*2.0,
+    #     # field_y=args.field_strength,
+    # )
+    # tiss_init_state.forces()["bottom_forcing_field"] = make_forcing_field_rectangular(
+    #     ymin=2*field_size_multiplier*(box_lx)*0.1,
+    #     ymax=2*field_size_multiplier*(box_lx),
+    #     xmin=2*field_size_multiplier*(-box_ly),
+    #     xmax=2*field_size_multiplier*(box_ly),
+    #     field_x=0,
+    #     field_y=args.field_strength*2.0,
+    # )
     
     tiss_init_state.cell_groups()["all"].force_ids().extend([
         "perim_f_all",
         "area_f_all",
         "left_forcing_field",
         "right_forcing_field",
-        "top_forcing_field",
-        "bottom_forcing_field",
+        # "top_forcing_field",
+        # "bottom_forcing_field",
     ])
     
     vm_initial_state = VMState(
@@ -135,7 +136,7 @@ def do_stuff():
         sim_settings=SimulationSettings(
             integrator_settings=IntegratorSettings(
                 vertex_friction_gamma=0.1,
-                step_dt=0.004,
+                step_dt=0.012,
             ),
             topology_settings=TopologySettings(
                 T1_transition_settings=T1TransitionSettings(
@@ -179,7 +180,7 @@ def do_stuff():
         if (fn.startswith("res") or fn.startswith("vmst_")) and fn.endswith(".json"):
             os.remove(os.path.join(ckpt_dir, fn))
     
-    step_size = 10     # Step counter in terms of time units
+    step_size = 100     # Step counter in terms of time units
     N_checkpoints = 100
     
     for i in range(N_checkpoints):
