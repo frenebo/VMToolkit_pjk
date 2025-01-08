@@ -161,21 +161,67 @@ namespace VMTutorial
 		fh->_he = _halfedges[first_he].idx(); // Make sure that the first half edge is the face half-edge. This makes life easier when reading in "per edge" data.
 		fh->nsides = this->face_sides(*fh);
 	}
+	
+	bool Mesh::_edge_allowed_to_transition(const Edge &e, bool verbose) const
+	{
+		// In order to transition, the edge must have different faces on each side (duh),
+		// and also two different faces that it's vertices intersect - so that
+		// after the t1 transition, it will have different faces on each side.
+		// This excludes edges whose neighbor has the exact same neighboring faces.
+		
+		HECHandle he = e.he();		 // Half-edge belonging to the end
+		HECHandle hep = he->pair(); // Half-edge pair to he
+		
+		
+		// There must be a 'branch' after the edge
+		int idx_he_next_pair = he->next()->pair()->idx();
+		int idx_hep_prev = hep->prev()->idx();
+		
+		if (idx_he_next_pair == idx_hep_prev) {
+			if (verbose) {
+				cout << "  edge's next edge does not branch - not allowed to transition" << endl;
+			}
+			return false;
+		}
+		
+		// There must be a 'branch' before the edge
+		int idx_he_prev_pair = he->prev()->pair()->idx();
+		int idx_hep_next = hep->next()->idx();
+		
+		if (idx_he_prev_pair == idx_hep_next) {
+			if (verbose) {
+				cout << "  edge's prev edge does not branch - not allowed to transition" << endl;
+			}
+			return false;
+		}
+		
+		return true;
+	}
 
 	// Mesh manipulation functions
 	//! Implements actual T1
 	bool Mesh::T1(Edge &e, double edge_len, bool verbose)
 	{
-		if (e.boundary) {
+		if (! _edge_allowed_to_transition(e, verbose)) {
 			if (verbose) {
-				cout << "    Mesh::T1 - edge is boundary, skipping T1 transition" << endl;
+				cout << "    Mesh::T1 - edge not allowed to transition, skipping T1 transition" << endl;
 			}
 			return false;
 		}
+		
+
+		// he->face()->nsides = this->face_sides(*(he->face()));
+		// hep->face()->nsides = this->face_sides(*(hep->face()));
+		
+		// cout << "finished setting nsides" << endl;
+		
 
 		HEHandle he = e.he();		 // Half-edge belonging to the end
 		HEHandle hep = he->pair(); // Half-edge pair to he
-
+		
+		// if (ver)
+		cout << "n sides before for he and hep:" << he->face()->nsides << " , " << hep->face()->nsides << endl;
+		
 		VertexHandle v1 = he->from(); // We define v1 and the vertex he points from
 		VertexHandle v2 = he->to();	// We define v2 and the vertex he points to
 

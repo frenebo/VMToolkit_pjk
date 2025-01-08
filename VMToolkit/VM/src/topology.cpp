@@ -26,7 +26,7 @@ namespace VMTutorial
           _sys.mesh().len(e) < _min_edge_len
         ) {
           // if (verbose) {
-            cout << " attempting T1 TRANSITION for edge " << e.idx() << "- old len " << _sys.mesh().len(e) << "  ,new len " << _new_edge_len << endl;
+            // cout << " attempting T1 TRANSITION for edge " << e.idx() << "- old len " << _sys.mesh().len(e) << "  ,new len " << _new_edge_len << endl;
           // }
           if (_sys.mesh().T1(e, _new_edge_len, verbose)) {
             cout << "  T1 transition returned true - setting topology change to true" << endl;

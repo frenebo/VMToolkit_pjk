@@ -22,7 +22,6 @@ namespace VMTutorial
     vector<Vec> vertex_vels;
     _force_compute.compute_all_vertex_forces(vertex_vels, verbose);
     
-    // v = F/gamma
     for (auto& vel : vertex_vels)
     {
       vel.x *= mu;

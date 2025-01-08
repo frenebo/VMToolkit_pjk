@@ -101,7 +101,7 @@ class SqueezerSim:
             field_y=0.0,
         )
         
-        tiss_init_state.cell_groups()["all"].force_ids().extend([
+        tiss_init_state.cell_groups()["normal"].force_ids().extend([
             "perim_f",
             "area_f",
             

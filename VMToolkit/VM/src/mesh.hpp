@@ -119,6 +119,8 @@ namespace VMTutorial
 		Vec get_face_centroid(const Face &);
 
 	private:
+		bool _edge_allowed_to_transition(const Edge &e, bool verbose) const;
+		
 		std::vector<HalfEdge> _halfedges;
 		std::vector<Vertex> _vertices;
 		std::vector<Edge> _edges;

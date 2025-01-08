@@ -48,13 +48,13 @@ def make_forcing_field_rectangular(
 def do_stuff():
     parser = argparse.ArgumentParser()
     
-    parser.add_argument("--box_nsides_x", default=40,type=float, help="X size of tissue")
-    parser.add_argument("--box_nsides_y", default=40,type=float, help="Y size of tissue")
-    parser.add_argument("--field_strength", default=1.6, type=float, help="field strength")
+    parser.add_argument("--box_nsides_x", default=50,type=float, help="X size of tissue")
+    parser.add_argument("--box_nsides_y", default=50,type=float, help="Y size of tissue")
+    parser.add_argument("--field_strength", default=1.2, type=float, help="field strength")
     
     args = parser.parse_args()
     
-    A0_model = 9
+    A0_model = 15
     P0_model = 5
     gamma = 1.0
     kappa = 1.0
@@ -84,7 +84,7 @@ def do_stuff():
     tiss_init_state.forces()["perim_f_all"] = CellPerimeterForce(gamma=gamma, lam=P0_model*gamma)
     tiss_init_state.forces()["area_f_all"] = CellAreaForce(A0=A0_model, kappa=kappa)
     
-    field_size_multiplier = 0.08
+    field_size_multiplier = 0.1
     tiss_init_state.forces()["left_forcing_field"] = make_forcing_field_rectangular(
         xmin=2*field_size_multiplier*(-box_lx),
         xmax=2*field_size_multiplier*(-box_lx)*0.0,
@@ -121,7 +121,7 @@ def do_stuff():
     #     field_y=args.field_strength*2.0,
     # )
     
-    tiss_init_state.cell_groups()["all"].force_ids().extend([
+    tiss_init_state.cell_groups()["normal"].force_ids().extend([
         "perim_f_all",
         "area_f_all",
         "left_forcing_field",
@@ -136,7 +136,7 @@ def do_stuff():
         sim_settings=SimulationSettings(
             integrator_settings=IntegratorSettings(
                 vertex_friction_gamma=0.1,
-                step_dt=0.012,
+                step_dt=0.003,
             ),
             topology_settings=TopologySettings(
                 T1_transition_settings=T1TransitionSettings(
@@ -180,8 +180,8 @@ def do_stuff():
         if (fn.startswith("res") or fn.startswith("vmst_")) and fn.endswith(".json"):
             os.remove(os.path.join(ckpt_dir, fn))
     
-    step_size = 100     # Step counter in terms of time units
-    N_checkpoints = 100
+    step_size = 90     # Step counter in terms of time units
+    N_checkpoints = 500
     
     for i in range(N_checkpoints):
         ckpt_fp = "scratch/res{}.json".format(str(i).zfill(3))
@@ -192,8 +192,8 @@ def do_stuff():
         checkpoint_fps.append(ckpt_fp)
         sim_model.run_steps(step_size, do_time_force_computation=True)
         if sim_model._check_topology_changed():
-            print("TOP CHANGED _ changing step size")
-            step_size = 1
+            print("TOP CHANGED")
+        #     step_size = 1
             # break
     
 

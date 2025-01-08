@@ -150,7 +150,7 @@ class VMToolkitWrapper:
             self._topological_changes_enabled = False
     
     def _check_topology_changed(self):
-        print("Checking if topology changed")
+        # print("Checking if topology changed")
         return self._sim_sys.topology_changed()
     
     def run_steps(

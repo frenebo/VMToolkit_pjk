@@ -588,14 +588,14 @@ class HexagonalCellMesh:
         tiss_state = TissueState(
             geometry=tiss_geometry,
             vertex_groups={
-                "all": VertexGroup(
+                "normal": VertexGroup(
                     [vid for vid in vertex_topologies],
                     force_ids=[],
                     # force_ids=all_vertex_force_ids,
                 ),
             },
             cell_groups={
-                "all": CellGroup(
+                "normal": CellGroup(
                     [cid for cid in cell_topologies if cid != boundary_cell_id],
                     force_ids=[],
                     # force_ids=all_cells_force_ids,
