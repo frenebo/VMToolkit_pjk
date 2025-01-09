@@ -126,11 +126,11 @@ class VMToolkitWrapper:
         ))
         self._sim_sys.read_input_from_jsonstring(cpp_state_json_str, verbose=verbose)
         
-        self._configure_integrators(
+        self._setup_integrators(
             dt=vm_state.sim_settings().integrator_settings().step_dt(),
             friction_gam=vm_state.sim_settings().integrator_settings().vtx_friction_gamma(),
         )
-        self._configure_forces(vm_state, verbose=verbose)
+        self._setup_forces(vm_state, verbose=verbose)
         
         self._configure_topology_settings(vm_state, verbose=True)
         
@@ -153,7 +153,22 @@ class VMToolkitWrapper:
         # print("Checking if topology changed")
         return self._sim_sys.topology_changed()
     
-    def run_steps(
+    def run_with_adaptive_tstep(
+        self,
+        time_run,
+        verbose=False,
+    ):
+        if not self._tissue_initialized:
+            raise Exception("No tissue has been loaded...")
+        
+        
+        if verbose:
+            print("(python) VMToolkitWrapper.run_with_adaptive_tstep - about to run for telapsed={}".format(time_run))
+        
+        self._simulation.run_time_adaptive(runtime_tot=time_run, topological_change=self._topological_changes_enabled, verbose=verbose)
+        self._update_vm_state_from_cpp_vm()
+    
+    def run_steps_manual_tstep(
         self,
         n_steps,
         verbose=False,
@@ -163,7 +178,7 @@ class VMToolkitWrapper:
         if verbose:
             print("About to run simulation for {} steps".format(n_steps))
         
-        self._simulation.run(n_steps, topological_change=self._topological_changes_enabled, verbose=verbose)
+        self._simulation.run_timestep_manual(n_steps, topological_change=self._topological_changes_enabled, verbose=verbose)
         self._update_vm_state_from_cpp_vm()
         
     def _update_vm_state_from_cpp_vm(self):
@@ -224,15 +239,16 @@ class VMToolkitWrapper:
             sim_sys.log_debug_stats()
         forces = ForceCompute(sim_sys)  
                                                 # handles all types of forces
-        if verbose:
-            print("constructing integrators")
-            sim_sys.log_debug_stats()
-        integrators = Integrate(sim_sys, forces)              # handles all integrators
         
         if verbose:
             print("constructing topology")
             sim_sys.log_debug_stats()
         topology = Topology(sim_sys)                             # handles all topology changes (T1, division, ingression)
+        
+        if verbose:
+            print("constructing integrators")
+            sim_sys.log_debug_stats()
+        integrators = Integrate(sim_sys, forces, topology)              # handles all integrators
         
         if verbose:
             print("constructing dumps")
@@ -377,7 +393,7 @@ class VMToolkitWrapper:
             raise ValueError("Unknown CELL force spec type for force id {} ... {}".format(force_id, force_spec))
         
     
-    def _configure_forces(self, vm_state, verbose=False):
+    def _setup_forces(self, vm_state, verbose=False):
         if verbose:
             print("Configuring forces")
         
@@ -418,15 +434,25 @@ class VMToolkitWrapper:
             else:
                 raise ValueError("Expecteed force '{}' to  either be instance of CellForce or VertexForce! {}".format(force_id, force_spec))
 
-    def _configure_integrators(self, dt, friction_gam, verbose=False):
+    def _setup_integrators(self, dt, friction_gam, verbose=False):
+        # if verbose:
+        #     print("Adding runge_kutta integrator")
+        # self._integrators.add('runge_kutta')
         if verbose:
-            print("Adding runge_kutta integrator")
-        self._integrators.add('runge_kutta')
+            print("Adding adaptive runge kutta integrator")
+        self._integrators.add("adaptive_dormand_prince_runge_kutta")
         
         if verbose:
             print("Setting dt={}, friction_gamma={}".format(dt, friction_gam))
         # self._integrators.set_dt(dt) # set time step
-        self._integrators.set_params("runge_kutta", {"gamma": friction_gam, "dt": dt})
+        # self._integrators.set_params("runge_kutta", {"gamma": friction_gam, "dt": dt})
+        self._integrators.set_params("adaptive_dormand_prince_runge_kutta", {
+            "gamma": friction_gam,
+            "error_allowed": 0.02,
+            # "dt": dt,
+            "init_dt": dt,
+        })
+        # self._integrators.set_flag("adaptive_dormand_prince_runge_kutta", "log_integrator_details", True);
         
         if verbose:
             print("Done configuring integrators")

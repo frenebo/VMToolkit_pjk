@@ -27,10 +27,12 @@ namespace VMTutorial
 
       IntegratorEuler(
         System& sys,
-        ForceCompute& fc
+        ForceCompute& fc,
+        Topology& top
       ) : Integrator{
           sys,
           fc,
+          top,
           Integrator::IntegrationType::MANUAL_TIMESTEP
         },
         _T{0.0},

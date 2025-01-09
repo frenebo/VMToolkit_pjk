@@ -10,7 +10,6 @@
 
 
 #include "integrator.hpp"
-
 #include <map>
 #include <stdexcept>
 
@@ -30,16 +29,22 @@ namespace VMTutorial
       
       IntegratorAdaptiveRungeKutta(
         System& sys,
-        ForceCompute& fc
+        ForceCompute& fc,
+        Topology& topology
       ) : Integrator{
             sys,
             fc,
+            topology,
             Integrator::IntegrationType::ADAPTIVE_TIMESTEP
           },
           _gamma_param{-1.0},
           _error_allowed_param{-1.0},
           _init_dt{-1.0},
           _current_dt{-1.0},
+          _log_integrator_stuff{false},
+          _log_runge_kutta_details{false},
+          _pbar_spinner_idx{0},
+          _pbar_width{40},
           
           
           // Butcher talbeau for the Runge-Kutta Dormand-Prince method
@@ -70,7 +75,7 @@ namespace VMTutorial
         // blah blah
       }
       
-      void run_for_time(double t_run, bool verbose);
+      void adaptive_run_for_time(double t_run, bool show_progress_bar, bool topological_change, bool verbose) override;
       
       void set_params(const params_type& params) override 
       { 
@@ -89,6 +94,17 @@ namespace VMTutorial
         }
       }
       
+      void set_flag(const string& flagname, bool flag_val) override
+      {
+        if (flagname == "log_integrator_details") {
+          _log_integrator_stuff = flag_val;
+        } else if (flagname == "log_runge_kutta_details") {
+          _log_runge_kutta_details = flag_val;
+        } else {
+          throw runtime_error("IntegratorAdaptiveRungeKutta::set_flag - unknown flagname " + flagname);
+        }
+      }
+      
       
     private:
       void _calc_instantaneous_velocities(vector<Vec>& vertex_vels_out, bool verbose) const;
@@ -96,16 +112,23 @@ namespace VMTutorial
       void _calculate_kvec(int kidx, double hstep, const vector<Vec> & init_positions, bool verbose);
       void _get_current_vtx_positions(vector<Vec>& vtx_positions_out);
       void _try_step(
+        double hstep, // time step size
         const vector<Vec>& init_vertex_positions,
         vector<Vec>& vtx_dr_out,
         vector<Vec>& vtx_errs_out,
         bool verbose
       );
       
+      void _update_progress_bar(double t_elapsed, double t_run, double current_tstep);
+      
       double _gamma_param;
       double _error_allowed_param;
       double _init_dt;
       double _current_dt;
+      bool _log_integrator_stuff;
+      bool _log_runge_kutta_details;
+      int _pbar_spinner_idx;
+      int _pbar_width;
       
       // These k values are cleared and recalculated every timestep as part of the runge-kutta algorithm
       vector<Vec> _k0;

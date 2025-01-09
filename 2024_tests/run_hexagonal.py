@@ -124,7 +124,7 @@ def run_hexagonal(args):
         tiss_topology=tiss_topology,
         current_state=tiss_init_state,
         sim_settings=SimulationSettings(
-            integrator_settings=IntegratorSettings(
+            integrator_settings=IntegratorSettings( # @TODO make integrator settings specify which integrator to use
                 vertex_friction_gamma=args.vertex_friction_gamma,
                 step_dt=args.step_dt,
             ),
@@ -172,11 +172,14 @@ def run_hexagonal(args):
     for i in range(args.n_checkpoints):
         ckpt_fp = "scratch/res{}.json".format(str(i).zfill(ckpt_strnum_nchars))
         vmstate_json = sim_model.vm_state_json()
+        
         with open(ckpt_fp, "w") as f:
             f.write(json.dumps(vmstate_json))
         
         checkpoint_fps.append(ckpt_fp)
-        sim_model.run_steps(args.ckpt_step_size, do_time_force_computation=True)
+        # sim_model.run_steps_manual_tstep(args.ckpt_step_size, do_time_force_computation=True)
+        sim_model.run_with_adaptive_tstep(args.ckpt_step_size * args.step_dt, do_time_force_computation=True, verbose=False)
+        
         if sim_model._check_topology_changed():
             print("TOP CHANGED")
     

@@ -29,10 +29,12 @@ namespace VMTutorial
       
       IntegratorRungeKutta(
         System& sys,
-        ForceCompute& fc
+        ForceCompute& fc,
+        Topology& top
       ) : Integrator{
           sys,
           fc,
+          top,
           Integrator::IntegrationType::MANUAL_TIMESTEP
         },
         _gamma{-1.0},

@@ -13,14 +13,25 @@ using std::endl;
 
 namespace VMTutorial
 {
-  void Simulation::run(int steps, bool topological_change, bool old_style, bool verbose)
+  void Simulation::run_time_adaptive(double runtime_tot, bool topological_change, bool verbose)
   {
-    // if (topological_change) {
-    //   throw runtime_error("Simulation::run - topological_change is not guaranteed to work, this code has changed a lot since that was last used.");
-    // }
+    if (verbose) {
+      cout << "Simulation::run_time_adaptive - running simulation for runtime_tot=" << runtime_tot << endl;
+    }
     
+    
+    // throw runtime_error("This should integrate T1 transitions into the integrator...");
+    
+    bool show_progress_bar=true;
+    _integ.run_time_adaptive(runtime_tot, show_progress_bar, topological_change, verbose);
+  }
+  
+  void Simulation::run_timestep_manual(int steps, bool topological_change, bool old_style, bool verbose)
+  {
     double progress = 0.0;
-    if (verbose) { cout << "Simulation::run - Running simulation for " << steps << " steps" << endl; }
+    if (verbose) {
+      cout << "Simulation::run_timestep_manual - Running simulation for " << steps << " steps" << endl;
+    }
     
     for (int i = sim_step; i < sim_step + steps; i++)
     {
@@ -49,14 +60,19 @@ namespace VMTutorial
         
       }
     }
+    
     if (this->print_freq > 0 && !old_style) {
       progress_bar(progress, " ");
     }
+    
     sim_step += steps;
+    
     if (this->print_freq > 0 && !old_style) {
       cout << " --> Completed " << sim_step << " simulation steps " << endl;  
     }
   }
+  
+  
 
   void Simulation::progress_bar(double progress, const string& end_of_line)
   {
@@ -82,7 +98,8 @@ namespace VMTutorial
           .def(py::init<System&,Integrate&,ForceCompute&,Topology&>())
           .def_readwrite("print_freq", &Simulation::print_freq)
           .def_readwrite("bar_width", &Simulation::bar_width)
-          .def("run", &Simulation::run, py::arg("steps"), py::arg("topological_change") = true, py::arg("old_style") = false, py::arg("verbose") = false)
+          .def("run_time_adaptive", &Simulation::run_time_adaptive, py::arg("runtime_tot"),  py::arg("topological_change") = true, py::arg("verbose") = false)
+          .def("run_timestep_manual", &Simulation::run_timestep_manual, py::arg("steps"), py::arg("topological_change") = true, py::arg("old_style") = false, py::arg("verbose") = false)
           .def("print_version", &Simulation::print_version);
   }  
 

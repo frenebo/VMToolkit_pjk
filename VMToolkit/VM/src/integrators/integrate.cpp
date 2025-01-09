@@ -22,11 +22,11 @@ namespace VMTutorial
     }
     
     if (name == "euler") {
-      this->add<IntegratorEuler, System&, ForceCompute&>(name, _sys, _force_compute);
+      this->add<IntegratorEuler, System&, ForceCompute&, Topology&>(name, _sys, _force_compute, _topology);
     } else if (name == "runge_kutta") {
-      this->add<IntegratorRungeKutta, System&, ForceCompute&>(name, _sys, _force_compute);
-    } else if (name == "adaptive_runge_kutta") {
-      this->add<IntegratorAdaptiveRungeKutta, System&, ForceCompute&>(name, _sys, _force_compute);
+      this->add<IntegratorRungeKutta, System&, ForceCompute&, Topology&>(name, _sys, _force_compute, _topology);
+    } else if (name == "adaptive_dormand_prince_runge_kutta") {
+      this->add<IntegratorAdaptiveRungeKutta, System&, ForceCompute&, Topology&>(name, _sys, _force_compute, _topology);
     } else  {
       throw runtime_error("Unknown integrator type : " + name + ".");
     }
@@ -37,8 +37,9 @@ namespace VMTutorial
   void export_Integrate(py::module& m)
   {
     py::class_<Integrate>(m, "Integrate")
-      .def(py::init<System&, ForceCompute&>(), py::arg("sys"), py::arg("fc"))
+      .def(py::init<System&, ForceCompute&, Topology&>(), py::arg("sys"), py::arg("fc"), py::arg("top"))
       .def("set_params", &Integrate::set_params)
+      .def("set_flag", &Integrate::set_flag)
       // .def("enable", &Integrate::enable)
       // .def("disable", &Integrate::disable)
       // .def("set_dt", &Integrate::set_dt)

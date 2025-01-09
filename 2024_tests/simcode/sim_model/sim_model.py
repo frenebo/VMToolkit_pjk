@@ -21,11 +21,20 @@ class SimModel:
     def vm_state_json(self):
         return self._vm_wrapper.vm_state_json()
         
-    def run_steps(self, n_steps, verbose=False, do_time_force_computation=False):
+    def run_steps_manual_tstep(self, n_steps, verbose=False, do_time_force_computation=False):
         if do_time_force_computation:
             self._vm_wrapper.start_force_compute_timers(verbose=verbose)
 
-        self._vm_wrapper.run_steps(n_steps, verbose=verbose)
+        self._vm_wrapper.run_steps_manual_tstep(n_steps, verbose=verbose)
+        if do_time_force_computation:
+            print("Force computation times (milliseconds):")
+            print(self._vm_wrapper.get_force_compute_timers_millis(verbose=verbose))
+            
+    def run_with_adaptive_tstep(self, time_run, verbose=False, do_time_force_computation=False):
+        if do_time_force_computation:
+            self._vm_wrapper.start_force_compute_timers(verbose=verbose)
+
+        self._vm_wrapper.run_with_adaptive_tstep(time_run, verbose=verbose)
         if do_time_force_computation:
             print("Force computation times (milliseconds):")
             print(self._vm_wrapper.get_force_compute_timers_millis(verbose=verbose))

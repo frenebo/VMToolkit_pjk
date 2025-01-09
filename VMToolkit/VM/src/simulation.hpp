@@ -42,7 +42,8 @@ namespace VMTutorial
     { 
 
     }
-    void run(int, bool = true, bool = true, bool = false);
+    void run_timestep_manual(int steps, bool topological_change, bool old_style, bool verbose);
+    void run_time_adaptive(double runtime_tot, bool topological_change, bool verbose);
     const string print_version() {
       return  "branch : "+static_cast<string>(XSTR(GIT_BRANCH))+" commit : "+static_cast<string>(XSTR(GIT_COMMIT_HASH));
      }

@@ -19,6 +19,8 @@ using std::runtime_error;
 using std::vector;
 using std::string;
 using std::map;
+using std::endl;
+using std::cout;
 
 
 namespace VMTutorial
@@ -27,8 +29,9 @@ namespace VMTutorial
   {
     public:
 
-      Integrate(System& sys, ForceCompute& fc) : _sys{sys},
-                                                _force_compute{fc}
+      Integrate(System& sys, ForceCompute& fc, Topology& top) : _sys{sys},
+                                                _force_compute{fc},
+                                                _topology{top}
       { 
 
       }
@@ -37,21 +40,44 @@ namespace VMTutorial
 
       Integrate(const ForceCompute&) = delete;
 
-      void timestep_manual(bool verbose=false)
+      void timestep_manual(bool verbose)
       {
         if (verbose) {
-          std::cout << "In Integrate::timestep_manual" << std::endl;
+          cout << "In Integrate::timestep_manual" << endl;
         }
-        // int n_integrators = 0;
+        
         for (const string& i : this->_integ_order) {
-          // if (this->_integrators_enabled.at(i)) {
           if (verbose) {
-            std::cout << "Going to apply a step for " << i << std::endl;
+            cout << "Going to apply a step for " << i << endl;
           }
-          this->factory_map[i]->timestep_manual(verbose);
-          // }
           
-          // n_integrators++;
+          this->factory_map[i]->timestep_manual(verbose);
+        }
+      }
+      
+      void run_time_adaptive(double runtime_tot, bool show_progress_bar, bool topological_change, bool verbose)
+      {
+        if (verbose) {
+          cout << "In Integrate::run_time_adaptive - running with runtime_tot=" << runtime_tot  << endl;
+        }
+      
+      
+        for (const string& i : this->_integ_order) {
+          if (verbose) {
+            cout << "Going to apply adaptive runtime for "<< i << endl;
+          }
+          
+          this->factory_map[i]->adaptive_run_for_time(runtime_tot, show_progress_bar, topological_change, verbose);
+        }
+        
+      }
+      
+      void set_flag(const string& iname, const string& flagname, bool flag_val)
+      {
+        if (this->factory_map.find(iname) != this->factory_map.end()) {
+          this->factory_map[iname]->set_flag(flagname, flag_val);
+        } else {
+          throw runtime_error("Integrate::set_flag - integrator with name could not be found: " + iname);
         }
       }
 
@@ -62,23 +88,6 @@ namespace VMTutorial
         else
           throw runtime_error("set_params: Integrator type " + iname + " is not used in this simulation.");
       }
-
-      // void enable(const string& iname)
-      // {
-      //   if (this->factory_map.find(iname) != this->factory_map.end()) {
-      //     this->_integrators_enabled[iname] = true;
-      //   } else {
-      //     throw runtime_error("enable: Integrator type " + iname + " is not used in this simulation."); 
-      //   }
-      // }
-
-      // void disable(const string& iname)
-      // {
-      //   if (this->factory_map.find(iname) != this->factory_map.end())
-      //     this->_integrators_enabled[iname] = false;
-      //   else
-      //     throw runtime_error("disable: Integrator type " + iname + " is not used in this simulation.");
-      // }
       
       void add_integrator(const string& iname);
 
@@ -86,6 +95,7 @@ namespace VMTutorial
 
       System& _sys;
       ForceCompute& _force_compute;
+      Topology& _topology;
       // double _dt;
       vector<string> _integ_order;  // Keeps track in which order integrators were added
       map<string,bool> _integrators_enabled;

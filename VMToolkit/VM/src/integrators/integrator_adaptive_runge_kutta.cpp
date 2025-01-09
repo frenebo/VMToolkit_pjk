@@ -17,7 +17,7 @@ namespace VMTutorial
   void IntegratorAdaptiveRungeKutta::_calc_instantaneous_velocities(vector<Vec>& vertex_vels_out, bool verbose) const
   {
     double mu = 1.0 / _gamma_param;    // mobility 
-    if (verbose) {
+    if (verbose || _log_runge_kutta_details) {
       cout << "  calculating instantaneous velocities with mu=1.0/_gamma_param=" << mu << endl;
     }
     
@@ -28,18 +28,6 @@ namespace VMTutorial
       vel.x *= mu;
       vel.y *= mu;
     }
-  }
-  
-  vector<Vec>& IntegratorAdaptiveRungeKutta::_getkvec(int kidx) {
-    if (kidx == 0) return _k0;
-    if (kidx == 1) return _k1;
-    if (kidx == 2) return _k2;
-    if (kidx == 3) return _k3;
-    if (kidx == 4) return _k4;
-    if (kidx == 5) return _k5;
-    if (kidx == 6) return _k6;
-    
-    throw runtime_error("invalid k idx" + std::to_string(kidx));
   }
   
   void IntegratorAdaptiveRungeKutta::_calculate_kvec(int kidx, double hstep, const vector<Vec> & init_positions, bool verbose) {
@@ -77,17 +65,7 @@ namespace VMTutorial
     _calc_instantaneous_velocities(kvec, verbose);
   }
   
-  void IntegratorAdaptiveRungeKutta::_get_current_vtx_positions(vector<Vec>& vtx_positions_out) {
-    int n_vertices = _sys.mesh().vertices().size();
-    
-    vtx_positions_out.clear();
-    vtx_positions_out.resize(n_vertices, Vec(0.0,0.0));
-    for (int vidx=0; vidx < n_vertices; vidx++) {
-      vtx_positions_out.at(vidx) = _sys.mesh().vertices().at(vidx).data().r;
-    }
-  }
-  
-  void IntegratorAdaptiveRungeKutta::run_for_time(double t_run, bool verbose)
+  void IntegratorAdaptiveRungeKutta::adaptive_run_for_time(double t_run,  bool show_progress_bar, bool topological_change, bool verbose)
   {
     const double safety_factor = 0.8; // Multiply the predicted dt by this safety factor so we hopefully undershoot the needed dt
     const int n_vertices = _sys.mesh().vertices().size();
@@ -103,17 +81,32 @@ namespace VMTutorial
     vector<Vec> init_vtx_positions;
     
     while (t_elapsed < t_run) {
+      if (topological_change) {
+        if (verbose || _log_integrator_stuff) {
+          cout << "  IntegratorAdaptiveRungeKutta::adaptive_run_for_time - topological change is enabled, so running topo changes before integrating." << endl;
+        }
+        
+        _topology.T1(verbose);
+      }
       double tremaining = t_run - t_elapsed;
       
-      if (verbose) {
+      
+      if (verbose || _log_integrator_stuff){
         cout << "  Storing current vertex positions as starting point for runge-kutta" << endl;
       }
       _get_current_vtx_positions(init_vtx_positions);
       
       bool error_acceptable = false;
+      double step_size_final = -1.0;
       
       while (! error_acceptable) {
-        _try_step(init_vtx_positions, vtx_dr_out, vtx_errs_out, verbose);
+        if (_current_dt > tremaining || _log_integrator_stuff) {
+          if (verbose) {
+            cout << "_current_dt is greater than tremaining - " << _current_dt << " > " << tremaining << " : setting current_dt to match tremaining" << endl;
+          }
+          _current_dt = tremaining;
+        }
+        _try_step(_current_dt, init_vtx_positions, vtx_dr_out, vtx_errs_out, verbose);
         
         double max_coord_error = 0.0;
         for (int vidx = 0; vidx < n_vertices; vidx++) {
@@ -123,13 +116,15 @@ namespace VMTutorial
           if (verr_y > max_coord_error) max_coord_error = verr_y;
         }
         
+        // Was the error small enough? If so we can move on
         if (max_coord_error > _error_allowed_param) {
           error_acceptable = false;
           
-          if (verbose) {
+          if (verbose || _log_integrator_stuff) {
             cout << "  Max error (" << max_coord_error << ") was greater than max allowable (" << _error_allowed_param << "), going to retry." << endl;
           }
         } else {
+          step_size_final = _current_dt;
           error_acceptable = true;
         }
         
@@ -137,15 +132,95 @@ namespace VMTutorial
         // a pointlessly small dt when it is not needed.
         double err_ratio_fifth_root = std::pow( (_error_allowed_param / max_coord_error)  , 1.0/5.0);
         double new_dt = safety_factor * _current_dt * err_ratio_fifth_root;
-        if (verbose) {
+        if (verbose || _log_integrator_stuff) {
           cout << "  calculating new dt - old dt=" << _current_dt << ", NEW dt=" << new_dt << endl;
         }
+        if ( (!error_acceptable) && (new_dt > _current_dt)) {
+          throw runtime_error("???????");
+        }
+        
         _current_dt = new_dt;
       }
+      
+      // Once the error has been made small enough, we save the vertex displacements and continue
+      for (int vidx = 0; vidx < n_vertices; vidx++) {
+        _sys.mesh().vertices().at(vidx).data().r += vtx_dr_out.at(vidx);
+      }
+      
+      t_elapsed += step_size_final;
+      
+      if (show_progress_bar) {
+        _update_progress_bar(t_elapsed, t_run, step_size_final);
+      }
     }
+    
+    if (show_progress_bar) {
+      _update_progress_bar(t_elapsed, t_run, _current_dt);
+    }
+    cout << endl;
+  }
+  
+  void IntegratorAdaptiveRungeKutta::_update_progress_bar(double t_elapsed, double t_run, double current_tstep)
+  {
+    double progress = t_elapsed / t_run;
+    
+    cout << "[";
+    int pos = static_cast<int>(round(_pbar_width * progress));
+    for (int i = 0; i < _pbar_width; ++i) {
+      if (i < pos) {
+        cout << "=";
+      } else if (i == pos || i == pos + 1) {
+        if (_pbar_spinner_idx == 0) {
+          cout << "|";
+        } else if (_pbar_spinner_idx == 1) {
+          cout << "/";
+        } else if (_pbar_spinner_idx == 2) {
+          cout << "-";
+        } else if (_pbar_spinner_idx == 3) {
+          cout << "\\";
+        }
+      } else {
+        cout << " ";
+      }
+    }
+    cout << "] " <<  static_cast<int>(round(progress * 100.0)) << "%" << ", tstep=" << current_tstep << "\r";
+    cout.flush();
+    
+    _pbar_spinner_idx++;
+    if (_pbar_spinner_idx > 3) _pbar_spinner_idx = 0;
+    
+    
+  // void Simulation::progress_bar(double progress, const string& end_of_line)
+  // {
+  //   cout << "[";
+  //   int pos = static_cast<int>(round(bar_width * progress));
+  //   for (int i = 0; i < bar_width; ++i) 
+  //   {
+  //     if (i < pos) 
+  //       cout << "=";
+  //     else if (i == pos) 
+  //       cout << ">";
+  //     else 
+  //       cout << " ";
+  //   }
+  //   cout << "] "  << static_cast<int>(round(progress * 100.0)) << "%" << end_of_line;
+  //   cout.flush();
+  // }
+
+
+    // if (this->print_freq > 0 && !old_style) {
+    //   progress_bar(progress, " ");
+    // }
+    
+    // sim_step += steps;
+    
+    // if (this->print_freq > 0 && !old_style) {
+    //   cout << " --> Completed " << sim_step << " simulation steps " << endl;  
+    // }
   }
   
   void IntegratorAdaptiveRungeKutta::_try_step(
+    double hstep,
     const vector<Vec>& init_vertex_positions,
     vector<Vec>& vtx_dr_out,
     vector<Vec>& vtx_errs_out,
@@ -181,7 +256,7 @@ namespace VMTutorial
     _k5.clear();
     _k6.clear();
     
-    const double hstep = _current_dt;
+    // const double hstep = _current_dt;
     
     // in order, evaluate each set of k coefficients
     _calculate_kvec(0, hstep, init_vertex_positions, verbose);
@@ -224,5 +299,28 @@ namespace VMTutorial
       
       vtx_errs_out.at(vidx) = err;
     }
+  }
+  
+  void IntegratorAdaptiveRungeKutta::_get_current_vtx_positions(vector<Vec>& vtx_positions_out) {
+    int n_vertices = _sys.mesh().vertices().size();
+    
+    vtx_positions_out.clear();
+    vtx_positions_out.resize(n_vertices, Vec(0.0,0.0));
+    for (int vidx=0; vidx < n_vertices; vidx++) {
+      vtx_positions_out.at(vidx) = _sys.mesh().vertices().at(vidx).data().r;
+    }
+  }
+  
+  
+  vector<Vec>& IntegratorAdaptiveRungeKutta::_getkvec(int kidx) {
+    if (kidx == 0) return _k0;
+    if (kidx == 1) return _k1;
+    if (kidx == 2) return _k2;
+    if (kidx == 3) return _k3;
+    if (kidx == 4) return _k4;
+    if (kidx == 5) return _k5;
+    if (kidx == 6) return _k6;
+    
+    throw runtime_error("invalid k idx" + std::to_string(kidx));
   }
 }
