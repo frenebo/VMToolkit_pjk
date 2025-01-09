@@ -37,11 +37,11 @@ namespace VMTutorial
     return vertex_vels;
   }
   
-  void IntegratorRungeKutta::step(bool verbose)
+  void IntegratorRungeKutta::timestep_manual(bool verbose)
   {
     if (verbose)
     {
-        cout << "IntegratorRungeKutta::step - executing with dt=" << _dt << endl;
+        cout << "IntegratorRungeKutta::timestep_manual - executing with dt=" << _dt << endl;
     }
     if (_dt <= 0)
     {

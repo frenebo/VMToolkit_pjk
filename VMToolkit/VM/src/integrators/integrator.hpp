@@ -24,19 +24,34 @@ namespace VMTutorial
 
   class Integrator 
   {
-
     public:
+      enum class IntegrationType { MANUAL_TIMESTEP, ADAPTIVE_TIMESTEP };
+
     
-      Integrator(System& sys, ForceCompute& fc) : _sys{sys}, 
-                                                  _force_compute{fc}
+      Integrator(System& sys, ForceCompute& fc, IntegrationType integ_type) : _sys{sys}, 
+                                                  _force_compute{fc},
+                                                  _integ_type{integ_type}
       { 
         
       }
       virtual ~Integrator() { }
       
-      virtual void step(bool verbose=false)
+      virtual void timestep_manual(bool verbose)
       {
-        throw runtime_error("Child has not implemented Integrator::step");
+        if (_integ_type == IntegrationType::ADAPTIVE_TIMESTEP) {
+          throw runtime_error("Integrator::timestep_manual - this is an ADAPTIVE_TIMESTEP integrator, should not be run with timestep_manual");
+        }
+        
+        throw runtime_error("Child has not implemented Integrator::timestep_manual");
+      }
+      
+      virtual void adaptive_run_for_time(double t_run, bool verbose)
+      {
+        if (_integ_type == IntegrationType::MANUAL_TIMESTEP) {
+          throw runtime_error("Integrator::adaptive_run_for_time - this is a MANUAL_TIMESTEP integrator, should not be run with adaptive_run_for_time");
+        }
+        
+        throw runtime_error("Child has not implemented Integrator::adaptive_run_for_time");
       }
       
       virtual void set_params(const params_type&)
@@ -44,16 +59,15 @@ namespace VMTutorial
         throw runtime_error("Child has not implemented Integrator::set_params");
       }
       
-      // void set_dt(double dt) { _dt = dt; }
-      // void rng_set(const RNGState& state) { _rng.set(state); }
-      // RNGState get_rng_state() { return _rng.get_state(); }
-
+      IntegrationType get_integration_type()
+      {
+        return _integ_type;
+      }
+      
     protected:
-      // double _dt;
-      // RNG _rng;
       System& _sys;              // system
       ForceCompute&   _force_compute;
-      // double _dt; // time step
+      IntegrationType _integ_type;
   };
 
 }

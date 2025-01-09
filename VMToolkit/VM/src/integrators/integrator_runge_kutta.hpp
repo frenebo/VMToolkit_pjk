@@ -30,13 +30,17 @@ namespace VMTutorial
       IntegratorRungeKutta(
         System& sys,
         ForceCompute& fc
-      ) : Integrator{sys, fc},
-          _gamma{-1.0},
-          _dt{-1.0}
+      ) : Integrator{
+          sys,
+          fc,
+          Integrator::IntegrationType::MANUAL_TIMESTEP
+        },
+        _gamma{-1.0},
+        _dt{-1.0}
       {
       }
       
-      void step(bool verbose) override;
+      void timestep_manual(bool verbose) override;
       
       void set_params(const params_type& params) override 
       { 

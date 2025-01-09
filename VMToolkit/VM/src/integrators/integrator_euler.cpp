@@ -12,10 +12,10 @@ using std::endl;
 
 namespace VMTutorial
 {
-  void IntegratorEuler::step(bool verbose)
+  void IntegratorEuler::timestep_manual(bool verbose)
   {
     if (verbose) {
-      cout << "IntegratorEuler::step" << endl;
+      cout << "IntegratorEuler::timestep_manual" << endl;
     }
     if (_dt <= 0)
     {

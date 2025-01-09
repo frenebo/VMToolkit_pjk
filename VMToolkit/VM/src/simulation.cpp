@@ -32,7 +32,7 @@ namespace VMTutorial
       }
       
       if (verbose) { cout << "doing integration" << endl; }
-      _integ.apply(verbose);
+      _integ.timestep_manual(verbose);
 
       if (this->print_freq > 0) 
       {

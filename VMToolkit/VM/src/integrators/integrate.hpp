@@ -37,10 +37,10 @@ namespace VMTutorial
 
       Integrate(const ForceCompute&) = delete;
 
-      void apply(bool verbose=false)
+      void timestep_manual(bool verbose=false)
       {
         if (verbose) {
-          std::cout << "In Integrate::apply" << std::endl;
+          std::cout << "In Integrate::timestep_manual" << std::endl;
         }
         // int n_integrators = 0;
         for (const string& i : this->_integ_order) {
@@ -48,7 +48,7 @@ namespace VMTutorial
           if (verbose) {
             std::cout << "Going to apply a step for " << i << std::endl;
           }
-          this->factory_map[i]->step(verbose);
+          this->factory_map[i]->timestep_manual(verbose);
           // }
           
           // n_integrators++;
