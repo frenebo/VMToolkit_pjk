@@ -25,7 +25,7 @@ namespace VMTutorial
 
     public:
 
-      IntegratorEuler(System& sys, ForceCompute& fc, int seed) : Integrator{sys, fc, seed},
+      IntegratorEuler(System& sys, ForceCompute& fc) : Integrator{sys, fc},
                                                                     _T{0.0},
                                                                     _gamma{-1.0},
                                                                     _Dr{0.0},

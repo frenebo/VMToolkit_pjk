@@ -27,10 +27,8 @@ namespace VMTutorial
 
     public:
     
-      Integrator(System& sys, ForceCompute& fc, int seed) : _sys{sys}, 
-                                                            _force_compute{fc}
-                                                            // _rng{RNG((seed >= 0) ? seed : std::chrono::system_clock::now().time_since_epoch().count())},
-                                                            // _dt{0.01}
+      Integrator(System& sys, ForceCompute& fc) : _sys{sys}, 
+                                                  _force_compute{fc}
       { 
         
       }

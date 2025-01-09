@@ -9,7 +9,7 @@ using std::cout;
 namespace VMTutorial
 {
     
-	Vertex &Mesh::get_vertex(int i)
+	Vertex &Mesh::get_vertex_reference(int i)
 	{
 		if ((i < 0) || (i > _vertices.size()))
 			throw runtime_error("Vertex index out of bounds.");
@@ -17,23 +17,23 @@ namespace VMTutorial
 			return _vertices[i];
 	}
 
-	HalfEdge &Mesh::get_halfedge(int i)
-	{
-		if ((i < 0) || (i > _halfedges.size()))
-			throw runtime_error("Junction index out of bounds.");
-		else
-			return _halfedges[i];
-	}
+	// HalfEdge &Mesh::get_halfedge(int i)
+	// {
+	// 	if ((i < 0) || (i > _halfedges.size()))
+	// 		throw runtime_error("Junction index out of bounds.");
+	// 	else
+	// 		return _halfedges[i];
+	// }
 
-	Edge &Mesh::get_edge(int i)
-	{
-		if ((i < 0) || (i > _edges.size()))
-			throw runtime_error("Junction index out of bounds.");
-		else
-			return _edges[i];
-	}
+	// Edge &Mesh::get_edge(int i)
+	// {
+	// 	if ((i < 0) || (i > _edges.size()))
+	// 		throw runtime_error("Junction index out of bounds.");
+	// 	else
+	// 		return _edges[i];
+	// }
 
-	Face &Mesh::get_face(int i)
+	Face &Mesh::get_face_reference(int i)
 	{
 		if ((i < 0) || (i > _faces.size()))
 			throw runtime_error("Face index out of bounds.");
@@ -43,7 +43,7 @@ namespace VMTutorial
 	}
 
 	// accessor functions
-	HEHandle Mesh::get_mesh_he(int i)
+	HEHandle Mesh::get_he(int i)
 	{
 		if ((i >= 0) && (i < _halfedges.size()))
 		{
@@ -55,7 +55,7 @@ namespace VMTutorial
 		}
 	}
 
-	VertexHandle Mesh::get_mesh_vertex(int i)
+	VertexHandle Mesh::get_vertex(int i)
 	{
 		if ((i >= 0) && (i < _vertices.size()))
 		{
@@ -67,7 +67,7 @@ namespace VMTutorial
 		}
 	}
 
-	EdgeHandle Mesh::get_mesh_edge(int i)
+	EdgeHandle Mesh::get_edge(int i)
 	{
 		if ((i >= 0) && (i < _edges.size()))
 		{
@@ -79,7 +79,7 @@ namespace VMTutorial
 		}
 	}
 
-	FaceHandle Mesh::get_mesh_face(int i)
+	FaceHandle Mesh::get_face(int i)
 	{
 		if ((i >= 0) && (i < _faces.size()))
 		{
@@ -111,9 +111,9 @@ namespace VMTutorial
 			if (verbose) { std::cout << "  vtx idx " << i << std::endl; }
 			int v1_id = vert_ids[i], v2_id = vert_ids[(i == (vert_ids.size() - 1)) ? 0 : i + 1];
 			
-			VertexHandle vh_from = this->get_mesh_vertex(v1_id);
+			VertexHandle vh_from = this->get_vertex(v1_id);
 			
-			VertexHandle vh_to = this->get_mesh_vertex(v2_id);
+			VertexHandle vh_to = this->get_vertex(v2_id);
 			
 			
 			HalfEdge he_new = HalfEdge(*this);
@@ -122,7 +122,7 @@ namespace VMTutorial
 			
 			_halfedges.back().set_idx(_halfedges.size() - 1);
 			
-			he = this->get_mesh_he(_halfedges.size() - 1);
+			he = this->get_he(_halfedges.size() - 1);
 			
 			if (i == 0) {
 				first_he = he->idx();
@@ -203,7 +203,7 @@ namespace VMTutorial
 	bool Mesh::T1(Edge &e, double edge_len, bool verbose)
 	{
 		if (! _edge_allowed_to_transition(e, verbose)) {
-			if (verbose) {
+			if (verbose || _log_topology_stuff) {
 				cout << "    Mesh::T1 - edge not allowed to transition, skipping T1 transition" << endl;
 			}
 			return false;
@@ -220,7 +220,9 @@ namespace VMTutorial
 		HEHandle hep = he->pair(); // Half-edge pair to he
 		
 		// if (ver)
-		cout << "n sides before for he and hep:" << he->face()->nsides << " , " << hep->face()->nsides << endl;
+		if (verbose || _log_topology_stuff) {
+			cout << "n sides before for he and hep:" << he->face()->nsides << " , " << hep->face()->nsides << endl;
+		}
 		
 		VertexHandle v1 = he->from(); // We define v1 and the vertex he points from
 		VertexHandle v2 = he->to();	// We define v2 and the vertex he points to
@@ -234,13 +236,17 @@ namespace VMTutorial
 		Vec new_v1_r = rc - 0.5 * edge_len * rot_l;
 		Vec new_v2_r = rc + 0.5 * edge_len * rot_l;
 		
-		cout << "Old v1,v2 r : " << v1->data().r << ", " << v2->data().r << endl;
+		if (verbose || _log_topology_stuff) {
+			cout << "Old v1,v2 r : " << v1->data().r << ", " << v2->data().r << endl;
+		}
 		
 		v1->data().r = new_v1_r;
 		v2->data().r = new_v2_r;
 		
-		cout << "New v1,v2 r : " << v1->data().r << ", " << v2->data().r << endl;
 		
+		if (verbose || _log_topology_stuff) {
+			cout << "New v1,v2 r : " << v1->data().r << ", " << v2->data().r << endl;
+		}
 		// print()
 
 		v1->set_he(he->idx());
@@ -251,72 +257,94 @@ namespace VMTutorial
 		HEHandle he3 = hep->prev();
 		HEHandle he4 = hep->next();
 		
-		cout << "Before topo change: " << endl;
-		cout << "he1->next(): " << he1->next()->idx() << endl;
-		cout << "he2->prev(): " << he2->prev()->idx() << endl;
-		cout << "he3->next(): " << he3->next()->idx() << endl;
-		cout << "he4->prev(): " << he4->prev()->idx() << endl;
 		
-		cout << "Target values: " << endl;
-		cout << "he2: " << he2->idx() << endl;
-		cout << "he1: " << he1->idx() << endl;
-		cout << "he4: " << he4->idx() << endl;
-		cout << "he3: " << he3->idx() << endl;
+		if (verbose || _log_topology_stuff) {
+			cout << "Before topo change: " << endl;
+			cout << "he1->next(): " << he1->next()->idx() << endl;
+			cout << "he2->prev(): " << he2->prev()->idx() << endl;
+			cout << "he3->next(): " << he3->next()->idx() << endl;
+			cout << "he4->prev(): " << he4->prev()->idx() << endl;
+			
+			cout << "Target values: " << endl;
+			cout << "he2: " << he2->idx() << endl;
+			cout << "he1: " << he1->idx() << endl;
+			cout << "he4: " << he4->idx() << endl;
+			cout << "he3: " << he3->idx() << endl;
+		}
 
 		he1->set_next(he2->idx());
 		he2->set_prev(he1->idx());
 		he3->set_next(he4->idx());
 		he4->set_prev(he3->idx());
-		cout << "After topo change: " << endl;
-		cout << "he1->next(): " << he1->next()->idx() << endl;
-		cout << "he2->prev(): " << he2->prev()->idx() << endl;
-		cout << "he3->next(): " << he3->next()->idx() << endl;
-		cout << "he4->prev(): " << he4->prev()->idx() << endl;
+		
+		
+		if (verbose || _log_topology_stuff) {
+			cout << "After topo change: " << endl;
+			cout << "he1->next(): " << he1->next()->idx() << endl;
+			cout << "he2->prev(): " << he2->prev()->idx() << endl;
+			cout << "he3->next(): " << he3->next()->idx() << endl;
+			cout << "he4->prev(): " << he4->prev()->idx() << endl;
+		}
 
 		he->set_next(he1->pair()->idx());
 		he->set_prev(he4->pair()->idx());
 		hep->set_next(he3->pair()->idx());
 		hep->set_prev(he2->pair()->idx());
 		
-		cout << "Finished setting he, hep next & prev" << endl;
-
+		if (verbose || _log_topology_stuff) {
+			cout << "Finished setting he, hep next & prev" << endl;
+		}
+		
 		he1->pair()->set_prev(he->idx());
 		he2->pair()->set_next(hep->idx());
 		he3->pair()->set_prev(hep->idx());
 		he4->pair()->set_next(he->idx());
 		
-		cout << "Finished ssetting he1, he2, he3, he4 pair prev and next" << endl;
-
+		
+		if (verbose || _log_topology_stuff) {
+			cout << "Finished ssetting he1, he2, he3, he4 pair prev and next" << endl;
+		}
 		he1->set_to(v2->id);
 		he1->pair()->set_from(v2->id);
 		
-		cout << "finished setting he1 to & he1 pair from" << endl;
-
+		if (verbose || _log_topology_stuff) {
+			cout << "finished setting he1 to & he1 pair from" << endl;
+		}
+		
 		he3->set_to(v1->id);
 		he3->pair()->set_from(v1->id);
 		
-		cout << "finished setting he3 to & he3 pair from" << endl;
-
+		
+		if (verbose || _log_topology_stuff) {
+			cout << "finished setting he3 to & he3 pair from" << endl;
+		}
+		
 		he->face()->set_he(he2->idx());
 		hep->face()->set_he(he4->idx());
 		
-		cout << "finihed setting he & hep face he" << endl;
-
+		
+		if (verbose || _log_topology_stuff) {
+			cout << "finihed setting he & hep face he" << endl;
+		}
+		
 		he->set_face(he1->pair()->face()->id);
 		hep->set_face(he2->pair()->face()->id);
 		
-		cout << "finished setting he & hep face" << endl;
-
+		if (verbose || _log_topology_stuff) {
+			cout << "finished setting he & hep face" << endl;
+		}
+		
 		he->face()->nsides = this->face_sides(*(he->face()));
 		hep->face()->nsides = this->face_sides(*(hep->face()));
 		
-		cout << "finished setting nsides" << endl;
-		
-		if (he->face()->nsides != 6) {
-			cout << "    nsides changed " << endl;
+		if (verbose || _log_topology_stuff) {
+			cout << "finished setting nsides" << endl;
+			
+			if (he->face()->nsides != 6) {
+				cout << "    nsides changed " << endl;
+			}
+			cout << "  successfully completed a t1 transition!" << endl;
 		}
-		
-		cout << "  successfully completed a t1 transition!" << endl;
 
 		return true;
 	}

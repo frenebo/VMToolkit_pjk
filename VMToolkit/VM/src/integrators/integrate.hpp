@@ -27,13 +27,12 @@ namespace VMTutorial
   {
     public:
 
-      Integrate(System& sys, ForceCompute& fc, int seed) : _sys{sys},
-                                                           _force_compute{fc},
-                                                          //  _dt{0.01}, 
-                                                           _seed{seed}
-                                                           { 
-          
-                                                           } 
+      Integrate(System& sys, ForceCompute& fc) : _sys{sys},
+                                                _force_compute{fc}
+      { 
+
+      }
+      
       ~Integrate() = default; 
 
       Integrate(const ForceCompute&) = delete;
@@ -88,7 +87,6 @@ namespace VMTutorial
       System& _sys;
       ForceCompute& _force_compute;
       // double _dt;
-      int _seed;
       vector<string> _integ_order;  // Keeps track in which order integrators were added
       map<string,bool> _integrators_enabled;
   };

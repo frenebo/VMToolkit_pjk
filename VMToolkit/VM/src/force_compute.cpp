@@ -57,6 +57,7 @@ namespace VMTutorial
 		if (verbose) {
 			cout << "ForceCompute::compute_and_apply_vertex_force - computing all forces" << endl;
 		}
+		tot_vertex_forces.clear();
 		tot_vertex_forces.resize(_sys.cmesh().cvertices().size(), Vec(0.0,0.0));
 		
 		bool do_time_computations = (_force_timers.size() > 1);

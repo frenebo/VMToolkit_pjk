@@ -22,7 +22,7 @@ namespace VMTutorial
     class Topology
     {
     public:
-        Topology(System &sys, int seed) : _sys{sys},
+        Topology(System &sys) : _sys{sys},
                                           _min_edge_len{-1.0},
                                           _new_edge_len{-1.0}
                                         //   _min_edge_len{0.02},

@@ -44,20 +44,11 @@ def make_forcing_field_rectangular(
         )
     ))
 
-@profile
-def do_stuff():
-    parser = argparse.ArgumentParser()
-    
-    parser.add_argument("--box_nsides_x", default=50,type=float, help="X size of tissue")
-    parser.add_argument("--box_nsides_y", default=50,type=float, help="Y size of tissue")
-    parser.add_argument("--field_strength", default=1.2, type=float, help="field strength")
-    
-    args = parser.parse_args()
-    
-    A0_model = 15
-    P0_model = 5
-    gamma = 1.0
-    kappa = 1.0
+def run_hexagonal(args):
+    A0_model = args.param_A0
+    P0_model = args.param_P0
+    gamma = args.param_gamma
+    kappa = args.param_kappa
     
     analytical_predictions = HexagonalModel().find_rest_size_of_hexagon(
         A_0=A0_model,
@@ -79,27 +70,26 @@ def do_stuff():
         box_lx=box_lx,
         box_ly=box_ly,
     )
-    tiss_topology, tiss_init_state = cm.build_vm_state()#verbose=True)
+    tiss_topology, tiss_init_state = cm.build_vm_state()
     
     tiss_init_state.forces()["perim_f_all"] = CellPerimeterForce(gamma=gamma, lam=P0_model*gamma)
     tiss_init_state.forces()["area_f_all"] = CellAreaForce(A0=A0_model, kappa=kappa)
     
-    field_size_multiplier = 0.1
+    field_size_multiplier = args.field_size_multiplier
+    
     tiss_init_state.forces()["left_forcing_field"] = make_forcing_field_rectangular(
-        xmin=2*field_size_multiplier*(-box_lx),
-        xmax=2*field_size_multiplier*(-box_lx)*0.0,
-        ymin=2*field_size_multiplier*(-box_ly),
-        ymax=2*field_size_multiplier*(box_ly),
-        # field_x=args.field_strength,
+        xmin=(1/2)*field_size_multiplier*(-box_lx),
+        xmax=(1/2)*field_size_multiplier*(-box_lx)*0.0,
+        ymin=(1/2)*field_size_multiplier*(-box_ly),
+        ymax=(1/2)*field_size_multiplier*(box_ly),
         field_x=0,
         field_y=args.field_strength,
-        # field_y=args.field_strength,
     )
     tiss_init_state.forces()["right_forcing_field"] = make_forcing_field_rectangular(
-        xmin=2*field_size_multiplier*(box_lx)*0.0,
-        xmax=2*field_size_multiplier*(box_lx),
-        ymin=2*field_size_multiplier*(-box_ly),
-        ymax=2*field_size_multiplier*(box_ly),
+        xmin=(1/2)*field_size_multiplier*(box_lx)*0.0,
+        xmax=(1/2)*field_size_multiplier*(box_lx),
+        ymin=(1/2)*field_size_multiplier*(-box_ly),
+        ymax=(1/2)*field_size_multiplier*(box_ly),
         field_x=0,
         field_y=-args.field_strength,
     )
@@ -135,16 +125,14 @@ def do_stuff():
         current_state=tiss_init_state,
         sim_settings=SimulationSettings(
             integrator_settings=IntegratorSettings(
-                vertex_friction_gamma=0.1,
-                step_dt=0.003,
+                vertex_friction_gamma=args.vertex_friction_gamma,
+                step_dt=args.step_dt,
             ),
             topology_settings=TopologySettings(
                 T1_transition_settings=T1TransitionSettings(
                     enabled=True,
-                    min_edge_len=rest_side_length*0.2,
-                    new_edge_len=rest_side_length*0.21,
-                    # min_edge_len=0.2,
-                    # new_edge_len=0.22,
+                    min_edge_len=rest_side_length*args.t1_min_edge_len_rel,
+                    new_edge_len=rest_side_length*args.t1_new_edge_len_rel,
                 )
             )
         )
@@ -180,22 +168,40 @@ def do_stuff():
         if (fn.startswith("res") or fn.startswith("vmst_")) and fn.endswith(".json"):
             os.remove(os.path.join(ckpt_dir, fn))
     
-    step_size = 90     # Step counter in terms of time units
-    N_checkpoints = 500
-    
-    for i in range(N_checkpoints):
-        ckpt_fp = "scratch/res{}.json".format(str(i).zfill(3))
+    ckpt_strnum_nchars = len(str(args.n_checkpoints - 1))
+    for i in range(args.n_checkpoints):
+        ckpt_fp = "scratch/res{}.json".format(str(i).zfill(ckpt_strnum_nchars))
         vmstate_json = sim_model.vm_state_json()
         with open(ckpt_fp, "w") as f:
             f.write(json.dumps(vmstate_json))
         
         checkpoint_fps.append(ckpt_fp)
-        sim_model.run_steps(step_size, do_time_force_computation=True)
+        sim_model.run_steps(args.ckpt_step_size, do_time_force_computation=True)
         if sim_model._check_topology_changed():
             print("TOP CHANGED")
-        #     step_size = 1
-            # break
     
 
+    
 if __name__ == "__main__":
-    do_stuff()
+    parser = argparse.ArgumentParser()
+    
+    parser.add_argument("--box_nsides_x", default=50,type=float, help="X size of tissue")
+    parser.add_argument("--box_nsides_y", default=50,type=float, help="Y size of tissue")
+    parser.add_argument("--field_strength", default=1.2, type=float, help="field strength")
+    parser.add_argument("--param_A0", default=15, type=float, help="A0 energy term")
+    parser.add_argument("--param_P0", default=5, type=float, help="A0 energy term")
+    parser.add_argument("--param_gamma", default=1.0, type=float, help="A0 energy term")
+    parser.add_argument("--param_kappa", default=1.0, type=float, help="A0 energy term")
+    parser.add_argument("--field_size_multiplier", default=0.4, type=float, help="Size of the field")
+    parser.add_argument("--step_dt", default=0.003, type=float, help="Size of each integration step")
+    parser.add_argument("--vertex_friction_gamma", default=0.1 ,type=float, help="Friction coefficient for vertex motion")
+    parser.add_argument("--t1_min_edge_len_rel", default=0.2, type=float, help="Minimum edge length for t1 transition, relative to edge length at rest")
+    parser.add_argument("--t1_new_edge_len_rel", default=0.21, type=float, help="New edge length after t1 transition, relative to edge length at rest")
+    parser.add_argument("--ckpt_step_size", default=90, type=int, help="Number of integration steps per checkpoint")
+    
+    
+    parser.add_argument("--n_checkpoints", default=500, type=int, help="Number of checkpoints to run")
+    
+    args = parser.parse_args()
+    
+    run_hexagonal(args)

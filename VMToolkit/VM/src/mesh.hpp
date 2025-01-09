@@ -11,13 +11,14 @@
 
 #include <vector>
 #include <iostream>
-
+#include <string>
 
 #include "types.hpp"
 #include "type_circulators.hpp"
 
 using std::runtime_error;
 using std::vector;
+using std::string;
 
 namespace VMTutorial
 {
@@ -25,7 +26,10 @@ namespace VMTutorial
 	class Mesh
 	{
 	public:
-		Mesh() {}
+		Mesh() : _log_topology_stuff{false}
+		{
+			//
+		}
 
 		//! Mesh setup functions
 		void add_vertex(const Vertex &v)
@@ -46,15 +50,15 @@ namespace VMTutorial
 		}
 
 		// accessor functions
-		HEHandle get_mesh_he(int);
-		VertexHandle get_mesh_vertex(int);
-		EdgeHandle get_mesh_edge(int);
-		FaceHandle get_mesh_face(int);
+		HEHandle get_he(int);
+		VertexHandle get_vertex(int);
+		EdgeHandle get_edge(int);
+		FaceHandle get_face(int);
 
-		Vertex &get_vertex(int);
-		HalfEdge &get_halfedge(int);
-		Edge &get_edge(int);
-		Face &get_face(int);
+		Vertex &get_vertex_reference(int);
+		// HalfEdge &get_halfedge(int);
+		// Edge &get_edge(int);
+		Face &get_face_reference(int);
 
 		vector<HalfEdge> &halfedges() { return _halfedges; }
 		vector<Vertex> &vertices() { return _vertices; }
@@ -117,14 +121,25 @@ namespace VMTutorial
 		void tidyup();	  // get the mesh in order (set boundary edges, outer faces, etc. )
 		// Vec get_centre(); // compute geomes
 		Vec get_face_centroid(const Face &);
+		
+		void set_logflag(string logname, bool new_val) {
+			if (logname == "topology") {
+				_log_topology_stuff = new_val;
+			} else {
+				throw runtime_error("Unknown log flag name " + logname);
+			}
+		}
 
 	private:
 		bool _edge_allowed_to_transition(const Edge &e, bool verbose) const;
+		
+		bool _log_topology_stuff;
 		
 		std::vector<HalfEdge> _halfedges;
 		std::vector<Vertex> _vertices;
 		std::vector<Edge> _edges;
 		std::vector<Face> _faces;
+		
 	};
 
 };

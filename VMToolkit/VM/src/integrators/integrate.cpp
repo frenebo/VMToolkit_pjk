@@ -8,6 +8,7 @@
 #include "integrate.hpp"
 #include "integrator_euler.hpp"
 #include "integrator_runge_kutta.hpp"
+#include "integrator_adaptive_runge_kutta.hpp"
 
 namespace VMTutorial
 {
@@ -21,9 +22,11 @@ namespace VMTutorial
     }
     
     if (name == "euler") {
-      this->add<IntegratorEuler, System&, ForceCompute&, int>(name, _sys, _force_compute, _seed);
+      this->add<IntegratorEuler, System&, ForceCompute&>(name, _sys, _force_compute);
     } else if (name == "runge_kutta") {
-      this->add<IntegratorRungeKutta, System&, ForceCompute&, int>(name, _sys, _force_compute, _seed);
+      this->add<IntegratorRungeKutta, System&, ForceCompute&>(name, _sys, _force_compute);
+    } else if (name == "adaptive_runge_kutta") {
+      this->add<IntegratorAdaptiveRungeKutta, System&, ForceCompute&>(name, _sys, _force_compute);
     } else  {
       throw runtime_error("Unknown integrator type : " + name + ".");
     }
@@ -34,7 +37,7 @@ namespace VMTutorial
   void export_Integrate(py::module& m)
   {
     py::class_<Integrate>(m, "Integrate")
-      .def(py::init<System&, ForceCompute&, int>())
+      .def(py::init<System&, ForceCompute&>(), py::arg("sys"), py::arg("fc"))
       .def("set_params", &Integrate::set_params)
       // .def("enable", &Integrate::enable)
       // .def("disable", &Integrate::disable)

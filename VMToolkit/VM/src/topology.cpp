@@ -29,7 +29,6 @@ namespace VMTutorial
             // cout << " attempting T1 TRANSITION for edge " << e.idx() << "- old len " << _sys.mesh().len(e) << "  ,new len " << _new_edge_len << endl;
           // }
           if (_sys.mesh().T1(e, _new_edge_len, verbose)) {
-            cout << "  T1 transition returned true - setting topology change to true" << endl;
             _sys.set_topology_change(true);
           }
         }
@@ -40,7 +39,7 @@ namespace VMTutorial
   void export_Topology(py::module& m)
   {
     py::class_<Topology>(m, "Topology")
-      .def(py::init<System&, int>(), py::arg("sys"),  py::arg("seed") = 0)
+      .def(py::init<System&>(), py::arg("sys"))
       .def("set_params", &Topology::set_params)
       ;
   }

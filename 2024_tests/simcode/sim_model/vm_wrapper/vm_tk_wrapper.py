@@ -227,7 +227,7 @@ class VMToolkitWrapper:
         if verbose:
             print("constructing integrators")
             sim_sys.log_debug_stats()
-        integrators = Integrate(sim_sys, forces, 0)              # handles all integrators
+        integrators = Integrate(sim_sys, forces)              # handles all integrators
         
         if verbose:
             print("constructing topology")
