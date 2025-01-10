@@ -12,7 +12,7 @@ class BoxSelector:
         
         vertex_ids_inside = []
         
-        for vid, vgeom in vm_state.current_state().geometry().vertices().items():
+        for vid, vgeom in vm_state.current_tissue_state().geometry().vertices().items():
             vx = vgeom.x()
             vy = vgeom.y()
             

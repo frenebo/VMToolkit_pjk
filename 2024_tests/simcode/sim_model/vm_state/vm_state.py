@@ -297,29 +297,52 @@ class TissueState:
             "cellgroups": cell_groups_json,
             "forces": forces_json,
         }
+        
 
 class IntegratorSettings:
     @staticmethod
     def from_json(jobj):
-        return IntegratorSettings(
+        if jobj["integrator_type"] == IntegratorSettingsDormandPrinceRungeKutta.integrator_type:
+            return IntegratorSettingsDormandPrinceRungeKutta.from_json(jobj)
+        else:
+            raise ValueError("Unknown integrator type {}".format(jobj["integrator_type"]))
+
+class IntegratorSettingsDormandPrinceRungeKutta(IntegratorSettings):
+    integrator_type = "dormand_prince_runge_kutta"
+    
+    @classmethod
+    def from_json(cls, jobj):
+        assert jobj["integrator_type"] == cls.integrator_type
+        
+        return IntegratorSettingsDormandPrinceRungeKutta(
             vertex_friction_gamma=jobj["vertex_friction_gamma"],
-            step_dt=jobj["step_dt"],
+            init_dt=jobj["init_dt"],
+            displacement_error_max=jobj["displacement_error_max"],
         )
     
-    def __init__(self, vertex_friction_gamma, step_dt):
+    def __init__(self, vertex_friction_gamma, init_dt, displacement_error_max):
         self._vertex_friction_gamma = vertex_friction_gamma
-        self._step_dt = step_dt
+        self._init_dt = init_dt
+        self._displacement_error_max = displacement_error_max
     
     def step_dt(self):
         return self._step_dt
     
-    def vtx_friction_gamma(self):
+    def vertex_friction_gamma(self):
         return self._vertex_friction_gamma
+    
+    def init_dt(self):
+        return self._init_dt
+    
+    def displacement_error_max(self):
+        return self._displacement_error_max
     
     def to_json(self):
         return {
-            "vertex_friction_gamma": self._vertex_friction_gamma,
-            "step_dt": self._step_dt,
+            "integrator_type": self.integrator_type,
+            "init_dt": self._init_dt,
+            "displacement_error_max": self._displacement_error_max,
+            "vertex_friction_gamma": self._vertex_friction_gamma
         }
 
 class T1TransitionSettings:
@@ -418,20 +441,20 @@ class VMState:
     def from_json(jobj):
         return VMState(
             tiss_topology=TissueTopology.from_json(jobj["topology"]),
-            current_state=TissueState.from_json(jobj["current_state"]),
+            current_tissue_state=TissueState.from_json(jobj["current_tissue_state"]),
             sim_settings=SimulationSettings.from_json(jobj["simsettings"]),
         )
         
-    def __init__(self, tiss_topology, current_state, sim_settings):
+    def __init__(self, tiss_topology, current_tissue_state, sim_settings):
         self._tissue_topology = tiss_topology
-        self._current_state = current_state
+        self._current_tissue_state = current_tissue_state
         self._simulation_settings = sim_settings
     
     def topology(self):
         return self._tissue_topology
     
-    def current_state(self):
-        return self._current_state
+    def current_tissue_state(self):
+        return self._current_tissue_state
     
     def sim_settings(self):
         return self._simulation_settings
@@ -439,6 +462,6 @@ class VMState:
     def to_json(self):
         return {
             "topology": self._tissue_topology.to_json(),
-            "current_state": self._current_state.to_json(),
+            "current_tissue_state": self._current_tissue_state.to_json(),
             "simsettings": self._simulation_settings.to_json(),
         }

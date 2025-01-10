@@ -16,6 +16,8 @@ from ..vm_state import (
     EFieldSpecConstantPolygonRegion,
     PolygonSpec,
     CellTopology,
+    IntegratorSettingsDormandPrinceRungeKutta,
+    IntegratorSettings,
 )
 
 class CppJsonTissueBuilder:
@@ -41,7 +43,7 @@ class CppJsonTissueBuilder:
         for vertex_id, vertex_top in vm_state.topology().vertex_topologies().items():
             vertex_index = vertex_id_to_cpp_idx[vertex_id]
             
-            v_geometry = vm_state.current_state().geometry().vertices()[vertex_id]
+            v_geometry = vm_state.current_tissue_state().geometry().vertices()[vertex_id]
             vtx_x = v_geometry.x()
             vtx_y = v_geometry.y()
             
@@ -127,8 +129,8 @@ class VMToolkitWrapper:
         self._sim_sys.read_input_from_jsonstring(cpp_state_json_str, verbose=verbose)
         
         self._setup_integrators(
-            dt=vm_state.sim_settings().integrator_settings().step_dt(),
-            friction_gam=vm_state.sim_settings().integrator_settings().vtx_friction_gamma(),
+            integrator_settings=vm_state.sim_settings().integrator_settings(),
+            verbose=verbose,
         )
         self._setup_forces(vm_state, verbose=verbose)
         
@@ -191,7 +193,7 @@ class VMToolkitWrapper:
         
         
         # Update vertex positions
-        state_vertex_geos = new_vmstate.current_state().geometry().vertices()
+        state_vertex_geos = new_vmstate.current_tissue_state().geometry().vertices()
         for vtx_idx, vtx_pos in enumerate(vtx_positions):
             vtx_id = self._ids_to_cpp_index_maps["vtx_indices_to_ids"][vtx_idx]
             
@@ -397,9 +399,9 @@ class VMToolkitWrapper:
         if verbose:
             print("Configuring forces")
         
-        cell_groups = vm_state.current_state().cell_groups()
-        vertex_groups = vm_state.current_state().vertex_groups()
-        tiss_forces = vm_state.current_state().forces()
+        cell_groups = vm_state.current_tissue_state().cell_groups()
+        vertex_groups = vm_state.current_tissue_state().vertex_groups()
+        tiss_forces = vm_state.current_tissue_state().forces()
         
         for force_id, force_spec in tiss_forces.items():
             if isinstance(force_spec, VertexForce):
@@ -434,26 +436,21 @@ class VMToolkitWrapper:
             else:
                 raise ValueError("Expecteed force '{}' to  either be instance of CellForce or VertexForce! {}".format(force_id, force_spec))
 
-    def _setup_integrators(self, dt, friction_gam, verbose=False):
-        # if verbose:
-        #     print("Adding runge_kutta integrator")
-        # self._integrators.add('runge_kutta')
+    def _setup_integrators(self, integrator_settings, verbose=False):
         if verbose:
-            print("Adding adaptive runge kutta integrator")
-        self._integrators.add("adaptive_dormand_prince_runge_kutta")
+            print("VMToolkitWrapper._setup_integrators - setting up an integrator")
         
-        if verbose:
-            print("Setting dt={}, friction_gamma={}".format(dt, friction_gam))
-        # self._integrators.set_dt(dt) # set time step
-        # self._integrators.set_params("runge_kutta", {"gamma": friction_gam, "dt": dt})
-        self._integrators.set_params("adaptive_dormand_prince_runge_kutta", {
-            "gamma": friction_gam,
-            "error_allowed": 0.02,
-            # "dt": dt,
-            "init_dt": dt,
-        })
-        # self._integrators.set_flag("adaptive_dormand_prince_runge_kutta", "log_integrator_details", True);
+        if not isinstance(integrator_settings, IntegratorSettings):
+            raise ValueError("Must supply integrator settings class to _setup_integrators - invalid value {}".format(integrator_settings))
         
-        if verbose:
-            print("Done configuring integrators")
+        if isinstance(integrator_settings, IntegratorSettingsDormandPrinceRungeKutta):
+            self._integrators.add("adaptive_dormand_prince_runge_kutta")
+            self._integrators.set_params("adaptive_dormand_prince_runge_kutta", {
+                "gamma": integrator_settings.vertex_friction_gamma(),
+                "error_allowed": integrator_settings.displacement_error_max(),
+                "init_dt": integrator_settings.init_dt(),
+            })
+        else:
+            raise ValueError("Unimplemented integrator setting type - {}".format(integrator_settings))
+        
     

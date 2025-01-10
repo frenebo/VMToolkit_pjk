@@ -164,7 +164,7 @@ namespace VMTutorial
   {
     double progress = t_elapsed / t_run;
     
-    cout << "[";
+    cout << " [";
     int pos = static_cast<int>(round(_pbar_width * progress));
     for (int i = 0; i < _pbar_width; ++i) {
       if (i < pos) {

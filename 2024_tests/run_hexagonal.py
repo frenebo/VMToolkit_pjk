@@ -2,7 +2,6 @@ import numpy as np
 import argparse
 import json
 import os
-from line_profiler import profile
 
 from simcode.theoretical_model.find_hexagon_rest_area import HexagonalModel, find_hexagon_rest_area
 from VMToolkit.config_builder.open.honeycomb_lattice import HoneycombLattice
@@ -16,6 +15,7 @@ from simcode.sim_model.vm_state import (
     CellAreaForce, CellPerimeterForce, ConstantVertexForce,  CellGroup, VertexGroup,
     ElectricForceOnCellBoundary, EFieldSpecConstantPolygonRegion, PolygonSpec,
     TopologySettings, T1TransitionSettings,
+    IntegratorSettingsDormandPrinceRungeKutta,
     
 )
 from simcode.sim_model.box_selector import BoxSelector
@@ -82,16 +82,17 @@ def run_hexagonal(args):
         xmax=(1/2)*field_size_multiplier*(-box_lx)*0.0,
         ymin=(1/2)*field_size_multiplier*(-box_ly),
         ymax=(1/2)*field_size_multiplier*(box_ly),
-        field_x=0,
-        field_y=args.field_strength,
+        field_x=args.field_strength,
+        field_y=0,
+        # field_y=args.field_strength,
     )
     tiss_init_state.forces()["right_forcing_field"] = make_forcing_field_rectangular(
         xmin=(1/2)*field_size_multiplier*(box_lx)*0.0,
         xmax=(1/2)*field_size_multiplier*(box_lx),
         ymin=(1/2)*field_size_multiplier*(-box_ly),
         ymax=(1/2)*field_size_multiplier*(box_ly),
-        field_x=0,
-        field_y=-args.field_strength,
+        field_x=-args.field_strength,
+        field_y=0,
     )
     # tiss_init_state.forces()["top_forcing_field"] = make_forcing_field_rectangular(
     #     ymin=2*field_size_multiplier*(-box_lx),
@@ -122,11 +123,12 @@ def run_hexagonal(args):
     
     vm_initial_state = VMState(
         tiss_topology=tiss_topology,
-        current_state=tiss_init_state,
+        current_tissue_state=tiss_init_state,
         sim_settings=SimulationSettings(
-            integrator_settings=IntegratorSettings( # @TODO make integrator settings specify which integrator to use
+            integrator_settings=IntegratorSettingsDormandPrinceRungeKutta(
                 vertex_friction_gamma=args.vertex_friction_gamma,
-                step_dt=args.step_dt,
+                init_dt=args.init_integrator_dt,
+                displacement_error_max=args.dormand_prince_max_error,
             ),
             topology_settings=TopologySettings(
                 T1_transition_settings=T1TransitionSettings(
@@ -169,6 +171,7 @@ def run_hexagonal(args):
             os.remove(os.path.join(ckpt_dir, fn))
     
     ckpt_strnum_nchars = len(str(args.n_checkpoints - 1))
+    
     for i in range(args.n_checkpoints):
         ckpt_fp = "scratch/res{}.json".format(str(i).zfill(ckpt_strnum_nchars))
         vmstate_json = sim_model.vm_state_json()
@@ -177,8 +180,7 @@ def run_hexagonal(args):
             f.write(json.dumps(vmstate_json))
         
         checkpoint_fps.append(ckpt_fp)
-        # sim_model.run_steps_manual_tstep(args.ckpt_step_size, do_time_force_computation=True)
-        sim_model.run_with_adaptive_tstep(args.ckpt_step_size * args.step_dt, do_time_force_computation=True, verbose=False)
+        sim_model.run_with_adaptive_tstep(args.ckpt_period, do_time_force_computation=True, verbose=False)
         
         if sim_model._check_topology_changed():
             print("TOP CHANGED")
@@ -186,7 +188,8 @@ def run_hexagonal(args):
 
     
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     
     parser.add_argument("--box_nsides_x", default=50,type=float, help="X size of tissue")
     parser.add_argument("--box_nsides_y", default=50,type=float, help="Y size of tissue")
@@ -196,12 +199,13 @@ if __name__ == "__main__":
     parser.add_argument("--param_gamma", default=1.0, type=float, help="A0 energy term")
     parser.add_argument("--param_kappa", default=1.0, type=float, help="A0 energy term")
     parser.add_argument("--field_size_multiplier", default=0.4, type=float, help="Size of the field")
-    parser.add_argument("--step_dt", default=0.003, type=float, help="Size of each integration step")
+    parser.add_argument("--ckpt_period", default=0.300, type=float, help="Size of each integration step")
     parser.add_argument("--vertex_friction_gamma", default=0.1 ,type=float, help="Friction coefficient for vertex motion")
     parser.add_argument("--t1_min_edge_len_rel", default=0.2, type=float, help="Minimum edge length for t1 transition, relative to edge length at rest")
     parser.add_argument("--t1_new_edge_len_rel", default=0.21, type=float, help="New edge length after t1 transition, relative to edge length at rest")
-    parser.add_argument("--ckpt_step_size", default=90, type=int, help="Number of integration steps per checkpoint")
     
+    parser.add_argument("--init_integrator_dt", default=0.005, type=float, help="Initial dt to try for the adaptive integrator")
+    parser.add_argument("--dormand_prince_max_error", default= 0.02, type=float,help="Max error (between fourth and fifth order runge kutta dormand prince results) to allow for a calcuation of a new vertex position.")
     
     parser.add_argument("--n_checkpoints", default=500, type=int, help="Number of checkpoints to run")
     

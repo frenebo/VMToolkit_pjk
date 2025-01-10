@@ -20,28 +20,28 @@ class ModelChangeReqApplicator:
     
     @classmethod
     def _applyreq_create_cell_group(cls, vm_state, creq):
-        preexisting_cellgroup_names = list(vm_state.current_state().cell_groups().keys())
+        preexisting_cellgroup_names = list(vm_state.current_tissue_state().cell_groups().keys())
         new_cgroup_name = creq.group_name()
         
         if new_cgroup_name in preexisting_cellgroup_names:
             raise ModelChangeFailedException("Cell group '{}' already exists".format(new_cgroup_name))
         
         new_state = cls._clonestate(vm_state)
-        new_state.current_state().cell_groups()[new_cgroup_name] = CellGroup(
+        new_state.current_tissue_state().cell_groups()[new_cgroup_name] = CellGroup(
             member_cells=[]
         )
         return new_state
         
     @classmethod
     def _applyreq_create_vertex_group(cls, vm_state, creq):
-        preexisting_vgroup_names = list(vm_state.current_state().vertex_groups().keys())
+        preexisting_vgroup_names = list(vm_state.current_tissue_state().vertex_groups().keys())
         new_vgroup_name = creq.group_name()
         
         if new_cgroup_name in preexisting_vgroup_names:
             raise ModelChangeFailedException("Vertex group '{}' already exists".format(new_vgroup_name))
         
         new_state =cls._clone_state(vm_state)
-        new_state.current_state().vertex_groups()[new_vgroup_name] = VertexGroup(
+        new_state.current_tissue_state().vertex_groups()[new_vgroup_name] = VertexGroup(
             vertex_ids=[]
         )
         return new_state
@@ -50,11 +50,11 @@ class ModelChangeReqApplicator:
     def _applyreq_add_cells_to_cell_group(cls, vm_state, creq):
         # preexisting
         cgrp_name = creq.group_name()
-        if cgrp_name not in list(vm_state.current_state().vertex_groups().keys()):
+        if cgrp_name not in list(vm_state.current_tissue_state().vertex_groups().keys()):
             raise ModelChangeFailedException("Cannot add cells to group '{}' - no group with such name found".format(
                 cgrp_name,
             ))
-        old_cids = new_state.current_state().cell_groups()[cgrp_name].cell_ids()
+        old_cids = new_state.current_tissue_state().cell_groups()[cgrp_name].cell_ids()
         new_cids = list(old_cids)
         for cid in creq.p("cell_ids"):
             # new_ci
@@ -62,7 +62,7 @@ class ModelChangeReqApplicator:
                 new_cis.append(cid)
         
         new_state =cls._clone_state(vm_state)
-        new_state.current_state().cell_groups()[cgrp_name] = CellGroup(
+        new_state.current_tissue_state().cell_groups()[cgrp_name] = CellGroup(
             member_cells=new_cids,
         )
         

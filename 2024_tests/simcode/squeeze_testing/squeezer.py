@@ -111,7 +111,7 @@ class SqueezerSim:
         
         vm_initial_state = VMState(
             tiss_topology=tiss_topology,
-            current_state=tiss_init_state,
+            current_tissue_state=tiss_init_state,
             sim_settings=SimulationSettings(
                 integrator_settings=IntegratorSettings(
                     vertex_friction_gamma=sim_friction_gamma,

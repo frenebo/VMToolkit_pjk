@@ -20,7 +20,7 @@ class TissueVisualizer:
         #     raise ValueError("Expected to find vertices in json['mesh'] object")
         
         vertices = {}
-        for vid, v in json_o["current_state"]["geometry"]["vertices"].items():
+        for vid, v in json_o["current_tissue_state"]["geometry"]["vertices"].items():
             # if v["erased"]:
             #     raise NotImplementedError()
                 
@@ -297,7 +297,7 @@ def build_fields_data(vmstate_fp):
         vmstate_obj = json.load(f)
     
     elec_fields = []
-    for fid, fspec in vmstate_obj['current_state']['forces'].items():
+    for fid, fspec in vmstate_obj['current_tissue_state']['forces'].items():
         if fspec['type'] == "electric_cell_boundary_force":
             elec_fields.append(fspec['field_spec'])
     print(elec_fields)
