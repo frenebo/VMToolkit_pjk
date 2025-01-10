@@ -3,6 +3,7 @@ import argparse
 import json
 import math
 import os
+from multiprocessing import Pool
 from dataclasses import dataclass
 
 from simcode.theoretical_model.regular_hexagon_sympy_model import RegHexagonalModel, find_regular_hexagonal_rests_area
@@ -345,8 +346,13 @@ def generate_battery_setup(args):
             root_outdir=args.output_dir,
         )
 
-def spawn_child(run_dirpath, run_config_json_fp):
-    print("\nSpawning child...")
+def spawn_child(run_dirpath, run_config_json_fp,  *xargs):
+    # print(run_dirpath)
+    # print(run_config_json_fp)
+    # print(xargs)
+    # print("adfsadfasdfs")
+    # raise NotImplementedError()
+    print("\nStarting as child...")
     # print(run_dirpath)
     print("Reading from: ", run_config_json_fp)
     with open(run_config_json_fp, "r") as f:
@@ -358,7 +364,7 @@ def spawn_child(run_dirpath, run_config_json_fp):
     run_hexagonal(experiment_config, outdir=run_dirpath)
 
 
-def run_battery(args):
+def run_battery(args,):
     if not os.path.exists(args.manifest_json):
         raise ValueError("Could not find '{}'".format(args.manifest_json))
     
@@ -371,6 +377,11 @@ def run_battery(args):
     if root_batterydir == "":
         root_batterydir = "."
     
+    if args.nproc <= 0:
+        raise ValueError("Invalid nproc value {}: must be positive".format(args.nproc))
+        
+    child_creation_args = []
+    
     for sub_exp in manifest_jobj["sub_experiments"]:
         # {'experiment_dirname': 'exp_0', 'conf_path': 'exp_0/exp_conf.json', 'ckpts_dir': 'exp_0/ckpts'}
         sub_exp["experiment_dirname"]
@@ -378,10 +389,14 @@ def run_battery(args):
         conf_json_path = os.path.join(root_batterydir, sub_exp["conf_path"])
         ckpts_absdir = os.path.join(root_batterydir, sub_exp["ckpts_dir"])
         
-        spawn_child(
-            run_dirpath=ckpts_absdir,
-            run_config_json_fp=conf_json_path,
-        )
+        child_creation_args.append([
+            ckpts_absdir,
+            conf_json_path,
+        ])
+        
+    with Pool(processes=args.nproc) as pool:
+        pool.starmap(spawn_child, child_creation_args)
+    
         # print(conf_json_path)
         # print(ckpts_absdir)
     
@@ -422,6 +437,7 @@ if __name__ == "__main__":
     
     battery_runner_parser = subparsers.add_parser("run_battery")
     battery_runner_parser.add_argument("--manifest_json", required=True, help="Json file with the manifest of the child experiments to be run. Generated with the generate_battery_setup command.")
+    battery_runner_parser.add_argument("--nproc", type=int, default=1, help="Number of processes to use in parallel")
     
     
     
