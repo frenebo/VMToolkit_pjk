@@ -16,9 +16,10 @@ import sympy
 """
 Everything here is adapted from the code in this notebook:
 2024_11_27_sijie_system.ipynb
-
+which repeated the previous caculations I did in terms of the energy paraameteers used by Sijie in his paper,
+and by most people working with vertex models.
 """
-class HexagonalModel:
+class RegHexagonalModel:
     @classmethod
     def create_area_symexp(
         cls,
@@ -122,9 +123,6 @@ class HexagonalModel:
             alpha,beta, A_r, P_r, K, Gam,
         )
         
-        
-
-        
                                                         
         self.tilde_mu_substitutions = [
             (alpha, alpha_til *mu),
@@ -135,9 +133,6 @@ class HexagonalModel:
             (K, K_til / mu**4),
         ]
         
-        # self.gradient_element_funcs = None
-        # self.hessian_mat_element_funcs = None
-        
         
         self.E_mu_subbed = self.energy_basic.subs(
             self.tilde_mu_substitutions
@@ -146,15 +141,11 @@ class HexagonalModel:
         ])
         
         
-
         self.E_til = (1/K_til) * self.E_mu_subbed.subs([
             ( Gam_til, Y * K_til ),
         ]).simplify()
         
-        
-    
-        
-
+        # Energy, if we scale vertically and horizontally by the same amount
         self.E_til_iso = self.E_til.subs([
             (alpha_til, xi_til),
             (beta_til, xi_til)
@@ -418,13 +409,7 @@ class HexagonalModel:
 
 
         ax.axhline(p0_crit,c='black',linestyle='--',label=r"$p_0=p_c \approx 3.722$")
-        # for p_val, colname in zip([3.71,3.87], ["white", "white"]):
-        #     ax.axhline(p_val,c='white',linestyle='--',linewidth=0.5,label=r"$p_0={:2f}$".format(p_val))
-        # ax.axhline(np.sqrt(24/np.sqrt(3)),c='black',linestyle='--',label=r"$p_0=p_c \approx 3.722$")
-        # ax[0].axhline(3.4641, c='black', linestyle='--')
-        # ax[0].axhline(3.4, c='black', linestyle='--')
-        # ax[0].axhline(3.4641, c='black', linestyle='--')
-
+        
         plt.subplots_adjust(right=0.7)
         ax.legend(loc='upper left', bbox_to_anchor=(1.3, 1.0))
         
@@ -435,11 +420,11 @@ class HexagonalModel:
     
 
 # @classmethod
-def find_hexagon_rest_area():
+def find_regular_hexagonal_rests_area():
     sympy.init_printing()
     
     
-    hex_m = HexagonalModel()
+    hex_m = RegHexagonalModel()
     print(sympy.Eq(
         sympy.Function('E')(hex_m.alpha, hex_m.beta, hex_m.A_r, hex_m.P_r, hex_m.K, hex_m.Gam),
         hex_m.energy_basic,

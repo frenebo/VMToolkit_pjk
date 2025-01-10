@@ -3,7 +3,7 @@ import numpy as np
 import os
 
 
-from ..theoretical_model.find_hexagon_rest_area import HexagonalModel, find_hexagon_rest_area
+from ..theoretical_model.find_regular_hexagonal_rests_area import RegHexagonalModel, find_regular_hexagonal_rests_area
 
 from ..tissue_builder.hexagonal import HexagonalCellMesh
 from ..sim_model.sim_model import SimModel
@@ -51,7 +51,7 @@ class SqueezerSim:
         field_zone_rel_width = env_setup_properties["forcing_field_relative_width"]
         
         
-        analytical_predictions = HexagonalModel().find_rest_size_of_hexagon(
+        analytical_predictions = RegHexagonalModel().find_rest_size_of_hexagon(
             A_0=A0_model,
             P_0=P0_model,
             K=kappa_force_coeff,
