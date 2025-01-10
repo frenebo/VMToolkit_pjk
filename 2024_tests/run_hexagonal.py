@@ -82,16 +82,16 @@ def run_hexagonal(args, outdir):
         xmax=(1/2)*field_size_multiplier*(-box_lx)*0.0,
         ymin=(1/2)*field_size_multiplier*(-box_ly),
         ymax=(1/2)*field_size_multiplier*(box_ly),
-        field_x=args.field_strength,
-        field_y=0,
+        field_y=args.field_strength,
+        field_x=0,
     )
     tiss_init_state.forces()["right_forcing_field"] = make_forcing_field_rectangular(
         xmin=(1/2)*field_size_multiplier*(box_lx)*0.0,
         xmax=(1/2)*field_size_multiplier*(box_lx),
         ymin=(1/2)*field_size_multiplier*(-box_ly),
         ymax=(1/2)*field_size_multiplier*(box_ly),
-        field_x=-args.field_strength,
-        field_y=0,
+        field_y=-args.field_strength,
+        field_x=0,
     )
     # tiss_init_state.forces()["top_forcing_field"] = make_forcing_field_rectangular(
     #     ymin=2*field_size_multiplier*(-box_lx),
