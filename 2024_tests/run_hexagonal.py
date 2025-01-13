@@ -6,7 +6,7 @@ import os
 from multiprocessing import Pool
 from dataclasses import dataclass
 
-from simcode.theoretical_model.regular_hexagon_sympy_model import RegHexagonalModel, find_regular_hexagonal_rests_area
+from simcode.theoretical_model.regular_hexagon_sympy_model import RegHexagonalModel
 from simcode.tissue_builder.hexagonal import HexagonalCellMesh
 from simcode.sim_model.sim_model import SimModel
 from simcode.sim_model.vm_state import (
@@ -48,11 +48,11 @@ def run_hexagonal(args, outdir):
     gamma = args.param_gamma
     kappa = args.param_kappa
     
-    analytical_predictions = RegHexagonalModel().find_rest_size_of_hexagon(
-        A_0=A0_model,
-        P_0=P0_model,
-        K=kappa,
-        Gamma=gamma,
+    analytical_predictions = RegHexagonalModel().find_elastic_props_of_hexagon(
+        A_0_num=A0_model,
+        P_0_num=P0_model,
+        K_num=kappa,
+        gamma_num=gamma,
     )
     
     rest_side_length = analytical_predictions["rest_side_length"]
@@ -94,31 +94,12 @@ def run_hexagonal(args, outdir):
         field_y=-args.field_strength,
         field_x=0,
     )
-    # tiss_init_state.forces()["top_forcing_field"] = make_forcing_field_rectangular(
-    #     ymin=2*field_size_multiplier*(-box_lx),
-    #     ymax=2*field_size_multiplier*(-box_lx)*0.1,
-    #     xmin=2*field_size_multiplier*(-box_ly),
-    #     xmax=2*field_size_multiplier*(box_ly),
-    #     field_x=0,
-    #     field_y=-args.field_strength*2.0,
-    #     # field_y=args.field_strength,
-    # )
-    # tiss_init_state.forces()["bottom_forcing_field"] = make_forcing_field_rectangular(
-    #     ymin=2*field_size_multiplier*(box_lx)*0.1,
-    #     ymax=2*field_size_multiplier*(box_lx),
-    #     xmin=2*field_size_multiplier*(-box_ly),
-    #     xmax=2*field_size_multiplier*(box_ly),
-    #     field_x=0,
-    #     field_y=args.field_strength*2.0,
-    # )
     
     tiss_init_state.cell_groups()["normal"].force_ids().extend([
         "perim_f_all",
         "area_f_all",
         "left_forcing_field",
         "right_forcing_field",
-        # "top_forcing_field",
-        # "bottom_forcing_field",
     ])
     
     vm_initial_state = VMState(
@@ -148,9 +129,7 @@ def run_hexagonal(args, outdir):
 
 
     # # #################################################################
-    # #
-    # # Create the initial configuration and read it
-    # #
+    # # Create the initial configuration and read it into the c++ model
     # # #################################################################
     print("Instantiating SimModel")
     sim_model = SimModel(verbose=False)
@@ -207,8 +186,74 @@ class ExperimentConfig:
     ckpt_period: int
     n_checkpoints: int
 
+def generate_vals_for_A0_P0(shapeparam_vals, param_kappa, param_gamma):
+    vals_for_A0_P0 = []
+    
+    # Generate a range of A0, P0 values that:
+    #  1. have the correct shape parameters specified
+    #  2. will have a rest area of 1.0
+    for shapep in shapeparam_vals:
+        A0_unscaled = 1
+        P0_unscaled = shapep * math.sqrt(A0_unscaled)
+        
+        unscaled_rest_side_length = RegHexagonalModel().find_elastic_props_of_hexagon(
+            A_0_num=A0_unscaled,
+            P_0_num=P0_unscaled,
+            K_num=param_kappa,
+            gamma_num=param_gamma,
+        )["rest_side_length"]
+        
+        unscaled_rest_area = ( (3 * (3**0.5))/2 ) * (unscaled_rest_side_length**2)
+        
+        # We scale these, so that the cells will have a rest area of 1. this makes simulations easier to compare
+        # side-by-side
+        A0_scaled = A0_unscaled / unscaled_rest_area
+        P0_scaled = P0_unscaled / math.sqrt(unscaled_rest_area)
+        
+        vals_for_A0_P0.append({
+            "A0": A0_scaled,
+            "P0": P0_scaled,
+            "shape_param": shapep,
+        })
+    
+    return vals_for_A0_P0
 
-
+def predict_shear_bulk_mod(
+    # field_strength_to_shearmod_ratios,
+    A0_val,
+    P0_val,
+    param_gamma,
+    param_kappa,
+):
+    analytical_predictions = RegHexagonalModel().find_elastic_props_of_hexagon(
+        A_0_num=A0_val,
+        P_0_num=P0_val,
+        K_num=param_kappa,
+        gamma_num=param_gamma,
+    )
+    
+    shear_modulus = analytical_predictions["shear_modulus"]
+    bulk_modulus=analytical_predictions["bulk_modulus"]
+    
+    return {
+        "shear_mod": shear_modulus,
+        "bulk_mod": bulk_modulus,
+    }
+    
+    # if shear_modulus is None:
+    #     raise ValueError("Shear modulus is none, for A0={A0}, P0={P0}, Kappa={K},Gam={Gam}.".format(
+    #         A0=A0_val,
+    #         P0=P0_val,
+    #         K=param_kappa,
+    #         Gam=param_gamma,
+    #     ))
+    
+    # print(" required ratios: {}".format(field_strength_to_shearmod_ratios))
+    # print("Shear modulus: {}".format(shear_modulus))
+    
+    # return [ ratio*shear_modulus for ratio in field_strength_to_shearmod_ratios ]
+    
+        
 def generate_manifest_experiment_structure_from_battery_config(jobj, root_outdir):
     # root_outdir 
     if not os.path.isdir(root_outdir):
@@ -230,60 +275,165 @@ def generate_manifest_experiment_structure_from_battery_config(jobj, root_outdir
         assert "shape_param_values" not in jobj["settings"]
         shapeparam_vals = None
     
+    do_scale_force_with_shear_modulus = "do_scale_force_with_shear_modulus" in jobj["settings"] and jobj["settings"]["do_scale_force_with_shear_modulus"]
+    do_scale_force_with_BULK_modulus = "do_scale_force_with_BULK_modulus" in jobj["settings"] and jobj["settings"]["do_scale_force_with_BULK_modulus"]
+    
+    if do_scale_force_with_shear_modulus and do_scale_force_with_BULK_modulus:
+        raise ValueError("Invalid config - force cannot be scaled with both bulk modulus and shear modulus at the same time")
+    
+    # if do_scale_force_with_shear_modulus
+    
+    if do_scale_force_with_shear_modulus:
+        # scale_fieldforce_with_shearmod = jobj["settings"]["scale_force_with_shear_modulus"]
+        field_strength_default_val = None
+        field_strength_to_shearmod_ratios = None
+        field_strength_to_shearmod_ratios = jobj["settings"]["field_strength_to_shearmod_ratios"]
+        
+        assert "field_strength" not in jobj["defaults"]
+        assert "field_strength_to_bulk_mod_ratios" not in jobj["settings"]
+        
+        assert isinstance(field_strength_to_shearmod_ratios, list)
+        for field_to_sh_rat in field_strength_to_shearmod_ratios:
+            assert isinstance(field_to_sh_rat, int) or isinstance(field_to_sh_rat, float)
+    elif do_scale_force_with_BULK_modulus:
+        field_strength_default_val = None
+        field_strength_to_shearmod_ratios = None
+        field_strength_to_BULKmod_ratios = jobj["settings"]["field_strength_to_bulk_mod_ratios"]
+        
+        assert "field_strength" not in jobj["defaults"]
+        assert "field_strength_to_shearmod_ratios" not in jobj["settings"]
+        
+        assert isinstance(field_strength_to_BULKmod_ratios, list)
+        for rat in field_strength_to_BULKmod_ratios:
+            assert isinstance(rat, int) or isinstance(rat, float)
+    else:
+        assert "field_strength_to_shearmod_ratios" not in jobj["settings"]
+        assert "field_strength_to_bulk_mod_ratios" not in jobj["settings"]
+        
+        field_strength_default_val = jobj["defaults"]["field_strength"]
+        field_strength_to_BULKmod_ratios = None
+        field_strength_to_shearmod_ratios = None
+    
+    do_scale_friction_with_shearmod = "do_scale_friction_with_shearmod" in jobj["settings"] and jobj["settings"]["do_scale_friction_with_shearmod"]
+    do_scale_friction_with_BULKmod = "do_scale_friction_with_BULKmod" in jobj["settings"] and jobj["settings"]["do_scale_friction_with_BULKmod"]
+    
+    if do_scale_friction_with_BULKmod and do_scale_friction_with_shearmod:
+        raise ValueError("Cannto scale friction with both bulk modulus and shear modulus - pick one")
+
+    if do_scale_friction_with_shearmod:
+        friction_gam_default_value = None
+        friction_to_BULKmod_ratio = None
+        friction_to_shearmod_ratio = jobj["settings"]["friction_to_shearmod_ratio"]
+        
+        assert "friction_to_BULKmod_ratio" not in jobj["settings"]
+        assert "vertex_friction_gamma" not in jobj["defaults"]
+    elif do_scale_friction_with_BULKmod:
+        friction_gam_default_value = None
+        friction_to_shearmod_ratio = None
+        friction_to_BULKmod_ratio = jobj["settings"]["friction_to_BULKmod_ratio"]
+        
+        assert "friction_to_shearmod_ratio" not in jobj["settings"]
+        assert "vertex_friction_gamma" not in jobj["defaults"]
+    else:
+        friction_gam_default_value = jobj["defaults"]["vertex_friction_gamma"]
+        friction_to_shearmod_ratio = None
+        friction_to_BULKmod_ratio = None
+        
+        assert "friction_to_shearmod_ratio" not in jobj["settings"]
+        assert "friction_to_BULKmod_ratio" not in jobj["settings"]
+        
+    
     param_gamma = jobj["defaults"]["param_gamma"]
     param_kappa = jobj["defaults"]["param_kappa"]
     
     
-    
-    ### Set up range of params
-    vals_for_A0_P0 = []
-    if shapeparam_vals is not None:
-        # Generate a range of A0, P0 values that:
-        #  1. have the correct shape parameters specified
-        #  2. will have a rest area of 1.0
-        for shapep in shapeparam_vals:
-            A0_unscaled = 1
-            P0_unscaled = shapep * math.sqrt(A0_unscaled)
-            
-            unscaled_rest_side_length = RegHexagonalModel().find_rest_size_of_hexagon(
-                A_0=A0_unscaled,
-                P_0=P0_unscaled,
-                K=param_kappa,
-                Gamma=param_gamma,
-            )["rest_side_length"]
-            
-            unscaled_rest_area = ( (3 * (3**0.5))/2 ) * (unscaled_rest_side_length**2)
-            
-            # We scale these, so that the cells will have a rest area of 1. this makes things easier to compare.
-            A0_scaled = A0_unscaled / unscaled_rest_area
-            P0_scaled = P0_unscaled / math.sqrt(unscaled_rest_area)
-            
-            vals_for_A0_P0.append({
-                "A0": A0_scaled,
-                "P0": P0_scaled,
-            })
+    ######
+    # Set up range of A0,P0 parameters
+    ######
+    if shapeparam_vals is None:
+        def_A0 = jobj["defaults"]["param_A0"]
+        def_P0 = jobj["defaults"]["param_P0"]
+        vals_for_A0_P0 = [{
+            "A0": def_A0,
+            "P0": def_P0,
+            "shape_param": def_P0/np.sqrt(def_A0),
+        }]
     else:
-        # Just use what was provided
-        vals_for_A0_P0.append({
-            "A0": jobj["defaults"]["param_A0"],
-            "P0": jobj["defaults"]["param_P0"],
-        })
+        vals_for_A0_P0 = generate_vals_for_A0_P0(
+            shapeparam_vals,
+            param_kappa=param_kappa,
+            param_gamma=param_gamma,
+        )
+    
+    vals_for_A0P0_field_strength = []
+    
+    for conf_A0P0 in vals_for_A0_P0:
+        A0_val = conf_A0P0["A0"]
+        P0_val = conf_A0P0["P0"]
+        
+        predres = predict_shear_bulk_mod(
+            # field_strength_to_shearmod_ratios,
+            A0_val=A0_val,
+            P0_val=P0_val,
+            param_gamma=param_gamma,
+            param_kappa=param_kappa,
+        )
+        shearmodulus_val = predres["shear_mod"]
+        bulkmodulus_val = predres["bulk_mod"]
+        
+        if do_scale_force_with_shear_modulus:
+            field_strength_values_fora0p0 = [ shearmodulus_val * rat for rat in field_strength_to_shearmod_ratios ]
+        elif do_scale_force_with_BULK_modulus:
+            field_strength_values_fora0p0 = [ bulkmodulus_val * rat for rat in field_strength_to_BULKmod_ratios ]
+        else:
+            field_strength_values_fora0p0 = [field_strength_default_val]
+        
+        for fstren_val in field_strength_values_fora0p0:
+            vals_for_A0P0_field_strength.append({
+                "A0": A0_val,
+                "P0": P0_val,
+                "field_strength": fstren_val,
+                "shear_mod": shearmodulus_val,
+                "shape_param": conf_A0P0["shape_param"],
+                "bulk_mod": bulkmodulus_val,
+            })
+        
+    # vals_for_
     
     all_experiment_configs = []
-    for pair_A0P0 in vals_for_A0_P0:
-        # print("Build config")
+    for conf_params in vals_for_A0P0_field_strength:
+        A0_val = conf_params["A0"]
+        P0_val = conf_params["P0"]
+        field_strength = conf_params["field_strength"]
+        
+        if do_scale_friction_with_shearmod:
+            friction_gam_val = friction_to_shearmod_ratio * conf_params["shear_mod"]
+        elif do_scale_friction_with_BULKmod:
+            friction_gam_val = friction_to_BULKmod_ratio * conf_params["bulk_mod"]
+        else:
+            friction_gam_val = friction_gam_default_value
+        # if ckpt_period_default_value is not None:
+        #     ckpt_period = ckpt_period_default_value
+        # else:
+        #     ckpt_period = (1.0/field_strength) * ckpt_period_to_inv_field_force_ratio
+        
         all_experiment_configs.append({
+            "metadata": {
+                "shape_param": conf_params["shape_param"],
+                "shear_mod_theory": conf_params["shear_mod"],
+                "bulk_mod_theory": conf_params["bulk_mod"]
+            },
             "params": {
                 "box_size_rel_x":               jobj["defaults"]["box_size_rel_x"],
                 "box_size_rel_y":               jobj["defaults"]["box_size_rel_y"],
-                "field_strength":           jobj["defaults"]["field_strength"],
-                "param_A0":                 pair_A0P0["A0"],
-                "param_P0":                 pair_A0P0["P0"],
+                "field_strength":           field_strength,
+                "param_A0":                 A0_val,
+                "param_P0":                 P0_val,
                 "param_gamma":              jobj["defaults"]["param_gamma"],
                 "param_kappa":              jobj["defaults"]["param_kappa"],
                 "field_size_multiplier":    jobj["defaults"]["field_size_multiplier"],
                 "ckpt_period":              jobj["defaults"]["ckpt_period"],
-                "vertex_friction_gamma":    jobj["defaults"]["vertex_friction_gamma"],
+                "vertex_friction_gamma":    friction_gam_val,
                 "t1_min_edge_len_rel":      jobj["defaults"]["t1_min_edge_len_rel"],
                 "t1_new_edge_len_rel":      jobj["defaults"]["t1_new_edge_len_rel"],
                 "init_integrator_dt":       jobj["defaults"]["init_integrator_dt"],
@@ -292,6 +442,13 @@ def generate_manifest_experiment_structure_from_battery_config(jobj, root_outdir
             },
         })
     
+    manifest_abspath = os.path.join(
+        root_outdir,
+        "manifest_experiments.json",
+    )
+    if os.path.exists(manifest_abspath):
+        raise Exception("Cannot generate experiments - manifest '{}' already exists".format(manifest_abspath))
+        
     # Generate a main json file to point to all of the child jsons
     manifest_jobj = {
         "sub_experiments": []
@@ -324,10 +481,6 @@ def generate_manifest_experiment_structure_from_battery_config(jobj, root_outdir
             "conf_path": os.path.join(exp_out_dirname, experiment_conf_fn),
             "ckpts_dir": os.path.join(exp_out_dirname, checkpoints_dirname),
         })
-    manifest_abspath = os.path.join(
-        root_outdir,
-        "manifest_experiments.json",
-    )
     with open(manifest_abspath, "w") as f:
         print("\nWriting manifest:  {}".format(manifest_abspath))
         json.dump(manifest_jobj, f, indent=4)
@@ -347,11 +500,6 @@ def generate_battery_setup(args):
         )
 
 def spawn_child(run_dirpath, run_config_json_fp,  *xargs):
-    # print(run_dirpath)
-    # print(run_config_json_fp)
-    # print(xargs)
-    # print("adfsadfasdfs")
-    # raise NotImplementedError()
     print("\nStarting as child...")
     # print(run_dirpath)
     print("Reading from: ", run_config_json_fp)
@@ -396,10 +544,6 @@ def run_battery(args,):
         
     with Pool(processes=args.nproc) as pool:
         pool.starmap(spawn_child, child_creation_args)
-    
-        # print(conf_json_path)
-        # print(ckpts_absdir)
-    
         
     
 if __name__ == "__main__":

@@ -208,7 +208,7 @@ def make_animated_tissue_plot(frame_data, fields_data):
     if len(fields_data) > len(field_colors):
         raise Exception("Need to add more colorss")
     for field_i, field_dat in enumerate(fields_data):
-        print(field_dat)
+        # print(field_dat)
         field_plot_col = field_colors[field_i]
         
         verts_x, verts_y = np.array(field_dat["vertices"],dtype=float).T
@@ -300,7 +300,7 @@ def build_fields_data(vmstate_fp):
     for fid, fspec in vmstate_obj['current_tissue_state']['forces'].items():
         if fspec['type'] == "electric_cell_boundary_force":
             elec_fields.append(fspec['field_spec'])
-    print(elec_fields)
+    # print(elec_fields)
     
     fields_data = []
     

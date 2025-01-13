@@ -80,6 +80,50 @@ class RegHexagonalModel:
         s_E = s_E_area + s_E_perim
         
         return s_E
+    
+    # @NOTE - supposed to be evaluated at equilibrium xi value!
+    @classmethod
+    def create_bulk_modulus_basic(
+        cls,
+        energy_regular_exp,
+        alpha,
+        beta,
+        xi_equilibrium,
+        A_r,
+        P_r,
+        K,
+        Gam
+    ):
+        xi = xi_equilibrium
+        # Energy, if alpha and beta scaling parameters are set equal to xi - isotropic shrink or stretch
+        energy_regular_iso = energy_regular_exp.subs([
+            (alpha, xi),
+            (beta, xi),
+        ])
+        
+        
+        # pressure = dE/dA 
+        # dA = Perimeter * d(center-to-edge distance) = 6*xi*d(xi*sqrt(3)/2) = 3*sqrt(3)*xi*dxi
+        # pressure = dE/(3*sqrt(3)*xi*dxi) = 1/(3*sqrt(3)*xi)*dE/dxi
+        
+        # We need dE/dgamma to find pressure
+        dE_regular_iso_dxi_symexp = energy_regular_iso.diff(xi).expand()
+        
+        pressure_reg_iso_exp = ( (-1) / (3 * sympy.sqrt(3) * xi) ) * dE_regular_iso_dxi_symexp
+        pressure_reg_iso_exp = pressure_reg_iso_exp.simplify()
+        
+        # Bulk modulus is defined as:
+        # B = -A d(pressure)/dA
+        # B = -A d(pressure)/dxi / (dA/dxi)
+        # Fining dA/dxi:
+        # A = (3*sqrt(3)/2)*xi^2
+        A_exp = ((3*xi*xi)*sympy.sqrt(3))/2
+        dA_dxi_exp = A_exp.diff(xi)
+        dpressure_dxi_reg_iso_exp = pressure_reg_iso_exp.diff(xi).simplify()
+        
+        B_bulkmod_reg_iso = (-1) * A_exp * dpressure_dxi_reg_iso_exp / dA_dxi_exp
+        
+        return B_bulkmod_reg_iso
         
     
     def __init__(self):
@@ -88,7 +132,23 @@ class RegHexagonalModel:
         K, Gam = sympy.symbols("K Gamma", real=True)
         mu = sympy.symbols("mu", real=True, positive=True)
         
-
+        Y = sympy.symbols("Y", real=True, positive=True)
+        
+        self.alpha = alpha
+        self.beta = beta
+        self.A_r = A_r
+        self.P_r = P_r
+        self.K = K
+        self.Gam = Gam
+        self.mu = mu
+        self.Y = Y
+        # self.xixi_equililbrium_sym = xi_equililbrium_sym
+        
+        self.energy_basic = self.create_energy_symexp(
+            alpha,beta, A_r, P_r, K, Gam,
+        )
+        
+        # Tilde variables make the math easier
 
         Gam_til, K_til, alpha_til =  sympy.symbols(
                                                         r"\tilde{\Gamma} \tilde{K} \tilde{\alpha}",
@@ -99,29 +159,15 @@ class RegHexagonalModel:
                                                         r"\tilde{\beta}  \tilde{P_r} \tilde{A_r}",
                                                         real=True,
                                                         positive=True)
-        Y = sympy.symbols("Y", real=True, positive=True)
         xi_til =  sympy.symbols(r"\tilde{\xi}", real=True, positive=True)
-        
-        self.alpha = alpha
-        self.beta = beta
-        self.A_r = A_r
-        self.P_r = P_r
-        self.K = K
-        self.Gam = Gam
-        self.mu = mu
+
         self.Gam_til = Gam_til
         self.K_til = K_til
         self.alpha_til = alpha_til
         self.beta_til = beta_til
         self.P_r_til = P_r_til
         self.A_r_til = A_r_til
-        self.Y = Y
         self.xi_til = xi_til
-
-
-        self.energy_basic = self.create_energy_symexp(
-            alpha,beta, A_r, P_r, K, Gam,
-        )
         
                                                         
         self.tilde_mu_substitutions = [
@@ -172,8 +218,62 @@ class RegHexagonalModel:
         
         self.get_gradient, self.get_hessian = self.generate_lambdified_grad_and_hessian_function()
         
+        self.get_bulk_modulus_numerical = self.generate_bulk_mod_numeric_function()
         
+        
+    def generate_bulk_mod_numeric_function(self):
+        xi_equilibrium_sym =  sympy.symbols(r"x_{eq}", real=True, positive=True)
+
+        
+        # @NOTE - supposed to be evaluated at equilibrium xi value!
+        bulk_modulus_basic_exp = self.create_bulk_modulus_basic(
+            energy_regular_exp=self.energy_basic,
+            alpha=self.alpha,
+            beta=self.beta,
+            xi_equilibrium=xi_equilibrium_sym,
+            A_r=self.A_r,
+            P_r=self.P_r,
+            K=self.K,
+            Gam=self.Gam
+        )
+        print("Bulk modulus:")
+        print(bulk_modulus_basic_exp)
+        lambdified_reg_vars = sympy.lambdify(
+            (
+                xi_equilibrium_sym,
+                self.A_r,
+                self.P_r,
+                self.K,
+                self.Gam,
+            ),
+            bulk_modulus_basic_exp
+        )
+        
+        def numeric_func(
+            xi_reg_eq_value,
             
+            gamma_reg_value,
+            K_reg_value,
+            
+            P_r_reg_value, # Defined in sijie's paper as p_0=P0/sqrt(A0).
+            A_r_reg_value,
+        ):
+            # print("Xi: {}".format(xi_reg_eq_value))
+            # print("gamma: {}".format(gamma_reg_value))
+            # print("K: {}".format(K_reg_value))
+            
+            # print("P_r: {}".format(P_r_reg_value))
+            # print("A_r: {}".format(A_r_reg_value))
+            return lambdified_reg_vars(
+                xi_reg_eq_value,
+                A_r_reg_value,
+                P_r_reg_value,
+                K_reg_value,
+                gamma_reg_value,
+            )
+            
+        return numeric_func
+        
         
     def find_xi_til_equilibrium_numeric(self, Y_value, P_r_til_value):
         cubic_coeffs = [coeff_f(Y_value, P_r_til_value) for coeff_f in self.dE_dxi_coeff_functions]
@@ -198,6 +298,8 @@ class RegHexagonalModel:
             raise ValueError("Failed to find real root - roots {}\n complex angles - {}".format(np_roots, np.angle(np_roots)))
         
         return minimum_roots[0]
+    
+    # def find_
 
     def generate_lambdified_grad_and_hessian_function(self):
         gradient_element_funcs = []
@@ -246,47 +348,79 @@ class RegHexagonalModel:
         
         return gradient_function, hessian_function
     
-    def find_rest_size_of_hexagon(
+    def find_elastic_props_of_hexagon(
         self,
-        A_0,
-        P_0,
-        K,
-        Gamma,
+        A_0_num,
+        P_0_num,
+        K_num,
+        gamma_num,
     ):
-        if A_0 <= 0:
-            raise ValueError("Invalid value A_0 = {} - must be positive".format(A_0))
-        if K <= 0:
-            raise ValueError("Invalid value K = {} - must be positive".format(K))
+        if A_0_num <= 0:
+            raise ValueError("Invalid value A_0_num = {} - must be positive".format(A_0_num))
+        if K_num <= 0:
+            raise ValueError("Invalid value K_num = {} - must be positive".format(K_num))
         
-        mu_val = np.sqrt(A_0) # Scaling factor to get tilded variables
-        
-        Y_val = Gamma / (K*A_0)
-        P_r_til_val = P_0 / mu_val
+        mu_val = np.sqrt(A_0_num) # Scaling factor to get tilded variables
         
         
-        eq_vals = self.get_important_vals_at_givenpoint(Y_val, P_r_til_val)
+        eq_vals = self.get_important_vals_at_givenpoint(
+            gamma_reg_value=gamma_num,
+            P_r_reg_value=P_0_num,
+            K_reg_value=K_num,
+            A_r_reg_value=A_0_num,
+        )
         
-        xi_til_eq = eq_vals["xi_til_eq"] # Equilibrium side length, in tilded variable
+        xi_til_eq     = eq_vals["xi_til_eq"] # Equilibrium side length, in tilded variable
         poisson_ratio = eq_vals["poisson_ratio"] # Same in either variable
+        bulk_modulus = eq_vals["bulk_modulus"]
         
         side_length_eq = xi_til_eq * mu_val
         rest_area = (3*np.sqrt(3)/2) * (side_length_eq ** 2)
         
-        # eigenvalues, eigenvectors = np.linalg.eig(eq_vals[""]
         if eq_vals["poisson_ratio"] > 1:
             raise Exception("Poisson ratio more than one, which means floppy regime - both A0 and P0 can be satisfied in floppy state...")
+        
+        # This is how it works in 3d:
+        # G_3d = shear modulus, B=bulk modulus
+        # 2G(1+nu)=3B(1-2nu)
+        #      3B(1-2nu)
+        # G_3d = -----------
+        #       (2+2nu)
+        # But in 2d...
+        # G = B*(1-nu)/(1+nu)
+        # Can redo derivation in landau lifshitz elasticity Ch1.Sec4
+        if poisson_ratio > 1:
+            raise ValueError("Poisson ratio greater than one!")
+        if poisson_ratio <= -1:
+            raise ValueError("Poisson ratio less than or equal to minus one!")
+            
+        shear_modulus = bulk_modulus*(1 - poisson_ratio) / (1 + poisson_ratio)
+        # if sshear
+        
+        print("Bulk modulus: {}".format(bulk_modulus))
+        print("Shear modulus: {}".format(shear_modulus))
+        print("Poisson ratio: {}".format(poisson_ratio))
         
         return {
             "rest_side_length": side_length_eq,
             "rest_area": rest_area,
             "poisson_ratio": poisson_ratio,
+            "bulk_modulus": bulk_modulus,
+            "shear_modulus": shear_modulus,
         }
 
     def get_important_vals_at_givenpoint(
         self,
-        Y_value, # Defined as Gamma/(K*A0).
-        P_r_tilvalue, # Defined in sijie's paper as p_0=P0/sqrt(A0).
+        gamma_reg_value,
+        P_r_reg_value,
+        K_reg_value,
+        A_r_reg_value,
     ):
+        mu_val = np.sqrt(A_r_reg_value)
+        # Finding equilibrium and poisson ratio is easier in tilded coordinates
+        Y_value = gamma_reg_value / (K_reg_value*A_r_reg_value)
+        P_r_tilvalue = P_r_reg_value / mu_val
+        
         xi_til_eq = self.find_xi_til_equilibrium_numeric(
             Y_value,
             P_r_tilvalue,
@@ -306,11 +440,27 @@ class RegHexagonalModel:
             P_r_tilvalue,
         )
         
+        # Change of variables back to normal, to calculate bulk modulus.
+        # Bulk moduus is not dimensionless, so we need to change back to do calculations
+        xi_nontilded_eq = xi_til_eq * mu_val
+        
+        bulk_modulus = self.get_bulk_modulus_numerical(
+            xi_reg_eq_value=xi_nontilded_eq,
+            
+            A_r_reg_value=A_r_reg_value,
+            P_r_reg_value=P_r_reg_value,
+            
+            gamma_reg_value=gamma_reg_value,
+            K_reg_value=K_reg_value,
+        )
+        
+        
         poisson_ratio = hessian_at_eq[0][1] / hessian_at_eq[1][1]
         
         return {
             "poisson_ratio": poisson_ratio,
             "xi_til_eq": xi_til_eq,
+            "bulk_modulus": bulk_modulus
         }
 
 
@@ -330,11 +480,7 @@ class RegHexagonalModel:
             Pr_t_max,
             200,
         )
-        # Pr_t_range = np.logspace(
-        #     np.log10(Pr_t_min),
-        #     np.log10(Pr_t_max),
-        #     100,
-        # )
+        
         Y_meshvals, Pr_t_meshvals = np.meshgrid(
             Y_range,
             Pr_t_range,
@@ -352,13 +498,6 @@ class RegHexagonalModel:
                 except Exception as e:
                     pass
                     poisson_val_meshvals[i][j]=np.nan
-                    # print("Y: {}".format(Y_meshvals[i][j]))
-                    # print("Pr_t: {}".format(Pr_t_meshvals[i][j]))
-                    # pass
-                    # print(str(e))
-                    # break
-                # except:
-                #     pass
 
 
         ## Plot stuff

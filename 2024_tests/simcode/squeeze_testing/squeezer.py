@@ -51,11 +51,11 @@ class SqueezerSim:
         field_zone_rel_width = env_setup_properties["forcing_field_relative_width"]
         
         
-        analytical_predictions = RegHexagonalModel().find_rest_size_of_hexagon(
-            A_0=A0_model,
-            P_0=P0_model,
-            K=kappa_force_coeff,
-            Gamma=gamma_force_coeff,
+        analytical_predictions = RegHexagonalModel().find_elastic_props_of_hexagon(
+            A_0_num=A0_model,
+            P_0_num=P0_model,
+            K_num=kappa_force_coeff,
+            gamma_num=gamma_force_coeff,
         )
         
         rest_side_length = analytical_predictions["rest_side_length"]

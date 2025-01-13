@@ -74,4 +74,5 @@ def do_stuff():
 
 
 if __name__ == "__main__":
+    raise Exception("Code in this has been broken due to other changes in the project")
     do_stuff()
