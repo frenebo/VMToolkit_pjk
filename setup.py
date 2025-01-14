@@ -9,8 +9,7 @@ setup(
     packages=[
         'VMToolkit',
         'VMToolkit.VM',
-        'VMToolkit.old_config_builder',
-        'VMToolkit.old_config_builder.periodic',
+        'VMToolkit.visualizer',
         ],
     cmake_install_dir='VMToolkit/VM',
     python_requires=">=3.8",

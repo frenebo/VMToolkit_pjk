@@ -92,7 +92,9 @@ namespace VMSim
 			return *this;
 		}
 
-		const reference __next__() 
+		// const reference __next__() 
+		
+		reference __next__() 
 		{
 			if (_isEnd) 
 			{

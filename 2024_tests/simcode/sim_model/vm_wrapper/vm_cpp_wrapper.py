@@ -71,7 +71,7 @@ class CppJsonTissueBuilder:
         }
 
 
-class VMToolkitWrapper:
+class VMCppWrapper:
     @staticmethod
     def _make_ids_to_cpp_index_maps(vm_state):
         cell_ids_to_idx = {}
@@ -120,7 +120,7 @@ class VMToolkitWrapper:
         if self._tissue_initialized:
             raise Exception("Cannnot initialize from vm state, when tissue has already been initialized!")
             
-        self._ids_to_cpp_index_maps = VMToolkitWrapper._make_ids_to_cpp_index_maps(vm_state)
+        self._ids_to_cpp_index_maps = VMCppWrapper._make_ids_to_cpp_index_maps(vm_state)
         cpp_state_json_str = json.dumps(CppJsonTissueBuilder.build_json_obj_for_vmtoolkit_loader(
             vm_state=vm_state,
             vertex_id_to_cpp_idx=self._ids_to_cpp_index_maps["vtx_ids_to_idx"],
@@ -165,7 +165,7 @@ class VMToolkitWrapper:
         
         
         if verbose:
-            print("(python) VMToolkitWrapper.run_with_adaptive_tstep - about to run for telapsed={}".format(time_run))
+            print("(python) VMCppWrapper.run_with_adaptive_tstep - about to run for telapsed={}".format(time_run))
         
         self._simulation.run_time_adaptive(runtime_tot=time_run, topological_change=self._topological_changes_enabled, verbose=verbose)
         self._update_vm_state_from_cpp_vm()
@@ -438,7 +438,7 @@ class VMToolkitWrapper:
 
     def _setup_integrators(self, integrator_settings, verbose=False):
         if verbose:
-            print("VMToolkitWrapper._setup_integrators - setting up an integrator")
+            print("VMCppWrapper._setup_integrators - setting up an integrator")
         
         if not isinstance(integrator_settings, IntegratorSettings):
             raise ValueError("Must supply integrator settings class to _setup_integrators - invalid value {}".format(integrator_settings))

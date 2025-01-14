@@ -7,6 +7,13 @@ Everything here is adapted from the code in this notebook:
 2024_11_27_sijie_system.ipynb
 which repeated the previous caculations I did in terms of the energy paraameteers used by Sijie in his paper,
 and by most people working with vertex models.
+
+This model finds the equilibrium size of a regular hexagon cell, then finds shear/bulk moduli, and other elastic
+properties in the linear regime (e.g. small deformations in x and y.)
+
+Note: this model ONLY allows scaling along x and y axis - so non-affine deformations are NOT allowed.
+A more complete model would allow vertices more freedom to deform, beyond infinitesimal affine deformations
+from the regular hexagon it starts at.
 """
 class RegHexagonalModel:
     @classmethod
@@ -553,8 +560,8 @@ class RegHexagonalModel:
     
     
 
-# @classmethod
 def find_regular_hexagonal_rests_area():
+    print("This function hasn't been tested in a while...")
     sympy.init_printing()
     
     
@@ -602,6 +609,3 @@ def find_regular_hexagonal_rests_area():
     
     hex_m.plot_values_of_Y_and_Pr_til()
     
-# %matplotlib widget
-
-

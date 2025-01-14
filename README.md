@@ -1,4 +1,3 @@
-![alt text](VMTutorial.png)
 
 # A Fork of Rastko Sknepnek's vertex model tutorial repo
 

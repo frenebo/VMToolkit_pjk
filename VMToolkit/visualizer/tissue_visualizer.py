@@ -328,12 +328,15 @@ def build_fields_data(vmstate_fp):
 
 
 
-def make_plotly_visualizer(tiss_ckpt_fps, init_vmstate_fp, vertices_to_highlight=None):
+def make_plotly_visualizer(tiss_ckpt_fps, init_vmstate_fp, vertices_to_highlight=None, janky_transitions=True):
     checkpoint_objs = []
     for ckpt_fp in tiss_ckpt_fps:
         with open(ckpt_fp, "r") as f:
             ckpt_obj = json.load(f)
         checkpoint_objs.append(ckpt_obj)
+    
+    if not janky_transitions:
+        raise ValueError("Not having janky transitions is not supported")
         
     
     frame_data = build_framedata(checkpoint_objs, vertices_to_highlight=vertices_to_highlight)

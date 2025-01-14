@@ -8,10 +8,6 @@ from simcode.sim_model.sim_model import SimModel
 from simcode.squeeze_testing.squeezer import build_squeezer_model
 
 def do_stuff():
-    # parser = argparse.ArgumentParser()
-    
-    # args = parser.parse_args()
-    
     
     vm_initial_state = build_squeezer_model(
         tissue_cell_properties={

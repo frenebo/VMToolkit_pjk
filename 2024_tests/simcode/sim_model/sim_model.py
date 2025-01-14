@@ -1,9 +1,7 @@
 import json
 
-from .vm_wrapper.vm_tk_wrapper import VMToolkitWrapper
+from .vm_wrapper import VMCppWrapper
 from .vm_state import VMState
-from .model_change_requests import ModelChangeRequest
-from .model_change_req_applicator import ModelChangeReqApplicator
 
 
 
@@ -12,7 +10,7 @@ from .model_change_req_applicator import ModelChangeReqApplicator
 # the vertex model and the cass that controls it should only care about the forces for each individual vertex.
 class SimModel:
     def __init__(self, verbose):
-        self._vm_wrapper = VMToolkitWrapper(verbose=verbose)
+        self._vm_wrapper = VMCppWrapper(verbose=verbose)
     
     def load_from_json_state(self, vm_state_json, verbose=False):
         vm_state = VMState.from_json(vm_state_json)
@@ -43,14 +41,3 @@ class SimModel:
         return self._vm_wrapper._check_topology_changed()
         
     
-    def process_model_change_req(self, model_change_req):
-        assert isinstance(model_change_req, ModelChangeRequest)
-        
-        raise NotImplementedError()
-        # try:
-        #     ModelChangeReqApplicator.apply_request_to_vm_state(self._last_vm_state, model_change_req)
-        # except:
-        #     print("Failed to apply model change rquest to current vm state.")
-        #     print("Model change req: {}".format(model_change_req))
-        #     print("Model change req to json: {}".format(model_change_req.to_json()))
-        #     raise
