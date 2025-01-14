@@ -15,7 +15,7 @@ Note: this model ONLY allows scaling along x and y axis - so non-affine deformat
 A more complete model would allow vertices more freedom to deform, beyond infinitesimal affine deformations
 from the regular hexagon it starts at.
 """
-class RegHexagonalModel:
+class TheoreticalRegularHexModel:
     @classmethod
     def create_area_symexp(
         cls,
@@ -565,7 +565,7 @@ def find_regular_hexagonal_rests_area():
     sympy.init_printing()
     
     
-    hex_m = RegHexagonalModel()
+    hex_m = TheoreticalRegularHexModel()
     print(sympy.Eq(
         sympy.Function('E')(hex_m.alpha, hex_m.beta, hex_m.A_r, hex_m.P_r, hex_m.K, hex_m.Gam),
         hex_m.energy_basic,

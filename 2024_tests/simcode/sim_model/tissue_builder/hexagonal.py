@@ -2,14 +2,13 @@ import math
 import numpy as np
 import json
 
-from ..sim_model.vm_state import (
+from ..vm_state import (
     VertexTopology, VertexGeometry, CellTopology, TissueTopology,
     TissGeometry, TissueState, CellGroup, VertexGroup,
 )
 
+class HexagonalCellMeshBuilder:
 
-class HexagonalMeshBoxBuilder:
-    
     @classmethod
     def _generate_cell_row_xpositions(cls, side_length, cell_row_idx, num_cell_rows, num_cell_columns, verbose=False):
         assert num_cell_rows % 2 == 1, 'n cell rows should be odd'
@@ -336,7 +335,6 @@ class HexagonalMeshBoxBuilder:
     
     
 
-class HexagonalCellMesh:
     @classmethod
     def _angle_subtract(cls, angle1, angle2):
         """ Assumes angle1 and angle 2 are between 0 and 2*pi """
@@ -486,7 +484,7 @@ class HexagonalCellMesh:
         self._build_cells(verbose=verbose)
     
     def _build_cells(self,verbose=False):
-        tissue_box = HexagonalMeshBoxBuilder.build_hex_tissue(self.side_length, self.box_lx, self.box_ly, verbose=verbose)    
+        tissue_box = self.build_hex_tissue(self.side_length, self.box_lx, self.box_ly, verbose=verbose)    
         self.cells_map, self.vertices_map = tissue_box["cells_map"], tissue_box["vertices_map"]
         
         if verbose:

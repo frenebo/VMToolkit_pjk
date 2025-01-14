@@ -6,8 +6,8 @@ import os
 from multiprocessing import Pool
 from dataclasses import dataclass
 
-from simcode.theoretical_model.regular_hexagon_sympy_model import RegHexagonalModel
-from simcode.tissue_builder.hexagonal import HexagonalCellMesh
+from simcode.theoretical_model.regular_hexagon_sympy_model import TheoreticalRegularHexModel
+from simcode.sim_model.tissue_builder.hexagonal import HexagonalCellMeshBuilder
 from simcode.sim_model.sim_model import SimModel
 from simcode.sim_model.vm_state import (
     VMState, SimulationSettings, IntegratorSettings, 
@@ -70,7 +70,7 @@ def run_experiment(
     
     ckpt_period = args.ckpt_period
     
-    analytical_predictions = RegHexagonalModel().find_elastic_props_of_hexagon(
+    analytical_predictions = TheoreticalRegularHexModel().find_elastic_props_of_hexagon(
         A_0_num=A0_model,
         P_0_num=P0_model,
         K_num=kappa,
@@ -88,7 +88,7 @@ def run_experiment(
     box_lx = box_size_rel_x*math.sqrt(rest_area)
     box_ly = box_size_rel_y*math.sqrt(rest_area)
     
-    cm = HexagonalCellMesh(
+    cm = HexagonalCellMeshBuilder(
         side_length=rest_side_length,
         box_lx=box_lx,
         box_ly=box_ly,
@@ -216,7 +216,7 @@ def generate_vals_for_A0_P0(shapeparam_vals, param_kappa, param_gamma):
         A0_unscaled = 1
         P0_unscaled = shapep * math.sqrt(A0_unscaled)
         
-        unscaled_rest_side_length = RegHexagonalModel().find_elastic_props_of_hexagon(
+        unscaled_rest_side_length = TheoreticalRegularHexModel().find_elastic_props_of_hexagon(
             A_0_num=A0_unscaled,
             P_0_num=P0_unscaled,
             K_num=param_kappa,
@@ -245,7 +245,7 @@ def predict_shear_bulk_mod(
     param_gamma,
     param_kappa,
 ):
-    analytical_predictions = RegHexagonalModel().find_elastic_props_of_hexagon(
+    analytical_predictions = TheoreticalRegularHexModel().find_elastic_props_of_hexagon(
         A_0_num=A0_val,
         P_0_num=P0_val,
         K_num=param_kappa,
