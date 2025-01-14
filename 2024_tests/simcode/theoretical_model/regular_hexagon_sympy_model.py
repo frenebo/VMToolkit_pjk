@@ -1,16 +1,5 @@
-
 import sympy
 import numpy as np
-
-
-# def get
-from matplotlib import colormaps
-from matplotlib import pyplot as plt
-# def find_rest_vv
-
-
-import sympy
-
 
 
 """
@@ -298,8 +287,6 @@ class RegHexagonalModel:
             raise ValueError("Failed to find real root - roots {}\n complex angles - {}".format(np_roots, np.angle(np_roots)))
         
         return minimum_roots[0]
-    
-    # def find_
 
     def generate_lambdified_grad_and_hessian_function(self):
         gradient_element_funcs = []
@@ -377,24 +364,29 @@ class RegHexagonalModel:
         side_length_eq = xi_til_eq * mu_val
         rest_area = (3*np.sqrt(3)/2) * (side_length_eq ** 2)
         
-        if eq_vals["poisson_ratio"] > 1:
-            raise Exception("Poisson ratio more than one, which means floppy regime - both A0 and P0 can be satisfied in floppy state...")
-        
-        # This is how it works in 3d:
-        # G_3d = shear modulus, B=bulk modulus
-        # 2G(1+nu)=3B(1-2nu)
-        #      3B(1-2nu)
-        # G_3d = -----------
-        #       (2+2nu)
-        # But in 2d...
-        # G = B*(1-nu)/(1+nu)
-        # Can redo derivation in landau lifshitz elasticity Ch1.Sec4
-        if poisson_ratio > 1:
-            raise ValueError("Poisson ratio greater than one!")
         if poisson_ratio <= -1:
             raise ValueError("Poisson ratio less than or equal to minus one!")
             
-        shear_modulus = bulk_modulus*(1 - poisson_ratio) / (1 + poisson_ratio)
+        if eq_vals["poisson_ratio"] > 1:
+            print("POISSON RATIO GREATER THAN ONE!")
+            rest_area = A_0_num
+            side_length_eq = np.sqrt(rest_area  * 2/(3*np.sqrt(3)) )
+            
+            poisson_ratio = 1.0
+            
+            shear_modulus = 0.0
+        else:
+            # This is how it works in 3d:
+            # G_3d = shear modulus, B=bulk modulus
+            # 2G(1+nu)=3B(1-2nu)
+            #      3B(1-2nu)
+            # G_3d = -----------
+            #       (2+2nu)
+            # But in 2d...
+            # G = B*(1-nu)/(1+nu)
+            # Can find by redoing derivation in landau lifshitz elasticity Ch1.Sec4, but in 2D.
+            # So (1/3)delta_ij => 1/2 delta_ij, take sums just over x&y, etc.
+            shear_modulus = bulk_modulus*(1 - poisson_ratio) / (1 + poisson_ratio)
         # if sshear
         
         print("Bulk modulus: {}".format(bulk_modulus))
@@ -465,6 +457,9 @@ class RegHexagonalModel:
 
 
     def plot_values_of_Y_and_Pr_til(self):
+        from matplotlib import colormaps
+        from matplotlib import pyplot as plt
+        
         Y_min = 0.001
         Y_max =  100
         Y_range = np.logspace(

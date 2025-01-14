@@ -31,16 +31,11 @@ namespace VMTutorial
   }
   
   void IntegratorAdaptiveRungeKutta::_calculate_kvec(int kidx, double hstep, const vector<Vec> & init_positions, bool verbose) {
-    // currently unused
-    // double dt = hstep * _butcher_tableau_timeoffsets.at(kidx);
     
     const vector<double>& k_compute_coeffs = _butcher_tableau_kcalc_coeffs.at(kidx);
     
     int n_vertices = _sys.mesh().vertices().size();
     
-    
-    
-    // vector<Vec> starting_positions
     for (int vidx = 0; vidx < n_vertices; vidx++) {
       Vec starting_pos = init_positions.at(vidx);
       
@@ -190,33 +185,6 @@ namespace VMTutorial
     if (_pbar_spinner_idx > 3) _pbar_spinner_idx = 0;
     
     
-  // void Simulation::progress_bar(double progress, const string& end_of_line)
-  // {
-  //   cout << "[";
-  //   int pos = static_cast<int>(round(bar_width * progress));
-  //   for (int i = 0; i < bar_width; ++i) 
-  //   {
-  //     if (i < pos) 
-  //       cout << "=";
-  //     else if (i == pos) 
-  //       cout << ">";
-  //     else 
-  //       cout << " ";
-  //   }
-  //   cout << "] "  << static_cast<int>(round(progress * 100.0)) << "%" << end_of_line;
-  //   cout.flush();
-  // }
-
-
-    // if (this->print_freq > 0 && !old_style) {
-    //   progress_bar(progress, " ");
-    // }
-    
-    // sim_step += steps;
-    
-    // if (this->print_freq > 0 && !old_style) {
-    //   cout << " --> Completed " << sim_step << " simulation steps " << endl;  
-    // }
   }
   
   void IntegratorAdaptiveRungeKutta::_try_step(

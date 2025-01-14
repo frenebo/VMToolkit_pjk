@@ -31,7 +31,6 @@ namespace VMTutorial
       throw runtime_error("Unknown integrator type : " + name + ".");
     }
     _integ_order.push_back(name);
-    // _integrators_enabled[iname] = true;
   }
   
   void export_Integrate(py::module& m)
@@ -40,9 +39,6 @@ namespace VMTutorial
       .def(py::init<System&, ForceCompute&, Topology&>(), py::arg("sys"), py::arg("fc"), py::arg("top"))
       .def("set_params", &Integrate::set_params)
       .def("set_flag", &Integrate::set_flag)
-      // .def("enable", &Integrate::enable)
-      // .def("disable", &Integrate::disable)
-      // .def("set_dt", &Integrate::set_dt)
       .def("add", &Integrate::add_integrator)
       ;
   }

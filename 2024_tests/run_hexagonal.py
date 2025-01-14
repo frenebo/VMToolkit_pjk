@@ -11,7 +11,7 @@ from simcode.tissue_builder.hexagonal import HexagonalCellMesh
 from simcode.sim_model.sim_model import SimModel
 from simcode.sim_model.vm_state import (
     VMState, SimulationSettings, IntegratorSettings, 
-    CellAreaForce, CellPerimeterForce, ConstantVertexForce,  CellGroup, VertexGroup,
+    CellAreaForce, CellPerimeterForce, ConstantVertexForce, CellGroup, VertexGroup,
     ElectricForceOnCellBoundary, EFieldSpecConstantPolygonRegion, PolygonSpec,
     TopologySettings, T1TransitionSettings,
     IntegratorSettingsDormandPrinceRungeKutta,
@@ -41,12 +41,34 @@ def make_forcing_field_rectangular(
         )
     )
 
-def run_hexagonal(args, outdir):
+def run_experiment(
+    args,
+    outdir,
+    ):
+    if not os.path.exists(outdir):
+        raise Exception("could not find {}".format(outdir))
+    
     A0_model = args.param_A0
     P0_model = args.param_P0
     
     gamma = args.param_gamma
     kappa = args.param_kappa
+    
+    box_size_rel_x = args.box_size_rel_x
+    box_size_rel_y = args.box_size_rel_y
+    
+    field_size_multiplier = args.field_size_multiplier
+    field_strength = args.field_strength
+    
+    vertex_friction_gamma = args.vertex_friction_gamma
+    init_integrator_dt = args.init_integrator_dt
+    dormand_prince_max_error = args.dormand_prince_max_error
+    t1_min_edge_len_rel = args.t1_min_edge_len_rel
+    t1_new_edge_len_rel = args.t1_new_edge_len_rel
+    
+    n_checkpoints = args.n_checkpoints
+    
+    ckpt_period = args.ckpt_period
     
     analytical_predictions = RegHexagonalModel().find_elastic_props_of_hexagon(
         A_0_num=A0_model,
@@ -63,8 +85,8 @@ def run_hexagonal(args, outdir):
     
     rest_area = (3*(math.sqrt(3))/2) * rest_side_length*rest_side_length
     
-    box_lx = args.box_size_rel_x*math.sqrt(rest_area)
-    box_ly = args.box_size_rel_y*math.sqrt(rest_area)
+    box_lx = box_size_rel_x*math.sqrt(rest_area)
+    box_ly = box_size_rel_y*math.sqrt(rest_area)
     
     cm = HexagonalCellMesh(
         side_length=rest_side_length,
@@ -76,14 +98,14 @@ def run_hexagonal(args, outdir):
     tiss_init_state.forces()["perim_f_all"] = CellPerimeterForce(gamma=gamma, lam=P0_model*gamma)
     tiss_init_state.forces()["area_f_all"] = CellAreaForce(A0=A0_model, kappa=kappa)
     
-    field_size_multiplier = args.field_size_multiplier
+    
     
     tiss_init_state.forces()["left_forcing_field"] = make_forcing_field_rectangular(
         xmin=(1/2)*field_size_multiplier*(-box_lx),
         xmax=(1/2)*field_size_multiplier*(-box_lx)*0.0,
         ymin=(1/2)*field_size_multiplier*(-box_ly),
         ymax=(1/2)*field_size_multiplier*(box_ly),
-        field_y=args.field_strength,
+        field_y=field_strength,
         field_x=0,
     )
     tiss_init_state.forces()["right_forcing_field"] = make_forcing_field_rectangular(
@@ -91,7 +113,7 @@ def run_hexagonal(args, outdir):
         xmax=(1/2)*field_size_multiplier*(box_lx),
         ymin=(1/2)*field_size_multiplier*(-box_ly),
         ymax=(1/2)*field_size_multiplier*(box_ly),
-        field_y=-args.field_strength,
+        field_y=(-1.0)*field_strength,
         field_x=0,
     )
     
@@ -107,15 +129,15 @@ def run_hexagonal(args, outdir):
         current_tissue_state=tiss_init_state,
         sim_settings=SimulationSettings(
             integrator_settings=IntegratorSettingsDormandPrinceRungeKutta(
-                vertex_friction_gamma=args.vertex_friction_gamma,
-                init_dt=args.init_integrator_dt,
-                displacement_error_max=args.dormand_prince_max_error,
+                vertex_friction_gamma=vertex_friction_gamma,
+                init_dt=              init_integrator_dt,
+                displacement_error_max=dormand_prince_max_error,
             ),
             topology_settings=TopologySettings(
                 T1_transition_settings=T1TransitionSettings(
                     enabled=True,
-                    min_edge_len=rest_side_length*args.t1_min_edge_len_rel,
-                    new_edge_len=rest_side_length*args.t1_new_edge_len_rel,
+                    min_edge_len=rest_side_length*t1_min_edge_len_rel,
+                    new_edge_len=rest_side_length*t1_new_edge_len_rel,
                 )
             )
         )
@@ -134,9 +156,7 @@ def run_hexagonal(args, outdir):
     print("Instantiating SimModel")
     sim_model = SimModel(verbose=False)
     print("Running sim_model.load_from_json_state")
-    # ckpt_dir = "scratch"
-    if not os.path.exists(outdir):
-        raise Exception("could not find {}".format(outdir))
+    
         
     with open(os.path.join(outdir, "initial_vm_state.json"), "w") as f:
         f.write(json.dumps(vm_initial_state.to_json(), indent=4))
@@ -150,10 +170,10 @@ def run_hexagonal(args, outdir):
         if (fn.startswith("res") or fn.startswith("vmst_")) and fn.endswith(".json"):
             os.remove(os.path.join(outdir, fn))
     
-    ckpt_strnum_nchars = len(str(args.n_checkpoints - 1))
+    ckpt_strnum_nchars = len(str(n_checkpoints - 1))
     
     tot_time_elaspsed = 0
-    for i in range(args.n_checkpoints):
+    for i in range(n_checkpoints):
         ckpt_filename = "res{}.json".format(str(i).zfill(ckpt_strnum_nchars))
         ckpt_fp = os.path.join(outdir, ckpt_filename)
         vmstate_json = sim_model.vm_state_json()
@@ -162,8 +182,8 @@ def run_hexagonal(args, outdir):
             f.write(json.dumps(vmstate_json, indent=4))
         
         checkpoint_fps.append(ckpt_fp)
-        sim_model.run_with_adaptive_tstep(args.ckpt_period, do_time_force_computation=True, verbose=False)
-        tot_time_elaspsed += args.ckpt_period
+        sim_model.run_with_adaptive_tstep(ckpt_period, do_time_force_computation=True, verbose=False)
+        tot_time_elaspsed += ckpt_period
         print("Time elapsed: {}".format(tot_time_elaspsed))
         if sim_model._check_topology_changed():
             print("TOPOLOGY CHANGED")
@@ -270,7 +290,6 @@ def generate_manifest_experiment_structure_from_battery_config(jobj, root_outdir
         
         if not isinstance(shapeparam_vals, list):
             raise ValueError("Expected jobj/settings/shape_param_values to be a list")
-        # for sp in shapeparam_vals:
     else:
         assert "shape_param_values" not in jobj["settings"]
         shapeparam_vals = None
@@ -281,10 +300,9 @@ def generate_manifest_experiment_structure_from_battery_config(jobj, root_outdir
     if do_scale_force_with_shear_modulus and do_scale_force_with_BULK_modulus:
         raise ValueError("Invalid config - force cannot be scaled with both bulk modulus and shear modulus at the same time")
     
-    # if do_scale_force_with_shear_modulus
+    
     
     if do_scale_force_with_shear_modulus:
-        # scale_fieldforce_with_shearmod = jobj["settings"]["scale_force_with_shear_modulus"]
         field_strength_default_val = None
         field_strength_to_shearmod_ratios = None
         field_strength_to_shearmod_ratios = jobj["settings"]["field_strength_to_shearmod_ratios"]
@@ -372,7 +390,6 @@ def generate_manifest_experiment_structure_from_battery_config(jobj, root_outdir
         P0_val = conf_A0P0["P0"]
         
         predres = predict_shear_bulk_mod(
-            # field_strength_to_shearmod_ratios,
             A0_val=A0_val,
             P0_val=P0_val,
             param_gamma=param_gamma,
@@ -397,8 +414,8 @@ def generate_manifest_experiment_structure_from_battery_config(jobj, root_outdir
                 "shape_param": conf_A0P0["shape_param"],
                 "bulk_mod": bulkmodulus_val,
             })
-        
-    # vals_for_
+    
+    
     
     all_experiment_configs = []
     for conf_params in vals_for_A0P0_field_strength:
@@ -509,29 +526,31 @@ def spawn_child(run_dirpath, run_config_json_fp,  *xargs):
     experiment_config = ExperimentConfig(**conf_jobj["params"])
     print(experiment_config)
     
-    run_hexagonal(experiment_config, outdir=run_dirpath)
+    run_experiment(experiment_config, outdir=run_dirpath)
 
 
-def run_battery(args,):
-    if not os.path.exists(args.manifest_json):
-        raise ValueError("Could not find '{}'".format(args.manifest_json))
+def run_battery(
+    manifest_json_fp,
+    nproc,
+    ):
+    if not os.path.exists(manifest_json_fp):
+        raise ValueError("Could not find '{}'".format(manifest_json_fp))
+    if nproc <= 0:
+        raise ValueError("Invalid nproc value {}: must be positive".format(nproc))
     
-    with open(args.manifest_json, 'r') as f:
+    with open(manifest_json_fp, 'r') as f:
         manifest_jobj = json.load(f)
     
-    root_batterydir = os.path.dirname(args.manifest_json)
+    root_batterydir = os.path.dirname(manifest_json_fp)
     
     # If we're working in the same directory, it may just be a blank string - so use cwd '.'
     if root_batterydir == "":
         root_batterydir = "."
     
-    if args.nproc <= 0:
-        raise ValueError("Invalid nproc value {}: must be positive".format(args.nproc))
         
     child_creation_args = []
     
     for sub_exp in manifest_jobj["sub_experiments"]:
-        # {'experiment_dirname': 'exp_0', 'conf_path': 'exp_0/exp_conf.json', 'ckpts_dir': 'exp_0/ckpts'}
         sub_exp["experiment_dirname"]
         sub_exp["conf_path"]
         conf_json_path = os.path.join(root_batterydir, sub_exp["conf_path"])
@@ -542,7 +561,7 @@ def run_battery(args,):
             conf_json_path,
         ])
         
-    with Pool(processes=args.nproc) as pool:
+    with Pool(processes=nproc) as pool:
         pool.starmap(spawn_child, child_creation_args)
         
     
@@ -574,10 +593,10 @@ if __name__ == "__main__":
     single_experiment_parser.add_argument("--n_checkpoints", default=500, type=int, help="Number of checkpoints to run")
     
     
-    
     battery_generator_parser = subparsers.add_parser("generate_battery_setup")
     battery_generator_parser.add_argument("--config_json", required=True, help="Json file containing the specifications for the experiments to be run")
     battery_generator_parser.add_argument("--output_dir", required=True, help="Directory to put results of experiments")
+    
     
     battery_runner_parser = subparsers.add_parser("run_battery")
     battery_runner_parser.add_argument("--manifest_json", required=True, help="Json file with the manifest of the child experiments to be run. Generated with the generate_battery_setup command.")
@@ -585,15 +604,16 @@ if __name__ == "__main__":
     
     
     
-    
-    
     args = parser.parse_args()
     
     if args.command == "single":
-        configs = run_hexagonal(args, outdir=args.outdir)
+        configs = run_experiment(args, outdir=args.outdir)
     elif args.command == "generate_battery_setup":
         generate_battery_setup(args)
     elif args.command == "run_battery":
-        run_battery(args)
+        run_battery(
+            manifest_json_fp=args.manifest_json,
+            nproc=args.nproc
+        )
     else:
         raise ValueError("unknown command '{}'".format(args.command))

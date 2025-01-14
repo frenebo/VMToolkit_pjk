@@ -15,6 +15,8 @@
 
 using std::map;
 using std::runtime_error;
+using std::cout;
+using std::endl;
 
 
 namespace VMTutorial
@@ -72,6 +74,7 @@ namespace VMTutorial
             5179.0/57600.0,  0.0,             7571.0/16695.0, 393.0/640.0, -92097.0/339200.0, 187.0/2100.0, 1.0/40.0
           }
       {
+        cout << "IntegratorAdaptiveRungeKutta - NOTE: this implementation of dormand-prince RK has NOT been verified thoroughly - the error calculated may not be correct." << endl;
         // blah blah
       }
       

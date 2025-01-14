@@ -1,5 +1,5 @@
 import json
-# from .vm_state import 
+
 from .vm_wrapper.vm_tk_wrapper import VMToolkitWrapper
 from .vm_state import VMState
 from .model_change_requests import ModelChangeRequest

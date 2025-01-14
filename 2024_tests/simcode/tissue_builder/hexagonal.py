@@ -1,10 +1,12 @@
 import math
 import numpy as np
+import json
+
 from ..sim_model.vm_state import (
     VertexTopology, VertexGeometry, CellTopology, TissueTopology,
     TissGeometry, TissueState, CellGroup, VertexGroup,
 )
-import json
+
 
 class HexagonalMeshBoxBuilder:
     

@@ -47,8 +47,6 @@ namespace VMTutorial
     {
       Vertex& v = _sys.mesh().vertices()[vid];
     
-    // if (!v.erased)
-    // {
       const Vec& f = vertex_forces.at(vid);
 
       if (verbose) {
@@ -61,15 +59,7 @@ namespace VMTutorial
         cout << "     added _dt*mu*f" << endl;
       }
       
-      // if (_T > 0.0)
-      // {
-      //   Vec ffr(B*_rng.gauss_rng(), B*_rng.gauss_rng());  // random noise contribution to force
-      //   Vec fr = ffr;
-        
-      //   v.data().r += sqrt_dt*fr;  // update vertex position due to noise
-      // }
-      v.data().vel = (1.0 / _dt) * (v.data().r - rold);  
-    // }
+      v.data().vel = (1.0 / _dt) * (v.data().r - rold);
     }
     if (verbose) {
       cout << "Finished second round thingy" << endl;
