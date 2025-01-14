@@ -80,16 +80,11 @@ namespace VMSim
         double intersection_length = 0;
         
         for(const auto& intersectionPiece : intersection) {
-            // BLineString intersectionPiece = *intersectionIter;
             double piece_intersect_len = boost::geometry::length(intersectionPiece);
             intersection_length += piece_intersect_len;
             if (verbose)  {
                 cout << "             found intersection piece, length=" << piece_intersect_len << endl;
             }
-            // std::cout << "Piece:" << std::endl;
-            // for(auto intersectionPieceIter = intersectionPiece.begin(); intersectionPieceIter != intersectionPiece.end(); ++intersectionPieceIter) {
-            // cout << boost::geometry::get<0>(intersectionPiece) << " " << boost::geometry::get<1>(intersectionPiece) << endl;
-            // }
         }
         
         return intersection_length;

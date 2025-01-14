@@ -1,0 +1,1 @@
+from .regular_hexagon_sympy_model import TheoreticalRegularHexModel
