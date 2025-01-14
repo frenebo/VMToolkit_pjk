@@ -6,10 +6,10 @@ import os
 from multiprocessing import Pool
 from dataclasses import dataclass
 
-from simcode.theoretical_model.regular_hexagon_sympy_model import TheoreticalRegularHexModel
-from simcode.sim_model.tissue_builder.hexagonal import HexagonalCellMeshBuilder
-from simcode.sim_model.sim_model import SimModel
-from simcode.sim_model.vm_state import (
+from VMToolkit.theoretical_models import TheoreticalRegularHexModel
+from VMToolkit.sim.tissue_builder import HexagonalCellMeshBuilder
+from VMToolkit.sim import SimulationModel
+from VMToolkit.sim.vm_state import (
     VMState, SimulationSettings, IntegratorSettings, 
     CellAreaForce, CellPerimeterForce, ConstantVertexForce, CellGroup, VertexGroup,
     ElectricForceOnCellBoundary, EFieldSpecConstantPolygonRegion, PolygonSpec,
@@ -153,8 +153,8 @@ def run_experiment(
     # # #################################################################
     # # Create the initial configuration and read it into the c++ model
     # # #################################################################
-    print("Instantiating SimModel")
-    sim_model = SimModel(verbose=False)
+    print("Instantiating SimulationModel")
+    sim_model = SimulationModel(verbose=False)
     print("Running sim_model.load_from_json_state")
     
         
