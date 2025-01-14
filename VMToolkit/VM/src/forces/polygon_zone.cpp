@@ -10,7 +10,7 @@
 using std::cout;
 using std::endl;
 
-namespace VMTutorial
+namespace VMSim
 {
     void PolygonZone::set_points(const vector<Vec>& polygon_vertices, bool verbose)
     {

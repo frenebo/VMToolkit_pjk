@@ -10,7 +10,7 @@
 
 #include "force.hpp"
 
-namespace VMTutorial
+namespace VMSim
 {
 
 	// Force on a vertex

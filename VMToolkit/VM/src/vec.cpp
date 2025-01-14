@@ -8,7 +8,7 @@
 
 #include "vec.hpp"
 
-namespace VMTutorial
+namespace VMSim
 {
   void export_Vec(py::module& m)
   {

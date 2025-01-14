@@ -16,7 +16,7 @@ using json = nlohmann::json;
 using std::cout;
 using std::endl;
 
-namespace VMTutorial
+namespace VMSim
 {
   void System::read_input_from_jsonstring(const string& json_contents, bool verbose)
   {

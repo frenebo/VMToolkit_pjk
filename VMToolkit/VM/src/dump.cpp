@@ -28,7 +28,7 @@ using std::map;
 using std::runtime_error;
 using std::vector;
 
-namespace VMTutorial
+namespace VMSim
 {
 	std::string Dump::mesh_to_jsonstr()
 	{

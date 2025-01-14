@@ -17,7 +17,7 @@
 using std::runtime_error;
 
 
-namespace VMTutorial
+namespace VMSim
 {
   class ConstraintManager: public ClassFactory<Constrainer>
   {

@@ -13,7 +13,7 @@ using std::cout;
 using std::vector;
 using std::endl;
 
-namespace VMTutorial
+namespace VMSim
 {
   vector<Vec> IntegratorRungeKutta::_instantaneous_velocities(bool verbose) const
   {

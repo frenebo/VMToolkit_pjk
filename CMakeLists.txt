@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14)  # Specify your required version
-project(VMTutorial LANGUAGES CXX)
+project(VMToolkit LANGUAGES CXX)
 
 # Optional: Set a default build type if none was specified
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)

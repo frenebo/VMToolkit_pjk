@@ -13,7 +13,7 @@ using std::vector;
 using std::cout;
 using std::endl;
 
-namespace VMTutorial
+namespace VMSim
 {
 	void ForceArea::compute_all_vertex_forces(vector<Vec>& res, bool verbose)
 	{

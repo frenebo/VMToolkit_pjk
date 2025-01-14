@@ -26,7 +26,7 @@ using std::cout;
 using std::string;
 using std::endl;
 
-namespace VMTutorial
+namespace VMSim
 {
 
   class Simulation

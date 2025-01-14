@@ -4,7 +4,7 @@
 
 #include "types.hpp"
 
-namespace VMTutorial
+namespace VMSim
 {
     // Forward declarations
 	

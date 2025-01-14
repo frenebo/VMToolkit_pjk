@@ -10,7 +10,7 @@
 using std::cout;
 using std::endl;
 
-namespace VMTutorial
+namespace VMSim
 {
   
 	void ForcePerimeter::compute_all_vertex_forces(vector<Vec>& res, bool verbose)

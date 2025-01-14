@@ -6,7 +6,7 @@ using std::vector;
 using std::endl;
 using std::cout;
 
-namespace VMTutorial
+namespace VMSim
 {
     
 	Vertex &Mesh::get_vertex_reference(int i)

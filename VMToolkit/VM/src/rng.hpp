@@ -12,7 +12,7 @@
 #include <string>
 #include <sstream>
 
-namespace VMTutorial
+namespace VMSim
 {
 
 	struct RNGState

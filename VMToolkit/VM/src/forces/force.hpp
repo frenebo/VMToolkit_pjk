@@ -22,7 +22,7 @@ using std::string;
 using std::runtime_error;
 
 
-namespace VMTutorial
+namespace VMSim
 {
   // Force on a vertex
   class Force 

@@ -11,7 +11,7 @@
 #include "../system.hpp"
 
 
-namespace VMTutorial
+namespace VMSim
 {
   class Constrainer
   {

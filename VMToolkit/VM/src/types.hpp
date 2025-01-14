@@ -21,7 +21,7 @@
 
 namespace py = pybind11;
 
-namespace VMTutorial
+namespace VMSim
 {
 	// Circulator definitions
 	class VertexCirculator;

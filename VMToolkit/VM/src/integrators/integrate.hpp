@@ -23,7 +23,7 @@ using std::endl;
 using std::cout;
 
 
-namespace VMTutorial
+namespace VMSim
 {
   class Integrate : public ClassFactory<Integrator>
   {

@@ -7,7 +7,7 @@
 
 #include "rng.hpp"
 
-namespace VMTutorial
+namespace VMSim
 {
 	//! Get a random number between 0 and 1 drawn from an uniform distribution
 	//! \return random number between 0 and 1

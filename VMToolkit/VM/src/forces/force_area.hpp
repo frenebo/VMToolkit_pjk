@@ -14,7 +14,7 @@
 #include <string>
 
 
-namespace VMTutorial
+namespace VMSim
 {
   // Force on a vertex
   class ForceArea : public Force

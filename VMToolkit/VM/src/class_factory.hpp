@@ -42,7 +42,7 @@
 	   }
 
 */
-namespace VMTutorial
+namespace VMSim
 {
 	template <typename BaseType>
 	class ClassFactory

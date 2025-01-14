@@ -11,7 +11,7 @@ using std::runtime_error;
 using std::cout;
 using std::endl;
 
-namespace VMTutorial
+namespace VMSim
 {
   void Simulation::run_time_adaptive(double runtime_tot, bool topological_change, bool verbose)
   {
@@ -107,24 +107,24 @@ namespace VMTutorial
 
 PYBIND11_MODULE(vm, m)
 {
-  VMTutorial::export_Vec(m);
-  VMTutorial::export_VertexProperty(m);
-  VMTutorial::export_HEProperty(m);
-  VMTutorial::export_EdgeProperty(m);
-  VMTutorial::export_FaceProperty(m);
-  VMTutorial::export_Vertex(m);
-  VMTutorial::export_VertexCirculator(m);
-  VMTutorial::export_Edge(m);
-  VMTutorial::export_HalfEdge(m);
-  VMTutorial::export_Face(m);
-  VMTutorial::export_FaceCirculator(m);
-  VMTutorial::export_Mesh(m);
-  VMTutorial::export_System(m);
-  VMTutorial::export_ForceCompute(m);
-  VMTutorial::export_Integrate(m);
-  VMTutorial::export_Topology(m);
-  VMTutorial::export_Dump(m);
-  VMTutorial::export_Simulation(m);
+  VMSim::export_Vec(m);
+  VMSim::export_VertexProperty(m);
+  VMSim::export_HEProperty(m);
+  VMSim::export_EdgeProperty(m);
+  VMSim::export_FaceProperty(m);
+  VMSim::export_Vertex(m);
+  VMSim::export_VertexCirculator(m);
+  VMSim::export_Edge(m);
+  VMSim::export_HalfEdge(m);
+  VMSim::export_Face(m);
+  VMSim::export_FaceCirculator(m);
+  VMSim::export_Mesh(m);
+  VMSim::export_System(m);
+  VMSim::export_ForceCompute(m);
+  VMSim::export_Integrate(m);
+  VMSim::export_Topology(m);
+  VMSim::export_Dump(m);
+  VMSim::export_Simulation(m);
   
   py::register_exception<std::domain_error>(m, "DomainError");
   py::register_exception<std::invalid_argument>(m, "InvalidArgumentError");

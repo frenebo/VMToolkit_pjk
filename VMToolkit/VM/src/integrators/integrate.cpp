@@ -10,7 +10,7 @@
 #include "integrator_runge_kutta.hpp"
 #include "integrator_adaptive_runge_kutta.hpp"
 
-namespace VMTutorial
+namespace VMSim
 {
   void Integrate::add_integrator(const string& iname)
   {

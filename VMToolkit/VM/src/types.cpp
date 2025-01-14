@@ -2,7 +2,7 @@
 #include "type_circulators.hpp"
 #include "mesh.hpp"
 
-namespace VMTutorial
+namespace VMSim
 {
   // Face class ===================================================== 
   HEHandle Face::he() { return _mesh.get_he(_he); }

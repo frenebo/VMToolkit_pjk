@@ -13,7 +13,7 @@ using std::runtime_error;
 using std::cout;
 using std::endl;
 
-namespace VMTutorial
+namespace VMSim
 {
 	
 	void ForceCompute::start_force_compute_timers(bool verbose)

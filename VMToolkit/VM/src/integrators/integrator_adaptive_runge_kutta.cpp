@@ -12,7 +12,7 @@
 using std::cout;
 using std::endl;
 
-namespace VMTutorial
+namespace VMSim
 {
   void IntegratorAdaptiveRungeKutta::_calc_instantaneous_velocities(vector<Vec>& vertex_vels_out, bool verbose) const
   {

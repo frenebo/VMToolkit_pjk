@@ -15,7 +15,7 @@
 #include "system.hpp"
 
 
-namespace VMTutorial
+namespace VMSim
 {
 
 	class Dump

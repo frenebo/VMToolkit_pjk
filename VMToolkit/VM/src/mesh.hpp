@@ -20,7 +20,7 @@ using std::runtime_error;
 using std::vector;
 using std::string;
 
-namespace VMTutorial
+namespace VMSim
 {
 
 	class Mesh

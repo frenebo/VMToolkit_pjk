@@ -15,7 +15,7 @@
 #include "vec.hpp"
 
 
-namespace VMTutorial
+namespace VMSim
 {
 
 	// struct Property

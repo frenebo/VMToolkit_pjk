@@ -20,7 +20,7 @@
 using std::vector;
 using std::map;
 
-namespace VMTutorial
+namespace VMSim
 {
     class PolygonZone
     {

@@ -22,7 +22,7 @@
 
  
 
-namespace VMTutorial
+namespace VMSim
 {
 
   class ForceCompute : public ClassFactory<Force>

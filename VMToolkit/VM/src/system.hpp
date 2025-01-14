@@ -21,7 +21,7 @@
 using std::string;
 using std::map;
 
-namespace VMTutorial
+namespace VMSim
 {
   typedef Mesh MyMesh;
   

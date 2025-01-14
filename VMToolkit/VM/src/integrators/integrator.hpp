@@ -20,7 +20,7 @@
 using std::map;
 using std::runtime_error;
 
-namespace VMTutorial
+namespace VMSim
 {
 
   class Integrator 

@@ -14,7 +14,7 @@
 #include <utility> // std::pair
 #include <string>
 
-namespace VMTutorial
+namespace VMSim
 {
 
 	// Force on a vertex

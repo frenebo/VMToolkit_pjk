@@ -20,7 +20,7 @@
 
 namespace py = pybind11;
 
-namespace VMTutorial
+namespace VMSim
 {
 
 	class Vec
