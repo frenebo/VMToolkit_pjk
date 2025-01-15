@@ -9,6 +9,14 @@
 
 #include <stdexcept>
 
+#include "forces/force_area.hpp"
+#include "forces/force_perimeter.hpp"
+#include "forces/force_const_vertex_propulsion.hpp"
+#include "forces/force_efield_on_cell_boundary.hpp"
+#include "forces/force_efield_on_cellbound_pixelated.hpp"
+
+
+
 using std::runtime_error;
 using std::cout;
 using std::endl;
@@ -164,6 +172,8 @@ namespace VMSim
 			this->add<ForceConstVertexPropulsion,const System&>(force_id, _sys);
 		} else if (force_type == "force_efield_on_cell_boundary") {
 			this->add<ForceEFieldOnCellBoundary, const System&>(force_id, _sys);
+		} else if (force_type == "force_efield_on_cell_boundary_pixelated") {
+			this->add<ForceEFieldOnCellBoundPixelated, const System&>(force_id, _sys);
 		} else  {
 			throw runtime_error("Unknown force name : " + force_id + ".");
 		}

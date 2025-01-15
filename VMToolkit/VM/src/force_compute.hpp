@@ -15,11 +15,6 @@
 #include "system.hpp"
 #include "class_factory.hpp"
 #include "forces/force.hpp"
-#include "forces/force_area.hpp"
-#include "forces/force_perimeter.hpp"
-#include "forces/force_const_vertex_propulsion.hpp"
-#include "forces/force_efield_on_cell_boundary.hpp"
-
  
 
 namespace VMSim
