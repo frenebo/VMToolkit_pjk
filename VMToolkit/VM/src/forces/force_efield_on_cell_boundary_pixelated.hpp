@@ -1,5 +1,5 @@
-#ifndef __FORCE_EFIELD_ON_CELLLBOUND_PIXELATED_HPP__
-#define __FORCE_EFIELD_ON_CELLLBOUND_PIXELATED_HPP__
+#ifndef __FORCE_EFIELD_ON_CELL_BOUNDARY_PIXELATED_HPP__
+#define __FORCE_EFIELD_ON_CELL_BOUNDARY_PIXELATED_HPP__
 
 #include <optional>
 
@@ -103,15 +103,20 @@ namespace VMSim
         {
         public:
             EFieldFaceParams(
-                float charge
+                double charge
             ): _charge{charge}
             {
                 // empty 
             }
             
-            float charge() const { return _charge; }
+            // default constructor
+            EFieldFaceParams(): _charge{0}
+            {
+            }
+            
+            double charge() const { return _charge; }
         private:
-            float _charge;
+            double _charge;
         };
 
         
@@ -146,9 +151,10 @@ namespace VMSim
                 int fid = fids.at(i);
                 const params_type& p = params.at(i);
                 
-                _face_params[fid] = EFieldFaceParams(
-                    p.at("charge"),
-                );
+                double cell_charge = p.at("charge");
+                EFieldFaceParams cell_params = EFieldFaceParams(cell_charge);
+                
+                _face_params[fid] = cell_params;
             }
         }
     private:
@@ -160,34 +166,39 @@ namespace VMSim
 			bool verbose=false
 		);
         
-		void _clear_compute_cache(bool verbose);
+        Vec _compute_he_force_for_face(
+            const Vertex& vert,
+            const HalfEdge& he,
+            const Face& f,
+            bool verbose=false
+        ) const;
+        
+        void _clear_compute_cache(bool verbose);
         void _cache_all_computations(bool verbose);
+        void _cache_comp_electric_field_on_edges(bool verbose);
+        Vec _get_pixel_origin_loc(std::pair<int,int> pix_gridpos) const;
+        std::pair<int, int> _get_pixel_indices(Vec loc) const;
+        void _lineseg_solve_for_y(double x, const Vec& line_start, const Vec& line_end) const;
+        void _lineseg_solve_for_x(double y, const Vec& line_start, const Vec& line_end) const;
+        vector<Vec> _get_pixspec_relative_intersection_positions(const PixIntersectionsSpec& pixspec) const;
         
-        optional<GridSpec> _gridspec;
-        optional< vector<vector<Vec>> > _field_vals_2d;
-        map<int, EFieldFaceParams> _face_params;
-		// bool _vec_outside_polygon_bbox(const Vec& v, bool verbose);
-        // bool _enabled_for_faceidx(int fid, bool verbose);
-		// Vec _compute_he_force(const Vertex& vert, const HalfEdge& he, bool verbose=false);
-		
+        double _get_intersection_of_line_passthrough_pixel(const PixIntersectionsSpec& pixspec) const;
+        double _get_intersection_of_line_ending_inside_pixel(
+            std::pair<int,int> pix_gridpos,
+            const PixIntersectionsSpec& pixspec, 
+            const Edge& edge
+        ) const;
+        Vec _integrate_field_over_edge(const Edge& edge, bool verbose) const;
+
+        std::map<std::pair<int,int>, PixIntersectionsSpec> _get_edge_pixel_intersections(
+            const Edge& edge,
+            bool verbose
+        ) const;
         
         
-        
-		// void _cache_mesh_computations(bool verbose);
-		// double _lazy_load_cell_edge_intersection(int vid_from, int vid_to, bool verbose);
-		
-		
-		// PolygonZone _poly_zone;
-		// double _E_x_param;
-		// double _E_y_param;
-		
-        // vector<bool> _force_enabled_mask_by_face_index;
-		// vector<double> _cell_charges_by_face_index;
-		
-		// vector<bool> _cached_vertices_outside_bbox;
-		// vector<bool> _cached_enabled_for_fid;
-		// vector<double> _cached_face_perims;
-		// map<std::pair<int, int>, double> _cached_edgelength_intersecting_polygon_by_vtx_ids;
+        std::optional<GridSpec> _gridspec;
+        std::optional< vector<vector<Vec>> > _field_vals_2d;
+        std::map<int, EFieldFaceParams> _face_params;
 	};
     
 }

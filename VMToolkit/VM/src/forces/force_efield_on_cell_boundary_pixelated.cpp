@@ -1,6 +1,6 @@
 
 
-#include "force_efield_on_cellbound_pixelated.hpp"
+#include "force_efield_on_cell_boundary_pixelated.hpp"
 #include <set>
 #include <cmath>
 #include <algorithm>
@@ -40,7 +40,7 @@ namespace VMSim
             cout << "ForceEFieldOnCellBoundPixelated::_clear_compute_cache - clearing the results from llast timestep" << endl;
         }
         
-        throw runtime_error("Unimplemented")
+        throw runtime_error("Unimplemented");
     }
     
     void ForceEFieldOnCellBoundPixelated::_cache_all_computations(bool verbose)
@@ -83,7 +83,7 @@ namespace VMSim
         // }
     }
     
-    Vec ForceEFieldOnCellBoundPixelated::get_pixel_origin_loc(pair<int,int> pix_gridpos)
+    Vec ForceEFieldOnCellBoundPixelated::_get_pixel_origin_loc(pair<int,int> pix_gridpos)
     {
         double xpos = pix_gridpos.first * _gridspec->grid_spacing() + _grid_spacing->origin_x();
         double ypos = pix_gridpos.second * _gridspec->grid_spacing() + _grid_spacing->origin_y();
@@ -91,10 +91,10 @@ namespace VMSim
         return Vec(xpos,ypos);
     }
     
-    pair<int, int> ForceEFieldOnCellBoundPixelated::get_pixel_indices(Vec loc)
+    pair<int, int> ForceEFieldOnCellBoundPixelated::_get_pixel_indices(Vec loc)
     {
         if (! _gridspec) {
-            throw runtime_error("ForceEFieldOnCellBoundPixelated::get_pixel_indices - can't get value, gridspec is unset");
+            throw runtime_error("ForceEFieldOnCellBoundPixelated::_get_pixel_indices - can't get value, gridspec is unset");
         }
         double xpos_dbl = (loc.x - _gridspec->origin_x()) / _gridspec->grid_spacing();
         double ypos_dbl = loc.y - _gridspec->origin_y() / _gridspec->grid_spacing();
@@ -126,7 +126,7 @@ namespace VMSim
         return how_far_along_segment * vx + line_start.x;
     }
     
-    vector<Vec> ForceEFieldOnCellBoundPixelated::get_pixspec_relative_intersection_positions(const PixIntersectionsSpec& pixspec)
+    vector<Vec> ForceEFieldOnCellBoundPixelated::_get_pixspec_relative_intersection_positions(const PixIntersectionsSpec& pixspec)
     {
         double pix_size = _gridspec.grid_spacing();
         vector<Vec> positions;
@@ -154,8 +154,9 @@ namespace VMSim
         return positions;
     }
     
-    double ForceEFieldOnCellBoundPixelated::get_intersection_of_line_passthrough_pixel(const PixIntersectionsSpec& pixspec) {
-        vector<Vec> intersection_rel_positions = get_pixspec_relative_intersection_positions(pixspec);
+    double ForceEFieldOnCellBoundPixelated::_get_intersection_of_line_passthrough_pixel(const PixIntersectionsSpec& pixspec)
+    {
+        vector<Vec> intersection_rel_positions = _get_pixspec_relative_intersection_positions(pixspec);
         if (intersection_rel_positions.size() != 2) {
             throw runtime_error("Number of intersections must be 2 for a line to pass through a pixel");
         }
@@ -166,8 +167,9 @@ namespace VMSim
         return (intersection_0_rel_pos - intersection_1_rel_pos).len();
     }
     
-    double ForceEFieldOnCellBoundPixelated::get_intersection_of_line_ending_inside_pixel(pair<int,int> pix_gridpos, const PixIntersectionsSpec& pixspec,  const Edge& edge) {
-        vector<Vec> intersection_rel_positions = get_pixspec_relative_intersection_positions(pixspec);
+    double ForceEFieldOnCellBoundPixelated::_get_intersection_of_line_ending_inside_pixel(pair<int,int> pix_gridpos, const PixIntersectionsSpec& pixspec,  const Edge& edge)
+    {
+        vector<Vec> intersection_rel_positions = _get_pixspec_relative_intersection_positions(pixspec);
         if (intersection_rel_positions.size() != 1) {
             throw runtime_error("Number of intersections must be 1 for a line to go into and end within a pixel");
         }
@@ -178,8 +180,8 @@ namespace VMSim
         Vec edge_start_r = edge.he().from().data().r;
         Vec edge_end_r = edge.he().to().data().r;
         
-        pair<int,int> edge_start_gridpos = get_pixel_indices(edge_start_r);
-        pair<int,int> edge_end_gridpos   = get_pixel_indices(edge_end_r);
+        pair<int,int> edge_start_gridpos = _get_pixel_indices(edge_start_r);
+        pair<int,int> edge_end_gridpos   = _get_pixel_indices(edge_end_r);
         
         Vec contained_endpt_pos(0.0,0.0);
         if (edge_start_gridpos == pix_gridpos) {
@@ -187,18 +189,18 @@ namespace VMSim
         } else if (edge_end_gridpos == pix_gridpos) {
             contained_endpt_pos = edge_end_r;
         } else {
-            throw runtime_error("this is weird - the edge neither starts nor ends in this pixel, but we're in get_intersection_of_line_ending_inside_pixel ");
+            throw runtime_error("this is weird - the edge neither starts nor ends in this pixel, but we're in _get_intersection_of_line_ending_inside_pixel ");
         }
         
         /*
          * Calculate the distance between the edge's end point, and the intersection
         */
-        Vec intersection_abs_loc = intersection_rel_positions.at(0) + get_pixel_origin_loc(pix_gridpos);
+        Vec intersection_abs_loc = intersection_rel_positions.at(0) + _get_pixel_origin_loc(pix_gridpos);
         
         return (intersection_abs_loc - contained_endpt_pos).len();
     }
     
-    Vec ForceEFieldOnCellBoundPixelated::integrate_field_over_edge(const Edge& edge, bool verbose)
+    Vec ForceEFieldOnCellBoundPixelated::_integrate_field_over_edge(const Edge& edge, bool verbose)
     {
         if (!_field_vals_2d) {
             throw runtime_error("Cannot calculate electric field effect on edge - field value have not been set");
@@ -206,12 +208,13 @@ namespace VMSim
         if (!_gridspec) {
             throw runtime_error("Can't run integrate field over edge - gridspec hasn't been set");
         }
+        
         /*
          * First we get all of the pixels this edge passes through, then we calculate the length of edge within
          * each of those pixels. We multiply each sublength by the field at that pixel, to get the result.
          */
         
-        map<pair<int,int>, PixIntersectionsSpec> pix_intersections = get_edge_pixel_intersections(edge, verbose);
+        map<pair<int,int>, PixIntersectionsSpec> pix_intersections = _get_edge_pixel_intersections(edge, verbose);
         
         // Now that we have all of the pixels that are passed thru...
         int num_cells_with_one_intersections = 0; // This should be exactly two - for the start and end cells
@@ -241,9 +244,9 @@ namespace VMSim
             } else if (pix_num_intersections == 1) {
                 num_cells_with_one_intersections++;
                 
-                pix_intersected_lengths[pix_gridpos] = get_intersection_of_line_ending_inside_pixel(pix_gridpos, pix_intersections, edge);
+                pix_intersected_lengths[pix_gridpos] = _get_intersection_of_line_ending_inside_pixel(pix_gridpos, pix_intersections, edge);
             } else if (pix_num_intersections == 2) {
-                pix_intersected_lengths[pix_gridpos] = get_intersection_of_line_passthrough_pixel(pixspec);
+                pix_intersected_lengths[pix_gridpos] = _get_intersection_of_line_passthrough_pixel(pixspec);
             } else {
                 cout << " pix n intersections: " << pix_num_intersections << endl;
                 throw runtime_error("Unexpected number of intersections...")
@@ -280,11 +283,11 @@ namespace VMSim
     
     
     
-    map<pair<int,int>, PixIntersectionsSpec> ForceEFieldOnCellBoundPixelated::get_edge_pixel_intersections(
+    map<pair<int,int>, PixIntersectionsSpec> ForceEFieldOnCellBoundPixelated::_get_edge_pixel_intersections(
         const Edge& edge, bool verbose,
     ) {
         if (! _gridspec) {
-            throw runtime_error("    get_edge_pixel_intersections - Grid spacing has not been set - can't run");
+            throw runtime_error("    _get_edge_pixel_intersections - Grid spacing has not been set - can't run");
         }
         
         if (verbose) {
@@ -297,11 +300,11 @@ namespace VMSim
         Vec edge_start_vec = edge.he().from().data().r;
         Vec edge_end_vec = edge.he().to().data().r;
         
-        pair<int, int> edge_start_pix_pr = get_pixel_indices(edge_start_vec);
+        pair<int, int> edge_start_pix_pr = _get_pixel_indices(edge_start_vec);
         int edge_start_x = edge_start_pix_pr.first;
         int edge_start_y = edge_start_pix_pr.second;
         
-        pair<int,int> edge_end_pix_pr = get_pixel_indices(edge_end_vec);
+        pair<int,int> edge_end_pix_pr = _get_pixel_indices(edge_end_vec);
         int edge_end_x = edge_end_pix_pr.first;
         int edge_end_y = edge_end_pix_pr.second;
         

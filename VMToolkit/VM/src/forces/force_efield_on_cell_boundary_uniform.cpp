@@ -5,7 +5,7 @@
  * \brief ForceEFieldOnCellBoundary class 
 */ 
 
-#include "force_efield_on_cell_boundary.hpp"
+#include "force_efield_on_cell_boundary_uniform.hpp"
 
 #include <limits> // std::numeric_limits<double>::signaling_NaN
 
@@ -29,10 +29,10 @@ namespace VMSim
 		size_t n_vertices = _sys.cmesh().cvertices().size();	
 		res.resize(n_vertices, Vec(0.0,0.0));
 			
-		for (auto& vertex : _sys.cmesh().cvertices())
+		for (const auto& vertex : _sys.cmesh().cvertices())
 		{
             Vec v_force(0.0,0.0);
-			for (auto& he : vertex.circulator()) {
+			for (const auto& he : vertex.circulator()) {
 				if (verbose) {
 					cout << "    computing force on vertex " << vertex.id << " by halfedge " << he.idx() << endl;
 				}

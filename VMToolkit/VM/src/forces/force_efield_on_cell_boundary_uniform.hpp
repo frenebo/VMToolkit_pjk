@@ -5,8 +5,8 @@
  * \brief ForceEFieldOnCellBoundary class 
 */ 
 
-#ifndef __FORCE_E_FIELD_ON_CELL_BOUNDARY_HPP__
-#define __FORCE_E_FIELD_ON_CELL_BOUNDARY_HPP__
+#ifndef __FORCE_E_FIELD_ON_CELL_BOUNDARY_UNIFORM_HPP__
+#define __FORCE_E_FIELD_ON_CELL_BOUNDARY_UNIFORM_HPP__
 
 #include "force.hpp"
 #include "polygon_zone.hpp"

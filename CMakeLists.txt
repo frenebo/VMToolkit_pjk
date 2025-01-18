@@ -10,4 +10,5 @@ endif()
 
 
 # Add VM subdirectory
+MESSAGE(STATUS "Root CMakeLists.txt - including VMToolkit/VM")
 add_subdirectory(VMToolkit/VM)

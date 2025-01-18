@@ -12,8 +12,8 @@
 #include "forces/force_area.hpp"
 #include "forces/force_perimeter.hpp"
 #include "forces/force_const_vertex_propulsion.hpp"
-#include "forces/force_efield_on_cell_boundary.hpp"
-#include "forces/force_efield_on_cellbound_pixelated.hpp"
+#include "forces/force_efield_on_cell_boundary_uniform.hpp"
+#include "forces/force_efield_on_cell_boundary_pixelated.hpp"
 
 
 
@@ -170,7 +170,7 @@ namespace VMSim
 			this->add<ForcePerimeter,const System&>(force_id, _sys);
 		} else if (force_type == "const_vertex_propulsion") {
 			this->add<ForceConstVertexPropulsion,const System&>(force_id, _sys);
-		} else if (force_type == "force_efield_on_cell_boundary") {
+		} else if (force_type == "force_efield_on_cell_boundary_uniform") {
 			this->add<ForceEFieldOnCellBoundary, const System&>(force_id, _sys);
 		} else if (force_type == "force_efield_on_cell_boundary_pixelated") {
 			this->add<ForceEFieldOnCellBoundPixelated, const System&>(force_id, _sys);

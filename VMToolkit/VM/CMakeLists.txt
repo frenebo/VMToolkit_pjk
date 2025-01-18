@@ -70,7 +70,7 @@ pybind11_add_module(VMTOOLKIT ${VMTOOLKIT_SRCS})
 
 if (SKBUILD)
     execute_process(COMMAND python -m site --user-site OUTPUT_VARIABLE PYTHON_SITE OUTPUT_STRIP_TRAILING_WHITESPACE)
-    MESSAGE(STATUS "Local Python site ${PYTHON_SITE}")
+    MESSAGE(STATUS "Local Python site is ${PYTHON_SITE}")
     set(lib_path "${PYTHON_SITE}/VMToolkit/VM")
 else()
     set(lib_path "${CMAKE_BINARY_DIR}")

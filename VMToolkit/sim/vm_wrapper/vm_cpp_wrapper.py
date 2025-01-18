@@ -321,7 +321,7 @@ class VMCppWrapper:
     def _add_cell_electric_boundary_force(self, force_id, force_spec, cell_indices, verbose=False):
         assert isinstance(force_spec, ElectricForceOnCellBoundary)
         
-        self._forces.add_force(force_id, "force_efield_on_cell_boundary")
+        self._forces.add_force(force_id, "force_efield_on_cell_boundary_uniform")
         
         field_spec = force_spec.electric_field_spec()
         if not isinstance(field_spec, EFieldSpecConstantPolygonRegion):
