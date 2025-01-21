@@ -181,8 +181,8 @@ def run_experiment(
         field_halves_npixels_wide = 5
         field_halves_npixels_tall = 2 * field_halves_npixels_wide
         
-        # field_halves_pixel_spacing = (left_field_xmax - left_field_xmin) / field_halves_npixels_wide
-        field_halves_pixel_spacing = 1.0
+        field_halves_pixel_spacing = (left_field_xmax - left_field_xmin) / field_halves_npixels_wide
+        # field_halves_pixel_spacing = 1.0
         
         tiss_init_state.forces()["left_forcing_field"] = make_CONST_TEST_pixelated_forcing_field_rectangular(
             xmin=left_field_xmin,
@@ -596,8 +596,11 @@ def generate_manifest_experiment_structure_from_battery_config(jobj, root_outdir
 def generate_battery_setup(args):
     if not os.path.exists(args.config_json):
         raise ValueError("'{}' does not exist".format(args.config_json))
-    if not os.path.isdir(args.output_dir):
-        raise ValueError("'{}' is not a directory".format(args.output_dir))
+    if not os.path.exists(args.output_dir):
+        if os.path.isdir(args.output_dir):
+            raise ValueError("'{}' is not a directory".format(args.output_dir))
+        else:
+            os.makedirs(args.output_dir)
     
     with open(args.config_json, "r") as f:
         battery_config = generate_manifest_experiment_structure_from_battery_config(

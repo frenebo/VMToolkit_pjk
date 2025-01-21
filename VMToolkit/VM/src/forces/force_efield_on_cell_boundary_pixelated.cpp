@@ -254,10 +254,16 @@ namespace VMSim
         } else if (edge_end_gridpos == pix_gridpos) {
             contained_endpt_pos = edge_end_r;
         } else {
-            cout << "Edge start grid pos : " << edge_start_gridpos.first << "," << edge_start_gridpos.second << endl;
-            cout << "Edge end grid pos : " << edge_end_gridpos.first << "," << edge_end_gridpos.second << endl;
-            cout << "Pix grid pos: " << pix_gridpos.first << "," << pix_gridpos.second << endl;
-            throw runtime_error("this is weird - the edge neither starts nor ends in this pixel, but we're in _get_intersection_of_line_ending_inside_pixel ");
+            cout << "_get_intersection_of_line_ending_inside_pixel: " << endl;
+            cout << "  Edge start grid pos : " << edge_start_gridpos.first << "," << edge_start_gridpos.second << endl;
+            cout << "  Edge end grid pos : " << edge_end_gridpos.first << "," << edge_end_gridpos.second << endl;
+            cout << "  Pix grid pos: " << pix_gridpos.first << "," << pix_gridpos.second << endl;
+            double relintx = intersection_rel_positions.at(0).x;
+            double relinty = intersection_rel_positions.at(0).y;
+            cout << "  Intersection relative position within pixel: " << relintx << "," << relinty << endl;
+            cout << "  this is weird - the edge neither starts nor ends in this pixel, but we're in _get_intersection_of_line_ending_inside_pixel " << endl;
+            cout << "  just returning zero..." << endl;
+            return 0.0;
         }
         
         /*
@@ -330,7 +336,8 @@ namespace VMSim
                 pix_intersected_lengths[pix_gridpos] = _get_intersection_of_line_passthrough_pixel(intersects_for_pix, verbose);
             } else {
                 cout << " pix n intersections: " << pix_num_intersections << endl;
-                throw runtime_error("Unexpected number of intersections...");
+                cout << " Unexpected number of intersections! just skipping this one." << endl;
+                // throw runtime_error("Unexpected number of intersections...");
             }
         }
         
@@ -545,6 +552,20 @@ namespace VMSim
             if (verbose) {
                 cout << "     the row crossing at idx#" << row_crossing_index << " crosses at x=" << row_crossing_x_pos << ", which has gridcol" << row_crossing_gridcol << " (nonfloored=" << row_crossing_gridcol_nonfloored << ")" << endl;
             }
+            
+            // // @NOTE IMPORTANT!!!
+            // // Floating point error makes this occasionally pick the 'wrong cell' - if the intersection is very close to a pixel's corner...
+            // double corner_closeness_thresh = 0.0001;
+            // // If close to the low end
+            // if ((row_crossing_gridcol_nonfloored - row_crossing_gridcol)/_gridspec.value().grid_spacing() < corner_closeness_thresh) {
+                
+            // }
+            // // If close to the high end
+            // if ((row_crossing_gridcol_nonfloored - row_crossing_gridcol)/_gridspec.value().grid_spacing() < corner_closeness_thresh) {
+                
+            // }
+            
+            
             pair<int, int> bot_cell_gridpos = std::pair<int,int> {
                 row_crossing_gridcol,
                 row_crossing_index - 1

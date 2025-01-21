@@ -210,6 +210,7 @@ namespace VMSim
         }
         
     private:
+        // void _dump_and_error
         void _clear_compute_cache(bool verbose);
         
         void _cache_all_computations(bool verbose);
