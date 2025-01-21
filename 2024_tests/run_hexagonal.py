@@ -12,13 +12,52 @@ from VMToolkit.sim import SimulationModel
 from VMToolkit.sim.vm_state import (
     VMState, SimulationSettings, IntegratorSettings, 
     CellAreaForce, CellPerimeterForce, ConstantVertexForce, CellGroup, VertexGroup,
-    ElectricForceOnCellBoundary, EFieldSpecConstantPolygonRegion, PolygonSpec,
+    UniformElectricForceOnCellBoundary, EFieldSpecConstantPolygonRegion, PolygonSpec,
+    PixelatedElectricForceOnCellBoundary, PixElecForceCellParam, PixelatedFieldSpec,
     TopologySettings, T1TransitionSettings,
     IntegratorSettingsDormandPrinceRungeKutta,
 )
 
+def make_CONST_TEST_pixelated_forcing_field_rectangular(
+    xmin,
+    ymin,
+    npixels_x,
+    npixels_y,
+    grid_spacing,
+    field_x,
+    field_y,
+    cell_ids_to_include,
+):
+    assert isinstance(npixels_x, int)
+    assert isinstance(npixels_y, int)
+    
+    cell_params = {}
+    for cell_id in cell_ids_to_include:
+        cell_params[cell_id] = PixElecForceCellParam(charge=1.0)
+    
+    field_data = []
+    for rowidx in range(npixels_x):
+        field_col = []
+        for colidx in range(npixels_y):
+            field_col.append([field_x, field_y])
+        field_data.append(field_col)
+    
+    return PixelatedElectricForceOnCellBoundary(
+        cell_params=cell_params,
+        field_spec=PixelatedFieldSpec(
+            grid_origin_x=xmin,
+            grid_origin_y=ymin,
+            grid_spacing=grid_spacing,
+            grid_ncells_x=npixels_x,
+            grid_ncells_y=npixels_y,
+            field_data=field_data,
+        ),
+    )
+    
+    
 
-def make_forcing_field_rectangular(
+
+def make_uniform_forcing_field_rectangular(
     xmin,
     xmax,
     ymin,
@@ -26,7 +65,7 @@ def make_forcing_field_rectangular(
     field_x,
     field_y,
     ):
-    return ElectricForceOnCellBoundary(
+    return UniformElectricForceOnCellBoundary(
         electric_field_spec=EFieldSpecConstantPolygonRegion(
             E_x=field_x,
             E_y=field_y,
@@ -44,9 +83,13 @@ def make_forcing_field_rectangular(
 def run_experiment(
     args,
     outdir,
+    verbose,
     ):
     if not os.path.exists(outdir):
         raise Exception("could not find {}".format(outdir))
+    
+    if verbose:
+        print("run_experiment - unpacking arguments for setting up this sim")
     
     A0_model = args.param_A0
     P0_model = args.param_P0
@@ -65,7 +108,8 @@ def run_experiment(
     dormand_prince_max_error = args.dormand_prince_max_error
     t1_min_edge_len_rel = args.t1_min_edge_len_rel
     t1_new_edge_len_rel = args.t1_new_edge_len_rel
-    
+    electric_field_type = args.electric_field_type
+    # electric_field_type == 
     n_checkpoints = args.n_checkpoints
     
     ckpt_period = args.ckpt_period
@@ -98,25 +142,69 @@ def run_experiment(
     tiss_init_state.forces()["perim_f_all"] = CellPerimeterForce(gamma=gamma, lam=P0_model*gamma)
     tiss_init_state.forces()["area_f_all"] = CellAreaForce(A0=A0_model, kappa=kappa)
     
+    left_field_xmin = (1/2)*field_size_multiplier*(-box_lx)
+    left_field_xmax = (1/2)*field_size_multiplier*(-box_lx)*0.0
+    left_field_ymin = (1/2)*field_size_multiplier*(-box_ly)
+    left_field_ymax = (1/2)*field_size_multiplier*(box_ly)
     
+    right_field_xmin = (1/2)*field_size_multiplier*(box_lx)*0.0
+    right_field_xmax = (1/2)*field_size_multiplier*(box_lx)
+    right_field_ymin = (1/2)*field_size_multiplier*(-box_ly)
+    right_field_ymax = (1/2)*field_size_multiplier*(box_ly)
     
-    tiss_init_state.forces()["left_forcing_field"] = make_forcing_field_rectangular(
-        xmin=(1/2)*field_size_multiplier*(-box_lx),
-        xmax=(1/2)*field_size_multiplier*(-box_lx)*0.0,
-        ymin=(1/2)*field_size_multiplier*(-box_ly),
-        ymax=(1/2)*field_size_multiplier*(box_ly),
-        field_y=field_strength,
-        field_x=0,
-    )
-    tiss_init_state.forces()["right_forcing_field"] = make_forcing_field_rectangular(
-        xmin=(1/2)*field_size_multiplier*(box_lx)*0.0,
-        xmax=(1/2)*field_size_multiplier*(box_lx),
-        ymin=(1/2)*field_size_multiplier*(-box_ly),
-        ymax=(1/2)*field_size_multiplier*(box_ly),
-        field_y=(-1.0)*field_strength,
-        field_x=0,
-    )
+    left_field_E_x = 0
+    left_field_E_y = field_strength
+    right_field_E_x = 0
+    right_field_E_y = (-1.0)*field_strength
     
+    if electric_field_type == "uniform":
+        tiss_init_state.forces()["left_forcing_field"] = make_uniform_forcing_field_rectangular(
+            xmin=left_field_xmin,
+            xmax=left_field_xmax,
+            ymin=left_field_ymin,
+            ymax=left_field_ymax,
+            field_x=left_field_E_x,
+            field_y=left_field_E_y,
+        )
+        tiss_init_state.forces()["right_forcing_field"] = make_uniform_forcing_field_rectangular(
+            xmin=right_field_xmin,
+            xmax=right_field_xmax,
+            ymin=right_field_ymin,
+            ymax=right_field_ymax,
+            field_y=right_field_E_y,
+            field_x=right_field_E_x,
+        )
+    else:
+        cell_ids_from_normal_group = tiss_init_state.cell_groups()["normal"].cell_ids()
+        
+        #@TODO this is a bad way to do this - put all this in a function, with width/height etc as args
+        field_halves_npixels_wide = 5
+        field_halves_npixels_tall = 2 * field_halves_npixels_wide
+        
+        # field_halves_pixel_spacing = (left_field_xmax - left_field_xmin) / field_halves_npixels_wide
+        field_halves_pixel_spacing = 1.0
+        
+        tiss_init_state.forces()["left_forcing_field"] = make_CONST_TEST_pixelated_forcing_field_rectangular(
+            xmin=left_field_xmin,
+            ymin=left_field_ymin,
+            npixels_x=field_halves_npixels_wide,
+            npixels_y=field_halves_npixels_tall,
+            grid_spacing=field_halves_pixel_spacing,
+            field_x=left_field_E_x,
+            field_y=left_field_E_y,
+            cell_ids_to_include=cell_ids_from_normal_group,
+        )
+        tiss_init_state.forces()["right_forcing_field"] = make_CONST_TEST_pixelated_forcing_field_rectangular(
+            xmin=right_field_xmin,
+            ymin=right_field_ymin,
+            npixels_x=field_halves_npixels_wide,
+            npixels_y=field_halves_npixels_tall,
+            grid_spacing=field_halves_pixel_spacing,
+            field_x=right_field_E_x,
+            field_y=right_field_E_y,
+            cell_ids_to_include=cell_ids_from_normal_group,
+        )
+        
     tiss_init_state.cell_groups()["normal"].force_ids().extend([
         "perim_f_all",
         "area_f_all",
@@ -154,7 +242,7 @@ def run_experiment(
     # # Create the initial configuration and read it into the c++ model
     # # #################################################################
     print("Instantiating SimulationModel")
-    sim_model = SimulationModel(verbose=False)
+    sim_model = SimulationModel(verbose=verbose)
     print("Running sim_model.load_from_json_state")
     
         
@@ -182,7 +270,7 @@ def run_experiment(
             f.write(json.dumps(vmstate_json, indent=4))
         
         checkpoint_fps.append(ckpt_fp)
-        sim_model.run_with_adaptive_tstep(ckpt_period, do_time_force_computation=True, verbose=False)
+        sim_model.run_with_adaptive_tstep(ckpt_period, do_time_force_computation=True, verbose=verbose)
         tot_time_elaspsed += ckpt_period
         print("Time elapsed: {}".format(tot_time_elaspsed))
         if sim_model._check_topology_changed():
@@ -205,6 +293,7 @@ class ExperimentConfig:
     dormand_prince_max_error: float
     ckpt_period: int
     n_checkpoints: int
+    electric_field_type: str
 
 def generate_vals_for_A0_P0(shapeparam_vals, param_kappa, param_gamma):
     vals_for_A0_P0 = []
@@ -259,20 +348,6 @@ def predict_shear_bulk_mod(
         "shear_mod": shear_modulus,
         "bulk_mod": bulk_modulus,
     }
-    
-    # if shear_modulus is None:
-    #     raise ValueError("Shear modulus is none, for A0={A0}, P0={P0}, Kappa={K},Gam={Gam}.".format(
-    #         A0=A0_val,
-    #         P0=P0_val,
-    #         K=param_kappa,
-    #         Gam=param_gamma,
-    #     ))
-    
-    # print(" required ratios: {}".format(field_strength_to_shearmod_ratios))
-    # print("Shear modulus: {}".format(shear_modulus))
-    
-    # return [ ratio*shear_modulus for ratio in field_strength_to_shearmod_ratios ]
-    
         
 def generate_manifest_experiment_structure_from_battery_config(jobj, root_outdir):
     # root_outdir 
@@ -296,11 +371,21 @@ def generate_manifest_experiment_structure_from_battery_config(jobj, root_outdir
     
     do_scale_force_with_shear_modulus = "do_scale_force_with_shear_modulus" in jobj["settings"] and jobj["settings"]["do_scale_force_with_shear_modulus"]
     do_scale_force_with_BULK_modulus = "do_scale_force_with_BULK_modulus" in jobj["settings"] and jobj["settings"]["do_scale_force_with_BULK_modulus"]
+    do_AB_test_electric_field_types = "do_AB_test_field_types" in jobj["settings"] and jobj["settings"]["do_AB_test_field_types"]
     
     if do_scale_force_with_shear_modulus and do_scale_force_with_BULK_modulus:
         raise ValueError("Invalid config - force cannot be scaled with both bulk modulus and shear modulus at the same time")
     
-    
+    if do_AB_test_electric_field_types:
+        assert "electric_field_type" not in jobj["defaults"]
+        electric_field_types = ["pixelated", "uniform"]
+    else:
+        default_elec_field_type = jobj["defaults"]["electric_field_type"]
+        if default_elec_field_type not in ["uniform", "pixelated"]:
+            raise ValueError("Invalid default electric_field_type: {}".format(default_elec_field_type))
+        
+        electric_field_types = [ default_elec_field_type ]
+        
     
     if do_scale_force_with_shear_modulus:
         field_strength_default_val = None
@@ -414,51 +499,55 @@ def generate_manifest_experiment_structure_from_battery_config(jobj, root_outdir
                 "shape_param": conf_A0P0["shape_param"],
                 "bulk_mod": bulkmodulus_val,
             })
+            
+    
     
     
     
     all_experiment_configs = []
-    for conf_params in vals_for_A0P0_field_strength:
-        A0_val = conf_params["A0"]
-        P0_val = conf_params["P0"]
-        field_strength = conf_params["field_strength"]
+    for efield_type in electric_field_types:
+        for conf_params in vals_for_A0P0_field_strength:
+            A0_val = conf_params["A0"]
+            P0_val = conf_params["P0"]
+            field_strength = conf_params["field_strength"]
+            
+            if do_scale_friction_with_shearmod:
+                friction_gam_val = friction_to_shearmod_ratio * conf_params["shear_mod"]
+            elif do_scale_friction_with_BULKmod:
+                friction_gam_val = friction_to_BULKmod_ratio * conf_params["bulk_mod"]
+            else:
+                friction_gam_val = friction_gam_default_value
+            # if ckpt_period_default_value is not None:
+            #     ckpt_period = ckpt_period_default_value
+            # else:
+            #     ckpt_period = (1.0/field_strength) * ckpt_period_to_inv_field_force_ratio
+            
+            all_experiment_configs.append({
+                "metadata": {
+                    "shape_param": conf_params["shape_param"],
+                    "shear_mod_theory": conf_params["shear_mod"],
+                    "bulk_mod_theory": conf_params["bulk_mod"]
+                },
+                "params": {
+                    "box_size_rel_x":               jobj["defaults"]["box_size_rel_x"],
+                    "box_size_rel_y":               jobj["defaults"]["box_size_rel_y"],
+                    "field_strength":           field_strength,
+                    "param_A0":                 A0_val,
+                    "param_P0":                 P0_val,
+                    "electric_field_type":      efield_type,
+                    "param_gamma":              jobj["defaults"]["param_gamma"],
+                    "param_kappa":              jobj["defaults"]["param_kappa"],
+                    "field_size_multiplier":    jobj["defaults"]["field_size_multiplier"],
+                    "ckpt_period":              jobj["defaults"]["ckpt_period"],
+                    "vertex_friction_gamma":    friction_gam_val,
+                    "t1_min_edge_len_rel":      jobj["defaults"]["t1_min_edge_len_rel"],
+                    "t1_new_edge_len_rel":      jobj["defaults"]["t1_new_edge_len_rel"],
+                    "init_integrator_dt":       jobj["defaults"]["init_integrator_dt"],
+                    "dormand_prince_max_error": jobj["defaults"]["dormand_prince_max_error"],
+                    "n_checkpoints":            jobj["defaults"]["n_checkpoints"],
+                },
+            })
         
-        if do_scale_friction_with_shearmod:
-            friction_gam_val = friction_to_shearmod_ratio * conf_params["shear_mod"]
-        elif do_scale_friction_with_BULKmod:
-            friction_gam_val = friction_to_BULKmod_ratio * conf_params["bulk_mod"]
-        else:
-            friction_gam_val = friction_gam_default_value
-        # if ckpt_period_default_value is not None:
-        #     ckpt_period = ckpt_period_default_value
-        # else:
-        #     ckpt_period = (1.0/field_strength) * ckpt_period_to_inv_field_force_ratio
-        
-        all_experiment_configs.append({
-            "metadata": {
-                "shape_param": conf_params["shape_param"],
-                "shear_mod_theory": conf_params["shear_mod"],
-                "bulk_mod_theory": conf_params["bulk_mod"]
-            },
-            "params": {
-                "box_size_rel_x":               jobj["defaults"]["box_size_rel_x"],
-                "box_size_rel_y":               jobj["defaults"]["box_size_rel_y"],
-                "field_strength":           field_strength,
-                "param_A0":                 A0_val,
-                "param_P0":                 P0_val,
-                "param_gamma":              jobj["defaults"]["param_gamma"],
-                "param_kappa":              jobj["defaults"]["param_kappa"],
-                "field_size_multiplier":    jobj["defaults"]["field_size_multiplier"],
-                "ckpt_period":              jobj["defaults"]["ckpt_period"],
-                "vertex_friction_gamma":    friction_gam_val,
-                "t1_min_edge_len_rel":      jobj["defaults"]["t1_min_edge_len_rel"],
-                "t1_new_edge_len_rel":      jobj["defaults"]["t1_new_edge_len_rel"],
-                "init_integrator_dt":       jobj["defaults"]["init_integrator_dt"],
-                "dormand_prince_max_error": jobj["defaults"]["dormand_prince_max_error"],
-                "n_checkpoints":            jobj["defaults"]["n_checkpoints"],
-            },
-        })
-    
     manifest_abspath = os.path.join(
         root_outdir,
         "manifest_experiments.json",
@@ -516,7 +605,7 @@ def generate_battery_setup(args):
             root_outdir=args.output_dir,
         )
 
-def spawn_child(run_dirpath, run_config_json_fp,  *xargs):
+def spawn_child(run_dirpath, run_config_json_fp,  verbose):
     print("\nStarting as child...")
     # print(run_dirpath)
     print("Reading from: ", run_config_json_fp)
@@ -526,12 +615,13 @@ def spawn_child(run_dirpath, run_config_json_fp,  *xargs):
     experiment_config = ExperimentConfig(**conf_jobj["params"])
     print(experiment_config)
     
-    run_experiment(experiment_config, outdir=run_dirpath)
+    run_experiment(experiment_config, outdir=run_dirpath, verbose=verbose)
 
 
 def run_battery(
     manifest_json_fp,
     nproc,
+    verbose,
     ):
     if not os.path.exists(manifest_json_fp):
         raise ValueError("Could not find '{}'".format(manifest_json_fp))
@@ -559,6 +649,7 @@ def run_battery(
         child_creation_args.append([
             ckpts_absdir,
             conf_json_path,
+            verbose,
         ])
         
     with Pool(processes=nproc) as pool:
@@ -591,6 +682,7 @@ if __name__ == "__main__":
     single_experiment_parser.add_argument("--init_integrator_dt", default=0.005, type=float, help="Initial dt to try for the adaptive integrator")
     single_experiment_parser.add_argument("--dormand_prince_max_error", default= 0.02, type=float,help="Max error (between fourth and fifth order runge kutta dormand prince results) to allow for a calcuation of a new vertex position.")
     single_experiment_parser.add_argument("--n_checkpoints", default=500, type=int, help="Number of checkpoints to run")
+    single_experiment_parser.add_argument("--verbose", action='store_true')
     
     
     battery_generator_parser = subparsers.add_parser("generate_battery_setup")
@@ -601,19 +693,21 @@ if __name__ == "__main__":
     battery_runner_parser = subparsers.add_parser("run_battery")
     battery_runner_parser.add_argument("--manifest_json", required=True, help="Json file with the manifest of the child experiments to be run. Generated with the generate_battery_setup command.")
     battery_runner_parser.add_argument("--nproc", type=int, default=1, help="Number of processes to use in parallel")
+    battery_runner_parser.add_argument("--verbose",  action='store_true', help="Log everything that's going on")
     
     
     
     args = parser.parse_args()
     
     if args.command == "single":
-        configs = run_experiment(args, outdir=args.outdir)
+        configs = run_experiment(args, outdir=args.outdir, verbose=args.verbose)
     elif args.command == "generate_battery_setup":
         generate_battery_setup(args)
     elif args.command == "run_battery":
         run_battery(
             manifest_json_fp=args.manifest_json,
-            nproc=args.nproc
+            nproc=args.nproc,
+            verbose=args.verbose,
         )
     else:
         raise ValueError("unknown command '{}'".format(args.command))

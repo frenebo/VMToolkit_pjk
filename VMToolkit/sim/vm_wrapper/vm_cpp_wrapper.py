@@ -12,8 +12,9 @@ from ..vm_state import (
     VertexGeometry,
     VertexForce,
     CellForce,
-    ElectricForceOnCellBoundary,
+    UniformElectricForceOnCellBoundary,
     EFieldSpecConstantPolygonRegion,
+    PixelatedElectricForceOnCellBoundary,
     PolygonSpec,
     CellTopology,
     IntegratorSettingsDormandPrinceRungeKutta,
@@ -299,7 +300,10 @@ class VMCppWrapper:
             })
             
         self._forces.set_face_params_facewise(
-            force_id, cell_indices, area_force_configs, verbose
+            force_id,
+            cell_indices,
+            area_force_configs,
+            verbose
         )
     
     def _add_cell_perimeter_force(self, force_id, force_spec, cell_indices, verbose=False):
@@ -318,8 +322,8 @@ class VMCppWrapper:
             force_id, cell_indices, perimeter_force_configs, verbose
         )
         
-    def _add_cell_electric_boundary_force(self, force_id, force_spec, cell_indices, verbose=False):
-        assert isinstance(force_spec, ElectricForceOnCellBoundary)
+    def _add_cell_electric_boundary_uniform_force(self, force_id, force_spec, cell_indices, verbose=False):
+        assert isinstance(force_spec, UniformElectricForceOnCellBoundary)
         
         self._forces.add_force(force_id, "force_efield_on_cell_boundary_uniform")
         
@@ -347,6 +351,8 @@ class VMCppWrapper:
         self._forces.set_global_params(force_id, 
             num_params=num_params,
             str_params=str_params,
+            int_params={},
+            flt_array_params={},
         )
         
         fids = list(cell_indices)
@@ -374,6 +380,64 @@ class VMCppWrapper:
             force_id, vertex_indices, const_vtx_force_configs, verbose
         )
     
+    def _add_pixelated_electric_boundary_force(self, force_id, force_spec, cell_indices_for_force, verbose=False):
+        assert isinstance(force_spec, PixelatedElectricForceOnCellBoundary)
+        
+        self._forces.add_force(force_id, "force_efield_on_cell_boundary_pixelated")
+        
+        field_spec = force_spec.field_spec()
+        
+        flattened_field_pix_vals = []
+        for col in field_spec.field_data():
+            for entry in col:
+                for coord in entry:
+                    flattened_field_pix_vals.append(coord)
+        
+        self._forces.set_global_params(
+            force_id,
+            num_params={
+                "grid_origin_x": field_spec.grid_origin_x(),
+                "grid_origin_y": field_spec.grid_origin_y(),
+                "grid_spacing": field_spec.grid_spacing(),
+            },
+            str_params={},
+            int_params={
+                "grid_ncells_x": field_spec.grid_ncells_x(),
+                "grid_ncells_y": field_spec.grid_ncells_y(),
+            },
+            flt_array_params={
+                "flattened_field_vals_by_pixel": flattened_field_pix_vals,
+            },
+            verbose=verbose,
+        )
+        
+        face_indices =    []
+        face_cpp_params = []
+        
+        for face_string_id, face_param in force_spec.cell_params().items():
+            face_idx = self._ids_to_cpp_index_maps["cell_ids_to_idx"][face_string_id]
+            if face_idx not in cell_indices_for_force:
+                print("Cell indice for force... ")
+                print(cell_indices_for_force)
+                raise ValueError("Face id '{faceid}' (c++ index={cppindex}) not included in the group of this force (id={force_id}) ...".format(
+                    faceid=face_string_id,
+                    cppindex=face_idx,
+                    force_id=force_id,
+                ))
+            
+            face_indices.append(face_idx)
+            face_cpp_params.append({
+                "charge": face_param.charge()
+            })
+        
+        
+        self._forces.set_face_params_facewise(
+            force_id,
+            face_indices,
+            face_cpp_params,
+            verbose=verbose
+        )
+    
     def _add_new_vertex_force(self, force_id, force_spec, vertex_indices_force, verbose=False):
         assert isinstance(force_spec, VertexForce)
         
@@ -389,8 +453,10 @@ class VMCppWrapper:
             self._add_cell_area_force(force_id, force_spec, cell_indices_force, verbose=verbose)
         elif isinstance(force_spec, CellPerimeterForce):
             self._add_cell_perimeter_force(force_id, force_spec, cell_indices_force, verbose=verbose)
-        elif isinstance(force_spec, ElectricForceOnCellBoundary):
-            self._add_cell_electric_boundary_force(force_id, force_spec, cell_indices_force, verbose=verbose)
+        elif isinstance(force_spec, UniformElectricForceOnCellBoundary):
+            self._add_cell_electric_boundary_uniform_force(force_id, force_spec, cell_indices_force, verbose=verbose)
+        elif isinstance(force_spec, PixelatedElectricForceOnCellBoundary):
+            self._add_pixelated_electric_boundary_force(force_id, force_spec, cell_indices_force, verbose=verbose)
         else:
             raise ValueError("Unknown CELL force spec type for force id {} ... {}".format(force_id, force_spec))
         

@@ -50,9 +50,19 @@ namespace VMSim
         throw runtime_error("Unimplemented Force::set_vertex_params_vertexwise - has not been overridden in child class apparently.");
       }
       
-      virtual void set_global_params(const params_type& params,const std::map<string,string>& str_params, bool verbose)
-      {
+      virtual void set_global_params(
+        const params_type& num_params,
+        const std::map<string,string>& str_params,
+        const std::map<string, int>& int_params,
+        const map<string, vector<double>> flt_array_params,
+        bool verbose
+      ) {
         throw runtime_error("Unimplemented Force::set_global_params - apparently has not been overriden in child class.");
+      }
+      
+      virtual void set_global_floatarray_params(const map<string, vector<double>>& params, bool verbose)
+      {
+        throw runtime_error("Unimplemented Force::set_global_floatarray_params - apparently has not been overriden in child class.");
       }
     
     protected:

@@ -1,3 +1,4 @@
+import copy
 
 class PolygonSpec:
     @staticmethod
@@ -91,18 +92,20 @@ class CellForce:
             return CellAreaForce.from_json(jobj)
         elif jobj["type"] == CellPerimeterForce.force_type:
             return CellPerimeterForce.from_json(jobj)
-        elif jobj["type"] == ElectricForceOnCellBoundary.force_type:
-            return ElectricForceOnCellBoundary.from_json(jobj)
+        elif jobj["type"] == UniformElectricForceOnCellBoundary.force_type:
+            return UniformElectricForceOnCellBoundary.from_json(jobj)
+        elif jobj["type"] == PixelatedElectricForceOnCellBoundary.force_type:
+            return PixelatedElectricForceOnCellBoundary.from_json(jobj)
         else:
             raise ValueError("Unknown cell force type '{}'".format(jobj["type"]))
 
-class ElectricForceOnCellBoundary(CellForce):
-    force_type = "electric_cell_boundary_force"
+class UniformElectricForceOnCellBoundary(CellForce):
+    force_type = "uniform_electric_cell_boundary_force"
     @classmethod
     def from_json(cls, jobj):
         assert jobj["type"] == cls.force_type
         
-        return ElectricForceOnCellBoundary(
+        return UniformElectricForceOnCellBoundary(
             ElectricFieldSpec.from_json(jobj["field_spec"])
         )
     
@@ -120,6 +123,173 @@ class ElectricForceOnCellBoundary(CellForce):
             "field_spec": self._electric_field_spec.to_json(),
         }
 
+class PixelatedFieldSpec:
+    field_type = "pixelated_electric_field_spec"
+    @classmethod
+    def from_json(cls, jobj):
+        assert jobj["type"] == cls.field_type
+        
+        grid_origin_x = jobj["grid_origin_x"]
+        grid_origin_y = jobj["grid_origin_y"]
+        grid_spacing =  jobj["grid_spacing"]
+        grid_ncells_x = jobj["grid_ncells_x"]
+        grid_ncells_y = jobj["grid_ncells_y"]
+        
+        assert isinstance(grid_origin_x, float) or isinstance(grid_origin_x, int)
+        assert isinstance(grid_origin_y, float) or isinstance(grid_origin_y, int)
+        assert isinstance(grid_spacing, float) or isinstance(grid_spacing, int)
+        
+        assert isinstance(grid_ncells_x, int)
+        assert isinstance(grid_ncells_y, int)
+        
+        field_data = cls.decode_field_data(
+            jobj["field_data"],
+            grid_ncells_x=grid_ncells_x,
+            grid_ncells_y=grid_ncells_y,
+        )
+        
+        return PixelatedFieldSpec(
+            grid_origin_x=grid_origin_x,
+            grid_origin_y=grid_origin_y,
+            grid_spacing=grid_spacing,
+            grid_ncells_x=grid_ncells_x,
+            grid_ncells_y=grid_ncells_y,
+            field_data=field_data,
+        )
+    
+    @classmethod
+    def decode_field_data(cls, field_data_arr, grid_ncells_x, grid_ncells_y):
+        assert isinstance(field_data_arr, list)
+        assert len(field_data_arr) == grid_ncells_x
+        for col in field_data_arr:
+            assert isinstance(col, list)
+            assert len(col) == grid_ncells_y
+            
+            for field_xy_pair in col:
+                assert isinstance(field_xy_pair, list)
+                
+                assert len(field_xy_pair) == 2 # x and y components of the field at this point
+                for el in field_xy_pair:
+                    assert isinstance(el, float) or isinstance(el, int) # should be numbers
+        
+        return copy.deepcopy(field_data_arr)
+    
+    def __init__(
+        self,
+        grid_origin_x,
+        grid_origin_y,
+        grid_spacing,
+        grid_ncells_x,
+        grid_ncells_y,
+        field_data,
+        ):
+        self._grid_origin_x = grid_origin_x
+        self._grid_origin_y = grid_origin_y
+        self._grid_spacing = grid_spacing
+        self._grid_ncells_x = grid_ncells_x
+        self._grid_ncells_y = grid_ncells_y
+        self._field_data = field_data
+        
+    def grid_origin_x(self):
+        return self._grid_origin_x
+    
+    def grid_origin_y(self):
+        return self._grid_origin_y
+    
+    def grid_spacing(self):
+        return self._grid_spacing
+    
+    def grid_ncells_x(self):
+        return self._grid_ncells_x
+    
+    def grid_ncells_y(self):
+        return self._grid_ncells_y
+    
+    def field_data(self):
+        return self._field_data
+    
+    def to_json(self):
+        return {
+            "type":          self.field_type,
+            "grid_origin_x": self._grid_origin_x,
+            "grid_origin_y": self._grid_origin_y,
+            "grid_spacing":  self._grid_spacing,
+            "grid_ncells_x": self._grid_ncells_x,
+            "grid_ncells_y": self._grid_ncells_y,
+            "field_data": copy.deepcopy(self._field_data),
+        }
+        
+        
+class PixElecForceCellParam:
+    @classmethod
+    def from_json(cls, jobj):
+        charge = jobj["charge"]
+        assert isinstance(charge, float) or isinstance(charge, int)
+        return PixElecForceCellParam(
+            charge=charge,
+        )
+    
+    def __init__(self, charge):
+        self._charge = charge
+        
+    def charge(self):
+        return self._charge
+        
+    def to_json(self):
+        return {
+            "charge": self._charge,
+        }
+
+class PixelatedElectricForceOnCellBoundary(CellForce):
+    force_type = "pixelated_electric_cell_boundary_force"
+    
+    @classmethod
+    def from_json(cls, jobj):
+        assert jobj["type"] == cls.force_type
+        
+        field_spec = PixelatedFieldSpec.from_json(jobj["field_spec"])
+        
+        cell_params_jobj = jobj["cell_params"]
+        assert isinstance(cell_params_jobj, dict)
+        
+        
+        cell_params_res = {}
+        for cell_id, cell_p_jobj in cell_params_jobj.items():
+            cell_p_res = PixElecForceCellParam.from_json(cell_p_jobj)
+            cell_params_res[cell_id] = cell_p_res
+        
+        
+        return PixelatedElectricForceOnCellBoundary(
+            cell_params=cell_params_res,
+            field_spec=field_spec,            
+        )
+    
+    def __init__(
+        self,
+        cell_params,
+        field_spec,
+    ):
+        self._cell_params = cell_params
+        self._field_spec = field_spec
+    
+    def cell_params(self):
+        return self._cell_params
+    
+    def field_spec(self):
+        return self._field_spec
+    
+    def to_json(self):
+        cell_params_jobj = {}
+        for cell_id, cell_p in self._cell_params.items():
+            cell_params_jobj[cell_id] = cell_p.to_json()
+        
+        
+        return {
+            "type":        self.force_type,
+            "target":      self.target_type,
+            "field_spec":  self._field_spec.to_json(),
+            "cell_params": cell_params_jobj,
+        }
 
 class CellAreaForce(CellForce):
     force_type = "area"

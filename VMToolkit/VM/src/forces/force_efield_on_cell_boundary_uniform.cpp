@@ -110,8 +110,13 @@ namespace VMSim
         );
     }
     
-    void ForceEFieldOnCellBoundary::set_global_params(const params_type& num_params, const map<string,string>& str_params, bool verbose)
-    {
+    void ForceEFieldOnCellBoundary::set_global_params(
+        const params_type& num_params,
+        const std::map<string,string>& str_params,
+        const std::map<string, int>& int_params,
+        const map<string, vector<double>> flt_array_params,
+        bool verbose
+    ) {
         string field_type = str_params.at("field_type");
         if (field_type != "constant") {
             throw runtime_error("Unknown field type '" + field_type + "'");

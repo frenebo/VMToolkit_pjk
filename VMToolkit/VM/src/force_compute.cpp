@@ -8,6 +8,7 @@
 #include "force_compute.hpp"
 
 #include <stdexcept>
+// #include <
 
 #include "forces/force_area.hpp"
 #include "forces/force_perimeter.hpp"
@@ -20,6 +21,7 @@
 using std::runtime_error;
 using std::cout;
 using std::endl;
+using std::map;
 
 namespace VMSim
 {
@@ -113,17 +115,29 @@ namespace VMSim
 	
 	
 
-	void ForceCompute::set_global_params(const string& force_id, const params_type& num_params, const map<string,string>& str_params,  bool verbose)
-	{
+	void ForceCompute::set_global_params(
+		const string& force_id,
+		const map<string, double>& num_params,
+		const map<string,string>& str_params,
+        const map<string, int>& int_params,
+        const map<string, vector<double>> flt_array_params,
+		bool verbose
+	) {
 		if (this->factory_map.find(force_id) != this->factory_map.end()) {
-			this->factory_map[force_id]->set_global_params(num_params,str_params, verbose);
+			this->factory_map[force_id]->set_global_params(
+				num_params,
+				str_params,
+				int_params,
+				flt_array_params,
+				verbose
+			);
 		} else {
 			throw runtime_error("ForceCompute::set_global_params: Force id " + force_id + " has not been added yet, could not set its params");
 		}
 	}
 
 	
-	void ForceCompute::set_face_params_facewise(const string& force_id, const vector<int>& fids, const vector<params_type>& params, bool verbose)
+	void ForceCompute::set_face_params_facewise(const string& force_id, const vector<int>& fids, const vector<map<string,double>>& params, bool verbose)
 	{
 		if (!(fids.size() == params.size())) {
 			throw runtime_error(
@@ -139,7 +153,7 @@ namespace VMSim
 		}
 	}
 	
-	void ForceCompute::set_vertex_params_vertexwise(const string& force_id, const vector<int>& vids, const vector<params_type>& params, bool verbose)
+	void ForceCompute::set_vertex_params_vertexwise(const string& force_id, const vector<int>& vids, const vector< map<string,double> >& params, bool verbose)
 	{
 		if (!(vids.size() == params.size())) {
 			throw runtime_error(
@@ -184,7 +198,12 @@ namespace VMSim
 		py::class_<ForceCompute>(m, "ForceCompute")
 			.def(py::init<System &>())
 			.def("set_global_params", &ForceCompute::set_global_params,
-				py::arg("force_id"), py::arg("num_params"), py::arg("str_params"), py::arg("verbose")=false
+				py::arg("force_id"),
+				py::arg("num_params"),
+				py::arg("str_params"),
+				py::arg("int_params"),
+				py::arg("flt_array_params"),
+				py::arg("verbose")=false
 			)
 			.def("set_face_params_facewise", &ForceCompute::set_face_params_facewise,
 				py::arg("force_id"), py::arg("face_ids"), py::arg("params"), py::arg("verbose")=false

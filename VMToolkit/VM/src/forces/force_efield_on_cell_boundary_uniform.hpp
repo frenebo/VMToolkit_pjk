@@ -26,7 +26,13 @@ namespace VMSim
         
 		virtual ~ForceEFieldOnCellBoundary() {}
       
-		void set_global_params(const params_type& num_params, const map<string,string>& str_params, bool verbose) override;
+		void set_global_params(
+			const params_type& num_params,
+			const std::map<string,string>& str_params,
+			const std::map<string, int>& int_params,
+			const map<string, vector<double>> flt_array_params,
+			bool verbose
+		) override;
 		
 		void compute_all_vertex_forces(vector<Vec>& res, bool verbose) override;
 

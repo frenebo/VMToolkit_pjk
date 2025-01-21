@@ -45,7 +45,14 @@ namespace VMSim
       
       void compute_all_vertex_forces(vector<Vec>& res_forces, bool verbose);
       
-      void set_global_params(const std::string& force_id, const params_type& num_params, const std::map<string,string>& str_params,  bool verbose);
+      void set_global_params(
+        const std::string& force_id,
+        const std::map<string, double>& num_params,
+        const std::map<string,string>& str_params,
+        const map<string, int>& int_params,
+        const map<string, vector<double>> flt_array_params,
+        bool verbose
+      );
       
       void set_face_params_facewise(const std::string& force_id, const vector<int>& fids, const vector<params_type>& params, bool verbose);
       

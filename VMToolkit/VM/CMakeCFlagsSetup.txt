@@ -7,7 +7,7 @@ if(NOT PASSED_FIRST_CONFIGURE)
        execute_process(COMMAND git rev-parse HEAD OUTPUT_VARIABLE GIT_REV ERROR_QUIET)
        string(STRIP ${GIT_REV} GIT_REV)
 	 
-       set(CMAKE_CXX_STANDARD "17"
+       set(CMAKE_CXX_STANDARD "20"
            CACHE STRING
            "Version of C++ used by the compiler." FORCE)
        set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall"
