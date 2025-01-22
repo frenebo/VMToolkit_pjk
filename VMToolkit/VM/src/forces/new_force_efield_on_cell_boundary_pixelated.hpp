@@ -51,6 +51,17 @@ namespace PixelatedElectricStuff
             if (_right_intersection_loc.has_value()) { throw runtime_error("_right_side_intersection_loc already has value"); }
             _right_intersection_loc = loc;
         }
+        
+        int count_intersections() const {
+            int n_intersects = 0;
+            
+            if (has_top_intersection()) n_intersects++;
+            if (has_bottom_intersection()) n_intersects++;
+            if (has_left_intersection()) n_intersects++;
+            if (has_right_intersection()) n_intersects++;
+            
+            return n_intersects;
+        }
     private:
         optional<double> _top_intersection_loc;
         optional<double> _bottom_intersection_loc;
@@ -345,6 +356,12 @@ namespace PixelatedElectricStuff
         vector<int> _get_column_crossings_of_edge(GridCoord edge_start, GridCoord edge_end, bool verbose) const;
         vector<int> _get_row_crossings_of_edge(GridCoord edge_start, GridCoord edge_end, bool verbose) const;
         double get_relative_position_of_crossing_along_edge(int crossing_coord, double edge_start_coord, double edge_end_coord) const;
+        
+        double _get_intersection_with_row_and_find_rel_pos_in_column(const Vec& edge_start_VEC, const Vec& edge_end_VEC, int row_to_intersect, int snap_column, bool verbose) const;
+        
+        double _get_intersection_with_column_and_find_rel_pos_in_row(const Vec& edge_start_VEC, const Vec& edge_end_VEC, int column_to_intersect, int snap_row, bool verbose) const;
+        
+        vector<Vec> _get_pixel_intersection_absolute_coordinates(const GridCoord& pixel_gridpos, const PixelIntersectionsDescriptor& pix_intersections, bool verbose) const;
         
         optional<GridSpec> _gridspec;
         optional<vector<Vec>> _flattened_field_vecs;

@@ -60,6 +60,92 @@ namespace PixelatedElectricStuff
         }
     }
     
+    double NEWForceEFieldOnCellBoundPixelated::_get_intersection_with_row_and_find_rel_pos_in_column(const Vec& edge_start_VEC, const Vec& edge_end_VEC, int row_to_intersect, int snap_column, bool verbose) const
+    {
+        if (!_gridspec) {
+            throw runtime_error("_gridspec not set - get_intersection_with_row_and_constrain_to_column can't work");
+        }
+        GridCoord snap_pixel_gridcoord = GridCoord(snap_column, row_to_intersect);
+        Vec pixel_origin = _get_vec_coords_for_grid_pos(snap_pixel_gridcoord, verbose);
+        
+        double vy = (edge_end_VEC.y - edge_start_VEC.y);
+        double vx = (edge_end_VEC.x - edge_start_VEC.x);
+        
+        double y = pixel_origin.y;
+        double dist_along_edge = (y - edge_start_VEC.y) / vy;
+        double x_abs = (dist_along_edge * vx) + edge_start_VEC.x;
+        
+        
+        double rel_x = x_abs - pixel_origin.x;
+        if (rel_x < 0) {
+            rel_x = 0;
+        } else if (rel_x > _gridspec->spacing_x()) {
+            rel_x = _gridspec->spacing_x();
+        }
+        
+        return rel_x;
+    }
+    
+    double NEWForceEFieldOnCellBoundPixelated::_get_intersection_with_column_and_find_rel_pos_in_row(const Vec& edge_start_VEC, const Vec& edge_end_VEC, int column_to_intersect, int snap_row, bool verbose) const
+    {
+        if (!_gridspec) {
+            throw runtime_error("_gridspec not set - get_intersection_with_column_and_find_rel_pos_in_row can't work");
+        }
+        GridCoord snap_pixel_gridcoord = GridCoord(column_to_intersect, snap_row);
+        Vec pixel_origin = _get_vec_coords_for_grid_pos(snap_pixel_gridcoord, verbose);
+        
+        double vy = (edge_end_VEC.y - edge_start_VEC.y);
+        double vx = (edge_end_VEC.x - edge_start_VEC.x);
+        
+        double x = pixel_origin.x;
+        double dist_along_edge = (x - edge_start_VEC.x) / vx;
+        double y_abs = (dist_along_edge * vy) + edge_start_VEC.x;
+        
+        double rel_y = y_abs - pixel_origin.y;
+        
+        if (rel_y < 0) {
+            rel_y = 0;
+        } else if (rel_y > _gridspec->spacing_y()) {
+            rel_y = _gridspec->spacing_y();
+        }
+        
+        return rel_y;
+    }
+    
+    vector<Vec> NEWForceEFieldOnCellBoundPixelated::_get_pixel_intersection_absolute_coordinates(const GridCoord& pixel_gridpos, const PixelIntersectionsDescriptor& pix_intersections, bool verbose) const
+    {
+        vector<Vec> locations_of_intersections;
+        Vec pixel_origin = _get_vec_coords_for_grid_pos(pixel_gridpos, verbose);
+        
+        if (pix_intersections.has_top_intersection()) {
+            locations_of_intersections.push_back(Vec(
+                pixel_origin.x + pix_intersections.top_intersection_loc(),
+                pixel_origin.y + _gridspec->spacing_y()
+            ));
+        }
+        if (pix_intersections.has_bottom_intersection()) {
+            locations_of_intersections.push_back(Vec(
+                pixel_origin.x + pix_intersections.bottom_intersection_loc(),
+                pixel_origin.y
+            ));
+        }
+        if (pix_intersections.has_left_intersection()) {
+            locations_of_intersections.push_back(Vec(
+                pixel_origin.x,
+                pixel_origin.y + pix_intersections.left_intersection_loc()
+            ));
+        }
+        if (pix_intersections.has_right_intersection()) {
+            locations_of_intersections.push_back(Vec(
+                pixel_origin.x + _gridspec->spacing_x(),
+                pixel_origin.y + pix_intersections.right_intersection_loc()
+            ));
+        }
+        
+        return locations_of_intersections;
+    }
+    
+    
     vector<double> NEWForceEFieldOnCellBoundPixelated::_get_edge_lengths_passing_thru_pixels(const Edge& edge, const vector<GridCoord>& pixels_intersected_by_edge, bool verbose) const
     {
         if (verbose) {
@@ -68,19 +154,20 @@ namespace PixelatedElectricStuff
         /*
          * Finding the segments of the edge that pass through each of these pixels
         */
-        vector<double> edge_length_passing_thru_each_pixel;
         
         // Case 1 : the edge starts and ends in the same pixel
+        Vec edge_start_VEC = edge.he()->from()->data().r;
+        Vec edge_end_VEC = edge.he()->to()->data().r;
+        
         if (pixels_intersected_by_edge.size() == 1) {
             // in this case, the entire edge is contained in the pixel, so we just take its total length:
-            Vec edge_start_VEC = edge.he()->from()->data().r;
-            Vec edge_end_VEC = edge.he()->to()->data().r;
-            double edge_entire_length = (edge_end_VEC - edge_start_VEC).len();
             
-            edge_length_passing_thru_each_pixel.push_back(edge_entire_length);
+            vector<double> result = {
+                (edge_end_VEC - edge_start_VEC).len()
+            };
             
             // We're done here, so return
-            return edge_length_passing_thru_each_pixel;
+            return result;
         }
         
         // Case 2 : the edge starts and ends in different pixels
@@ -103,18 +190,110 @@ namespace PixelatedElectricStuff
             
             const GridCoord& this_pixel_grid_pos = pixels_intersected_by_edge.at(pixel_idx);
             const GridCoord& next_pixel_grid_pos = pixels_intersected_by_edge.at(pixel_idx + 1);
-            
+            // get_intersection_with_row_and_snap_to_column
             // If they differ in x
             if (this_pixel_grid_pos.x() != next_pixel_grid_pos.x()  && this_pixel_grid_pos.y() == next_pixel_grid_pos.y()) {
-                throw runtime_error("NOT IMPLEMENTED");
+                int shared_row = this_pixel_grid_pos.y();
+                
+                // Case 1 - the next pixel is to the right
+                if (next_pixel_grid_pos.x() == this_pixel_grid_pos.x() + 1) {
+                    int intersection_column = next_pixel_grid_pos.x();
+                    
+                    double intersection_y = _get_intersection_with_column_and_find_rel_pos_in_row(edge_start_VEC, edge_end_VEC, intersection_column, shared_row, verbose);
+                    
+                    pix_intersections_descriptions.at(pixel_idx).set_right_intersection_loc(intersection_y);
+                    pix_intersections_descriptions.at(pixel_idx + 1).set_left_intersection_loc(intersection_y);
+                }
+                // Case 2 - the next pixel is to the left
+                else if (next_pixel_grid_pos.x() == this_pixel_grid_pos.x() - 1) {
+                    int intersection_column = this_pixel_grid_pos.x();
+                    
+                    double intersection_y = _get_intersection_with_column_and_find_rel_pos_in_row(edge_start_VEC, edge_end_VEC, intersection_column, shared_row, verbose);
+                    
+                    pix_intersections_descriptions.at(pixel_idx).set_left_intersection_loc(intersection_y);
+                    pix_intersections_descriptions.at(pixel_idx + 1).set_right_intersection_loc(intersection_y);
+                }
+                else {
+                    throw runtime_error("next pixel is neither directly to the left or right...");
+                }
             }
             // If they differ in y
             else if (this_pixel_grid_pos.x() == next_pixel_grid_pos.x() && this_pixel_grid_pos.y() != next_pixel_grid_pos.y()) {
-                throw runtime_error("NOT IMPLEMENTED");
+                int shared_column = this_pixel_grid_pos.x();
+                
+                //Case 1 - the next pixel is above
+                if (next_pixel_grid_pos.y() == this_pixel_grid_pos.y() + 1) {
+                    int intersection_row = next_pixel_grid_pos.y();
+                    
+                    double intersection_x = _get_intersection_with_row_and_find_rel_pos_in_column(edge_start_VEC, edge_end_VEC, intersection_row, shared_column, verbose);
+                    
+                    pix_intersections_descriptions.at(pixel_idx).set_top_intersection_loc(intersection_x);
+                    pix_intersections_descriptions.at(pixel_idx + 1).set_bottom_intersection_loc(intersection_x);
+                }
+                // Case 2 - the next pixel is below
+                else if (next_pixel_grid_pos.y() == this_pixel_grid_pos.y() - 1) {
+                    int intersection_row = this_pixel_grid_pos.y();
+                    
+                    double intersection_x = _get_intersection_with_row_and_find_rel_pos_in_column(edge_start_VEC, edge_end_VEC, intersection_row, shared_column, verbose);
+                    
+                    pix_intersections_descriptions.at(pixel_idx).set_bottom_intersection_loc(intersection_x);
+                    pix_intersections_descriptions.at(pixel_idx + 1).set_top_intersection_loc(intersection_x);
+                } else {
+                    throw runtime_error("next pixel is neither directly above or below...");
+                }
             }
             // If something weird has happened - normally, consecutive pixels along the edge should only differ in either x or y, not neither or both
             else {
-                throw runtime_error("NOT IMPLEMENTED");
+                cout << "this pixel grid pos: " << this_pixel_grid_pos.x() << "," << this_pixel_grid_pos.y() << endl;
+                cout << "next pixel grid pos: " << next_pixel_grid_pos.x() << "," << next_pixel_grid_pos.y() << endl;
+                throw runtime_error("Could not determine the neighbor relationship between consecutive pixels alogn edge");
+            }
+        }
+        
+        vector<double> edge_length_passing_thru_each_pixel;
+        for (int pix_idx = 0; pix_idx < pix_intersections_descriptions.size(); pix_idx++) {
+            const PixelIntersectionsDescriptor& pix_intersection_description = pix_intersections_descriptions.at(pix_idx);
+            const GridCoord& pix_loc = pixels_intersected_by_edge.at(pix_idx);
+            
+            // (const GridCoord& pixel_gridpos, const PixelIntersectionsDescriptor& pix_intersections, bool verbose) 
+            vector<Vec> pix_intersection_locations = _get_pixel_intersection_absolute_coordinates(pix_loc, pix_intersection_description, verbose);
+            // The first pixel
+            if (pix_idx == 0) {
+                if (pix_intersection_locations.size() != 1) {
+                    cout << "pix_intersection_locations.size() - " << pix_intersection_locations.size() << endl;
+                    throw runtime_error("Wrong number of pixel intersections for the first pixel - should be exactly one");
+                }
+                
+                Vec intersection_loc = pix_intersection_locations.at(0);
+                double len_within_pixel = (edge_start_VEC - intersection_loc).len();
+                
+                edge_length_passing_thru_each_pixel.push_back(len_within_pixel);
+            }
+            // The last pixel
+            else if (pix_idx == pix_intersections_descriptions.size() - 1) {
+                if (pix_intersection_locations.size() != 1) {
+                    cout << "pix_intersection_locations.size() - " << pix_intersection_locations.size() << endl;
+                    throw runtime_error("Wrong number of pixel intersections for the last pixel - should be exactly one");
+                }
+                
+                Vec intersection_loc = pix_intersection_locations.at(0);
+                double len_within_pixel = (edge_end_VEC - intersection_loc).len();
+                
+                edge_length_passing_thru_each_pixel.push_back(len_within_pixel);
+            }
+            // Middle pixels
+            else {
+                if (pix_intersection_locations.size() != 2) {
+                    cout << "pix_intersection_locations.size() - " << pix_intersection_locations.size() << endl;
+                    throw runtime_error("Wrong number of pixel intersections for middle pixel - should be exactly one");
+                }
+                
+                Vec first_intersection_loc = pix_intersection_locations.at(0);
+                Vec second_intersection_loc = pix_intersection_locations.at(1);
+                
+                double len_within_pixel = (second_intersection_loc - first_intersection_loc).len();
+                
+                edge_length_passing_thru_each_pixel.push_back(len_within_pixel);
             }
         }
         
@@ -124,8 +303,7 @@ namespace PixelatedElectricStuff
             throw runtime_error("Lengths don't match - pixels_intersected_by_edge.size() != edge_length_passing_thru_each_pixel.size()");
         }
         
-        
-        throw runtime_error("Unimplemented");
+        return edge_length_passing_thru_each_pixel;
     }
     
     EdgeComputationResult NEWForceEFieldOnCellBoundPixelated::_integrate_field_over_edge(const Edge& edge, bool verbose) const
@@ -135,8 +313,10 @@ namespace PixelatedElectricStuff
         }
         vector<GridCoord> pixels_intersected_by_edge = _get_edge_pixel_intersections(edge, verbose);
         
+        vector<double> edge_lengths_thru_pixels = _get_edge_lengths_passing_thru_pixels(edge, pixels_intersected_by_edge, verbose);
         
-        throw runtime_error("Not implemented");
+        
+        throw runtime_error("NEWForceEFieldOnCellBoundPixelated::_integrate_field_over_edge - Not implemented");
     }
     
     Vec NEWForceEFieldOnCellBoundPixelated::_get_vec_coords_for_grid_pos(GridCoord gc, bool verbose) const
