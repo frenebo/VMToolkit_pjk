@@ -15,15 +15,13 @@
 
 #include "../system.hpp"
 
-double const SMALL_NUMBER = 1e-6;
-
-using std::vector;
-using std::string;
-using std::runtime_error;
-
-
 namespace VMSim
 {
+
+  using std::vector;
+  using std::string;
+  using std::runtime_error;
+  
   // Force on a vertex
   class Force 
   {

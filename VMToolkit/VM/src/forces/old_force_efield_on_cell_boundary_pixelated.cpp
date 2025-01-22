@@ -1,6 +1,6 @@
 
 
-#include "force_efield_on_cell_boundary_pixelated.hpp"
+#include "old_force_efield_on_cell_boundary_pixelated.hpp"
 #include <set>
 #include <cmath>
 #include <algorithm>
@@ -13,18 +13,18 @@ using std::pair;
 
 namespace VMSim
 {
-    void ForceEFieldOnCellBoundPixelated::compute_all_vertex_forces(vector<Vec>& res_forces_out, bool verbose)
+    void OLDForceEFieldOnCellBoundPixelated::compute_all_vertex_forces(vector<Vec>& res_forces_out, bool verbose)
     {
         if (! _gridspec) {
-            throw runtime_error("ForceEFieldOnCellBoundPixelated::compute_all_vertex_forces - cannot compute forces, the gridspec has not been set yet.");
+            throw runtime_error("OLDForceEFieldOnCellBoundPixelated::compute_all_vertex_forces - cannot compute forces, the gridspec has not been set yet.");
         }
         
         if (verbose) {
-            cout << "  ForceEFieldOnCellBoundPixelated::compute_all_vertex_forces - clearing compute cache" << endl;
+            cout << "  OLDForceEFieldOnCellBoundPixelated::compute_all_vertex_forces - clearing compute cache" << endl;
         }
         _clear_compute_cache(verbose);
         if (verbose) {
-            cout << "  ForceEFieldOnCellBoundPixelated::compute_all_vertex_forces - caching computations" << endl;
+            cout << "  OLDForceEFieldOnCellBoundPixelated::compute_all_vertex_forces - caching computations" << endl;
         }
         _cache_all_computations(verbose);
         
@@ -62,22 +62,22 @@ namespace VMSim
     }
     
     
-    void ForceEFieldOnCellBoundPixelated::_clear_compute_cache(bool verbose)
+    void OLDForceEFieldOnCellBoundPixelated::_clear_compute_cache(bool verbose)
     {
         if (verbose) {
-            cout << "ForceEFieldOnCellBoundPixelated::_clear_compute_cache - clearing the results from llast timestep" << endl;
+            cout << "OLDForceEFieldOnCellBoundPixelated::_clear_compute_cache - clearing the results from llast timestep" << endl;
         }
         
         _cached_edge_integrated_field_wrt_length.clear();
     }
     
-    void ForceEFieldOnCellBoundPixelated::_cache_all_computations(bool verbose)
+    void OLDForceEFieldOnCellBoundPixelated::_cache_all_computations(bool verbose)
     {
         if (verbose) {
-            cout << "ForceEFieldOnCellBoundPixelated::_cache_all_computations - starting" << endl;
+            cout << "OLDForceEFieldOnCellBoundPixelated::_cache_all_computations - starting" << endl;
         }
         if (_cached_edge_integrated_field_wrt_length.size() != 0) {
-            throw runtime_error("ForceEFieldOnCellBoundPixelated::_cache_all_computations - cached integrated fieldl wrt length should be empty - was cache cleared before callling this?");
+            throw runtime_error("OLDForceEFieldOnCellBoundPixelated::_cache_all_computations - cached integrated fieldl wrt length should be empty - was cache cleared before callling this?");
         }
         std::set<int> edges_to_compute;
         
@@ -102,10 +102,10 @@ namespace VMSim
     }
     
     
-    Vec ForceEFieldOnCellBoundPixelated::_get_pixel_origin_loc(pair<int,int> pix_gridpos) const
+    Vec OLDForceEFieldOnCellBoundPixelated::_get_pixel_origin_loc(pair<int,int> pix_gridpos) const
     {
         if (!_gridspec) {
-            throw runtime_error("ForceEFieldOnCellBoundPixelated::_get_pixel_origin_loc - _gridspec not set");
+            throw runtime_error("OLDForceEFieldOnCellBoundPixelated::_get_pixel_origin_loc - _gridspec not set");
         }
         double grid_spacing = _gridspec.value().grid_spacing();
         
@@ -115,10 +115,10 @@ namespace VMSim
         return Vec(xpos,ypos);
     }
     
-    pair<int, int> ForceEFieldOnCellBoundPixelated::_get_pixel_indices(const Vec& loc, bool verbose) const
+    pair<int, int> OLDForceEFieldOnCellBoundPixelated::_get_pixel_indices(const Vec& loc, bool verbose) const
     {
         if (! _gridspec) {
-            throw runtime_error("ForceEFieldOnCellBoundPixelated::_get_pixel_indices - can't get value, gridspec is unset");
+            throw runtime_error("OLDForceEFieldOnCellBoundPixelated::_get_pixel_indices - can't get value, gridspec is unset");
         }
         double xpos_dbl = (loc.x - _gridspec.value().origin_x()) / _gridspec.value().grid_spacing();
         double ypos_dbl = ( loc.y - _gridspec.value().origin_y() ) / _gridspec.value().grid_spacing();
@@ -134,7 +134,7 @@ namespace VMSim
         return pair<int,int>{x_index, y_index};
     }
     
-    double ForceEFieldOnCellBoundPixelated::_lineseg_solve_for_y(double x, const Vec& line_start, const Vec& line_end, bool verbose) const
+    double OLDForceEFieldOnCellBoundPixelated::_lineseg_solve_for_y(double x, const Vec& line_start, const Vec& line_end, bool verbose) const
     {
         double vx = line_end.x - line_start.x;
         double vy = line_end.y - line_start.y;
@@ -157,7 +157,7 @@ namespace VMSim
     }
     
     
-    double ForceEFieldOnCellBoundPixelated::_lineseg_solve_for_x(double y, const Vec& line_start, const Vec& line_end, bool verbose) const
+    double OLDForceEFieldOnCellBoundPixelated::_lineseg_solve_for_x(double y, const Vec& line_start, const Vec& line_end, bool verbose) const
     {
         double vx = line_end.x - line_start.x;
         double vy = line_end.y - line_start.y;
@@ -178,10 +178,10 @@ namespace VMSim
         return x_intersect;
     }
     
-    vector<Vec> ForceEFieldOnCellBoundPixelated::_get_pixspec_relative_intersection_positions(const PixIntersectionsSpec& pixspec, bool verbose) const
+    vector<Vec> OLDForceEFieldOnCellBoundPixelated::_get_pixspec_relative_intersection_positions(const PixIntersectionsSpec& pixspec, bool verbose) const
     {
         if (!_gridspec) {
-            throw runtime_error("ForceEFieldOnCellBoundPixelated::_get_pixspec_relative_intersection_positions - cannot calculate when _gridspec has not been set!");
+            throw runtime_error("OLDForceEFieldOnCellBoundPixelated::_get_pixspec_relative_intersection_positions - cannot calculate when _gridspec has not been set!");
         }
         double pix_size = _gridspec.value().grid_spacing();
         vector<Vec> positions;
@@ -209,7 +209,7 @@ namespace VMSim
         return positions;
     }
     
-    double ForceEFieldOnCellBoundPixelated::_get_intersection_of_line_passthrough_pixel(const PixIntersectionsSpec& pixspec, bool verbose) const
+    double OLDForceEFieldOnCellBoundPixelated::_get_intersection_of_line_passthrough_pixel(const PixIntersectionsSpec& pixspec, bool verbose) const
     {
         if (verbose) {
             cout << "  _get_intersection_of_line_passthrough_pixel - finding intersection" << endl;
@@ -225,7 +225,7 @@ namespace VMSim
         return (intersection_0_rel_pos - intersection_1_rel_pos).len();
     }
     
-    double ForceEFieldOnCellBoundPixelated::_get_intersection_of_line_ending_inside_pixel(
+    double OLDForceEFieldOnCellBoundPixelated::_get_intersection_of_line_ending_inside_pixel(
         pair<int,int> pix_gridpos,
         const PixIntersectionsSpec& pixspec, 
         const Edge& edge,
@@ -274,10 +274,10 @@ namespace VMSim
         return (intersection_abs_loc - contained_endpt_pos).len();
     }
     
-    Vec ForceEFieldOnCellBoundPixelated::_integrate_field_over_edge_wrt_length(const Edge& edge, bool verbose) const
+    Vec OLDForceEFieldOnCellBoundPixelated::_integrate_field_over_edge_wrt_length(const Edge& edge, bool verbose) const
     {
         if (verbose) {
-            cout << "ForceEFieldOnCellBoundPixelated::_integrate_field_over_edge_wrt_length - starting" << endl;
+            cout << "OLDForceEFieldOnCellBoundPixelated::_integrate_field_over_edge_wrt_length - starting" << endl;
         }
         if (!_field_vals_2d) {
             throw runtime_error("Cannot calculate electric field effect on edge - field value have not been set");
@@ -371,7 +371,7 @@ namespace VMSim
     
     
     
-    map<pair<int,int>, ForceEFieldOnCellBoundPixelated::PixIntersectionsSpec> ForceEFieldOnCellBoundPixelated::_get_edge_pixel_intersections(
+    map<pair<int,int>, OLDForceEFieldOnCellBoundPixelated::PixIntersectionsSpec> OLDForceEFieldOnCellBoundPixelated::_get_edge_pixel_intersections(
         const Edge& edge,
         bool verbose
     ) const {
@@ -380,7 +380,7 @@ namespace VMSim
         }
         
         if (verbose) {
-            cout << "ForceEFieldOnCellBoundPixelated::get_edge_pixels - starting" << endl;
+            cout << "OLDForceEFieldOnCellBoundPixelated::get_edge_pixels - starting" << endl;
         }
         
         const Vec& edge_start_vec = edge.he()->from()->data().r;
@@ -404,7 +404,7 @@ namespace VMSim
         // Case 1: the entire edge occupies one pixel
         if (edge_start_x == edge_end_x && edge_start_y == edge_end_y) {
             if (verbose) {
-                cout << "ForceEFieldOnCellBoundPixelated::_get_edge_pixel_intersections - it looks like edge starts and ends at the same coordinates - so there is no intersection with any pixel." << endl;
+                cout << "OLDForceEFieldOnCellBoundPixelated::_get_edge_pixel_intersections - it looks like edge starts and ends at the same coordinates - so there is no intersection with any pixel." << endl;
             }
             // This will just be a single pixel, with no intersections
             map<pair<int,int>, PixIntersectionsSpec> just_one_pix_res = {

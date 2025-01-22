@@ -1,5 +1,5 @@
-#ifndef __FORCE_EFIELD_ON_CELL_BOUNDARY_PIXELATED_HPP__
-#define __FORCE_EFIELD_ON_CELL_BOUNDARY_PIXELATED_HPP__
+#ifndef __OLD_FORCE_EFIELD_ON_CELL_BOUNDARY_PIXELATED_HPP__
+#define __OLD_FORCE_EFIELD_ON_CELL_BOUNDARY_PIXELATED_HPP__
 
 #include <optional>
 
@@ -22,7 +22,7 @@ namespace VMSim
     
     
 	// Force on a vertex
-	class ForceEFieldOnCellBoundPixelated : public Force
+	class OLDForceEFieldOnCellBoundPixelated : public Force
 	{
         // The child classes used to represent various data:
 	public:
@@ -132,11 +132,11 @@ namespace VMSim
     
     public:
         // The actual class definition
-		ForceEFieldOnCellBoundPixelated(const System &sys) : Force{sys}
+		OLDForceEFieldOnCellBoundPixelated(const System &sys) : Force{sys}
         {
 		}
         
-		virtual ~ForceEFieldOnCellBoundPixelated() {}
+		virtual ~OLDForceEFieldOnCellBoundPixelated() {}
       
 		void set_global_params(
             const params_type& num_params,
@@ -179,10 +179,14 @@ namespace VMSim
                 for (size_t row_idx = 0; row_idx < ncells_y; row_idx++) {
                     size_t pix_position_in_flattened =  col_position_in_flattened + row_idx * 2;
                     
+                    double field_xval = flattened_field_vals_pixels.at(pix_position_in_flattened);
+                    double field_yval = flattened_field_vals_pixels.at(pix_position_in_flattened + 1);
                     field_vals_column.at(row_idx) = Vec(
-                        flattened_field_vals_pixels.at(pix_position_in_flattened),
-                        flattened_field_vals_pixels.at(pix_position_in_flattened + 1)
+                        field_xval,
+                        field_yval
                     );
+                    
+                    cout << "X: " << field_xval << ", Y: " << field_yval << endl;
                 }
                 
                 _field_vals_2d.value().push_back(field_vals_column);

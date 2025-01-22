@@ -14,7 +14,7 @@
 #include "forces/force_perimeter.hpp"
 #include "forces/force_const_vertex_propulsion.hpp"
 #include "forces/force_efield_on_cell_boundary_uniform.hpp"
-#include "forces/force_efield_on_cell_boundary_pixelated.hpp"
+#include "forces/new_force_efield_on_cell_boundary_pixelated.hpp"
 
 
 
@@ -187,7 +187,7 @@ namespace VMSim
 		} else if (force_type == "force_efield_on_cell_boundary_uniform") {
 			this->add<ForceEFieldOnCellBoundary, const System&>(force_id, _sys);
 		} else if (force_type == "force_efield_on_cell_boundary_pixelated") {
-			this->add<ForceEFieldOnCellBoundPixelated, const System&>(force_id, _sys);
+			this->add<PixelatedElectricStuff::NEWForceEFieldOnCellBoundPixelated, const System&>(force_id, _sys);
 		} else  {
 			throw runtime_error("Unknown force name : " + force_id + ".");
 		}

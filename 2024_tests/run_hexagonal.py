@@ -39,7 +39,10 @@ def make_CONST_TEST_pixelated_forcing_field_rectangular(
     for rowidx in range(npixels_x):
         field_col = []
         for colidx in range(npixels_y):
-            field_col.append([field_x, field_y])
+            field_col.append([
+                field_x,
+                field_y,
+            ])
         field_data.append(field_col)
     
     return PixelatedElectricForceOnCellBoundary(
@@ -248,7 +251,7 @@ def run_experiment(
         
     with open(os.path.join(outdir, "initial_vm_state.json"), "w") as f:
         f.write(json.dumps(vm_initial_state.to_json(), indent=4))
-    sim_model.load_from_json_state(vm_initial_state.to_json())#, verbose=True)
+    sim_model.load_from_json_state(vm_initial_state.to_json(), verbose=verbose)#, verbose=True)
     print("Finished sim_mode.load_from_json_state")
     
     checkpoint_fps = []

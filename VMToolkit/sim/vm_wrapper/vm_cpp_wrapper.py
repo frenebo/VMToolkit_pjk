@@ -398,7 +398,8 @@ class VMCppWrapper:
             num_params={
                 "grid_origin_x": field_spec.grid_origin_x(),
                 "grid_origin_y": field_spec.grid_origin_y(),
-                "grid_spacing": field_spec.grid_spacing(),
+                "grid_spacing_x": field_spec.grid_spacing(),
+                "grid_spacing_y": field_spec.grid_spacing(),
             },
             str_params={},
             int_params={
