@@ -15,16 +15,16 @@
 #include "../force_compute.hpp"
 #include "integrator.hpp"
 
-using std::runtime_error;
-using std::vector;
-using std::string;
-using std::map;
-using std::endl;
-using std::cout;
-
 
 namespace VMSim
 {
+  using std::runtime_error;
+  using std::vector;
+  using std::string;
+  using std::map;
+  using std::endl;
+  using std::cout;
+
   class Integrate : public ClassFactory<Integrator>
   {
     public:

@@ -355,7 +355,7 @@ class HexagonalCellMeshBuilder:
         if angle2 > angle1:
             angle2 -= 2*np.pi
         # diff_angle = angle1 - angle2
-        # raise NotImplementedError("This isn't doing what I think it's doing...")
+        
         return angle1 - angle2
     
     
@@ -603,6 +603,7 @@ class HexagonalCellMeshBuilder:
                 "boundary": CellGroup([boundary_cell_id], force_ids=[]),
             },
             forces={},
+            current_experienced_forces=None,
         )
         
         return tiss_topology, tiss_state

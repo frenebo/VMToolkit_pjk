@@ -14,11 +14,11 @@
 #include "../system.hpp"
 #include <stdexcept>
 
-using std::runtime_error;
-
 
 namespace VMSim
 {
+  using std::runtime_error;
+
   class ConstraintManager: public ClassFactory<Constrainer>
   {
     ConstraintManager(System& sys) : _sys{sys}

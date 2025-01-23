@@ -5,18 +5,18 @@
 
 #include "force.hpp"
 
-using std::map;
-using std::optional;
-using std::cout;
-using std::map;
-using std::endl;
-using std::runtime_error;
-using std::vector;
-using std::string;
-
 
 namespace VMSim
 {
+    using std::map;
+    using std::optional;
+    using std::cout;
+    using std::map;
+    using std::endl;
+    using std::runtime_error;
+    using std::vector;
+    using std::string;
+
     
     
     

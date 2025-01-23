@@ -18,10 +18,10 @@
 #include <pybind11/stl.h>
 
 
-namespace py = pybind11;
-
 namespace VMSim
 {
+	namespace py = pybind11;
+
 
 	class Vec
 	{

@@ -18,11 +18,13 @@
 #include "property.hpp"
 
 
-using std::string;
-using std::map;
 
 namespace VMSim
 {
+  using std::string;
+  using std::map;
+  
+
   typedef Mesh MyMesh;
   
 

@@ -17,11 +17,11 @@
 
 #include "../vec.hpp"
 
-using std::vector;
-using std::map;
-
 namespace VMSim
 {
+    using std::vector;
+    using std::map;
+
     class PolygonZone
     {
         typedef boost::geometry::model::d2::point_xy<double> BPoint;

@@ -19,8 +19,10 @@ from ..vm_state import (
     CellTopology,
     IntegratorSettingsDormandPrinceRungeKutta,
     IntegratorSettings,
+    VertexCurrentForces,
+    CurrentExperiencedForces,
+    CurrentVertexExperiencedForces,
 )
-
 class CppJsonTissueBuilder:
     @staticmethod
     def build_json_obj_for_vmtoolkit_loader(vm_state, vertex_id_to_cpp_idx, cell_id_to_cpp_face_idx):
@@ -44,7 +46,7 @@ class CppJsonTissueBuilder:
         for vertex_id, vertex_top in vm_state.topology().vertex_topologies().items():
             vertex_index = vertex_id_to_cpp_idx[vertex_id]
             
-            v_geometry = vm_state.current_tissue_state().geometry().vertices()[vertex_id]
+            v_geometry = vm_state.tissue_state().geometry().vertices()[vertex_id]
             vtx_x = v_geometry.x()
             vtx_y = v_geometry.y()
             
@@ -194,7 +196,7 @@ class VMCppWrapper:
         
         
         # Update vertex positions
-        state_vertex_geos = new_vmstate.current_tissue_state().geometry().vertices()
+        state_vertex_geos = new_vmstate.tissue_state().geometry().vertices()
         for vtx_idx, vtx_pos in enumerate(vtx_positions):
             vtx_id = self._ids_to_cpp_index_maps["vtx_indices_to_ids"][vtx_idx]
             
@@ -227,6 +229,23 @@ class VMCppWrapper:
             #     raise Exception()
             # if new_vmstate.topology().cell_topologies()[cell_id] != new_top:
             #     raise Exception()
+        
+        # Update vertex forces
+        vertex_experienced_forces = {}
+        cpp_vtx_instant_forces = self._forces.get_instantaneous_forces()
+        # print(cpp_vtx_instant_forces)
+        # for forceid, force_for_vertices in cpp_vtx_instant_forces.items():
+        #     print(force_for_vertices)
+        #     vtx_id = self._ids_to_cpp_index_maps["vtx_indices_to_ids"][vidx]
+        #     vertex_experienced_forces[vtx_id] = VertexCurrentForces(
+        #         tot_force=[ vtx_instant_force.x, vtx_instant_force.y ]
+        #     )
+        
+        # new_vmstate.tissue_state().set_current_experienced_forces(
+        #     CurrentExperiencedForces(
+        #         current_vertex_forces=CurrentVertexExperiencedForces(vertex_experienced_forces)
+        #     )
+        # )
             
         
         self._last_vm_state = new_vmstate
@@ -466,9 +485,9 @@ class VMCppWrapper:
         if verbose:
             print("Configuring forces")
         
-        cell_groups = vm_state.current_tissue_state().cell_groups()
-        vertex_groups = vm_state.current_tissue_state().vertex_groups()
-        tiss_forces = vm_state.current_tissue_state().forces()
+        cell_groups = vm_state.tissue_state().cell_groups()
+        vertex_groups = vm_state.tissue_state().vertex_groups()
+        tiss_forces = vm_state.tissue_state().forces()
         
         for force_id, force_spec in tiss_forces.items():
             if isinstance(force_spec, VertexForce):

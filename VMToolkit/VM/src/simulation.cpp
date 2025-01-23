@@ -10,6 +10,8 @@
 using std::runtime_error;
 using std::cout;
 using std::endl;
+namespace py = pybind11;
+
 
 namespace VMSim
 {

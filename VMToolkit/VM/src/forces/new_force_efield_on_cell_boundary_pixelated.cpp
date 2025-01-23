@@ -10,10 +10,41 @@ namespace PixelatedElectricStuff
     using std::set;
     using std::optional;
     
-    void NEWForceEFieldOnCellBoundPixelated::compute_all_vertex_forces(vector<Vec>& res, bool verbose)
+    void NEWForceEFieldOnCellBoundPixelated::compute_all_vertex_forces(vector<Vec>& vtx_forces_out, bool verbose)
     {
         _clear_compute_cache(verbose);
         _cache_computations(verbose);
+        
+        int n_vertices = _sys.cmesh().cvertices().size();
+        vtx_forces_out.clear();
+        vtx_forces_out.resize(n_vertices, Vec(0.0,0.0));
+        
+        for (const auto& fit : _face_params) {
+            int face_id = fit.first;
+            const Face& face = _sys.cmesh().cfaces().at(face_id);
+            const EFieldPixFaceConfig& faceconf = fit.second;
+            
+            double face_charge = faceconf.charge();
+            double face_perimeter = _sys.cmesh().perim(face);
+            
+            double perimeter_charge_density = face_charge / face_perimeter;
+            
+            for (const HalfEdge& he : face.circulator()) {
+                int edge_idx = he.edge()->idx();
+                const EdgeComputationResult& edge_computation = _cached_edge_computation_results.at(edge_idx);
+                
+                // force = integral_{over edge} dq * Electric field
+                // force = (charge density) * integral_{over edge} dl * electric field
+                Vec force_on_half_edge_by_face = perimeter_charge_density * edge_computation.integrated_efield_with_respect_to_dlength();
+                
+                // Half of the force is applied to each adjacent vertex
+                int vertex_idx_from = he.from()->id;
+                int vertex_idx_to = he.to()->id;
+                
+                vtx_forces_out.at(vertex_idx_from) = vtx_forces_out.at(vertex_idx_from) + (1.0/2.0)*force_on_half_edge_by_face;
+                vtx_forces_out.at(vertex_idx_to) = vtx_forces_out.at(vertex_idx_to) + (1.0/2.0)*force_on_half_edge_by_face;
+            }
+        }
     }
     
     void NEWForceEFieldOnCellBoundPixelated::_clear_compute_cache(bool verbose)
@@ -37,7 +68,7 @@ namespace PixelatedElectricStuff
             
             const Face& face = _sys.cmesh().cfaces().at(face_id);
             
-            for (const auto& he : face.circulator()) {
+            for (const HalfEdge& he : face.circulator()) {
                 int edge_idx = he.edge()->idx();
                 
                 edges_to_compute.insert(edge_idx);
@@ -306,17 +337,68 @@ namespace PixelatedElectricStuff
         return edge_length_passing_thru_each_pixel;
     }
     
+    Vec NEWForceEFieldOnCellBoundPixelated::get_electric_field_at_grid_coord(const GridCoord& gc, bool verbose) const
+    {
+        if (!_gridspec.has_value()) {
+            throw runtime_error("get_electric_field_at_grid_coord - can't run, _gridspec has not been set yet");
+        }
+        if (!_flattened_field_vecs.has_value()) {
+            throw runtime_error("get_electric_field_at_grid_coord - can't run, _flattened_field_vecs has not been set yet");
+        }
+        
+        if (gc.x() < 0 || gc.x() >= _gridspec->ncells_x() ||
+            gc.y() < 0 || gc.y() >= _gridspec->ncells_y())
+        {
+            cout << "grid ncells_x:" << _gridspec->ncells_x() << ", ncells_y" << _gridspec->ncells_y() << endl;
+            cout << "grid coord: " << gc.x() << "," << gc.y() << endl;
+            throw runtime_error("get_electric_field_at_grid_coord - invalid point, outside the grid");
+        }
+        size_t x = gc.x();
+        size_t y = gc.y();
+        size_t flattened_pos = x * _gridspec->ncells_y() + y;
+        if (flattened_pos >= _flattened_field_vecs->size()) {
+            cout << "x:" << x << ", y:" << y << " flattened_pos: " << flattened_pos << endl;
+            cout << "_flattened_field_vecs.value().size() - " << _flattened_field_vecs.value().size() << endl;
+            throw runtime_error("Flattened pos exceeds size of flattened field vecs");
+        }
+        
+        return _flattened_field_vecs->at(flattened_pos);
+    }
+    
     EdgeComputationResult NEWForceEFieldOnCellBoundPixelated::_integrate_field_over_edge(const Edge& edge, bool verbose) const
     {
         if (verbose) {
             cout << "  NEWForceEFieldOnCellBoundPixelated::_integrate_field_over_edge - starting" << endl;
         }
+        if (!_gridspec) {
+            throw runtime_error("NEWForceEFieldOnCellBoundPixelated::_integrate_field_over_edge - err, _gridspec has not been set");
+        }
         vector<GridCoord> pixels_intersected_by_edge = _get_edge_pixel_intersections(edge, verbose);
         
         vector<double> edge_lengths_thru_pixels = _get_edge_lengths_passing_thru_pixels(edge, pixels_intersected_by_edge, verbose);
         
+        if (edge_lengths_thru_pixels.size() != pixels_intersected_by_edge.size()) {
+            throw runtime_error("  Lengths of vectors don't match - edge_lengths_thru_pixels &  pixels_intersected_by_edge");
+        }
         
-        throw runtime_error("NEWForceEFieldOnCellBoundPixelated::_integrate_field_over_edge - Not implemented");
+        Vec sum_result = Vec(0.0,0.0);
+        
+        for (int pidx=0; pidx < pixels_intersected_by_edge.size(); pidx++) {
+            const GridCoord& gc = pixels_intersected_by_edge.at(pidx);
+            // If the pixels lies outside the field, skip it
+            if (gc.x() < 0 || gc.x() >= _gridspec->ncells_x() ||
+                gc.y() < 0 || gc.y() >= _gridspec->ncells_y()) {
+                continue;
+            }
+            
+            double edge_len_within_pix = edge_lengths_thru_pixels.at(pidx);
+            
+            Vec pix_field = get_electric_field_at_grid_coord(gc, verbose);
+            
+            sum_result += pix_field * edge_len_within_pix;
+        }
+        
+        return EdgeComputationResult(sum_result);
     }
     
     Vec NEWForceEFieldOnCellBoundPixelated::_get_vec_coords_for_grid_pos(GridCoord gc, bool verbose) const

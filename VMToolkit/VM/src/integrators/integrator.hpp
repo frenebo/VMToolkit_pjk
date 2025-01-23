@@ -17,11 +17,11 @@
 #include <chrono>
 #include <map>
 
-using std::map;
-using std::runtime_error;
 
 namespace VMSim
 {
+  using std::map;
+  using std::runtime_error;
 
   class Integrator 
   {

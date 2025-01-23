@@ -14,11 +14,13 @@
 
 #include <stdexcept>
 
-using std::exception;
-using std::runtime_error;
 
 namespace VMSim
 {
+    using std::exception;
+    using std::runtime_error;
+
+
     class Topology
     {
     public:

@@ -22,12 +22,12 @@
 #include "dump.hpp"
 #include "version.hpp"
 
-using std::cout;
-using std::string;
-using std::endl;
-
 namespace VMSim
 {
+  using std::cout;
+  using std::string;
+  using std::endl;
+
 
   class Simulation
   {

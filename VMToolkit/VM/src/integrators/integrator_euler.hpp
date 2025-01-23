@@ -14,11 +14,11 @@
 #include <map>
 #include <string>
 
-using std::map;
-using std::runtime_error;
 
 namespace VMSim
 {
+  using std::map;
+  using std::runtime_error;
 
   class IntegratorEuler : public Integrator 
   {

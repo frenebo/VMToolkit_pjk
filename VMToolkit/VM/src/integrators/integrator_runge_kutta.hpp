@@ -14,11 +14,11 @@
 #include <map>
 #include <stdexcept>
 
-using std::map;
-using std::runtime_error;
-
 namespace VMSim
 {
+  using std::map;
+  using std::runtime_error;
+
 
   class IntegratorRungeKutta : public Integrator 
   {

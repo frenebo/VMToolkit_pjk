@@ -19,6 +19,7 @@
 
 namespace VMSim
 {
+  using std::map;
 
   class ForceCompute : public ClassFactory<Force>
   {
@@ -44,6 +45,7 @@ namespace VMSim
       map<std::string, double> get_force_compute_timers_millis(bool verbose);
       
       void compute_all_vertex_forces(vector<Vec>& res_forces, bool verbose);
+      map<string, vector<Vec>> for_py_get_all_vertex_instantaneous_forces(bool verbose);
       
       void set_global_params(
         const std::string& force_id,

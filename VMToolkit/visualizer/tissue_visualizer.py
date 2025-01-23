@@ -20,8 +20,6 @@ class TissueVisualizer:
         
         vertices = {}
         for vid, v in json_o["current_tissue_state"]["geometry"]["vertices"].items():
-            # if v["erased"]:
-            #     raise NotImplementedError()
                 
             vertices[vid] = {
                 "r": [ v["x"], v["y"] ],
@@ -29,8 +27,6 @@ class TissueVisualizer:
         
         faces = {}
         for fid, f in json_o["topology"]["cells"].items():
-            # if "erased" in f and f["erased"]:
-            #     raise NotImplementedError()
             # if f["outer"]:
             #     if verbose:
             #         print("SKIPPING outer face - boundary")
@@ -231,21 +227,24 @@ def make_animated_tissue_plot(frame_data, fields_data):
             ),
         )
         
-        arrow_annotations.append(
-            go.layout.Annotation(dict(
-                ax=field_dat["center_x"],
-                ay=field_dat["center_y"],
-                xref="x", yref="y",
-                text="",
-                showarrow=True,
-                axref="x", ayref="y",
-                x=field_dat["center_x"] + field_dat["E_n_x"]*10,
-                y=field_dat["center_y"] + field_dat["E_n_y"]*10,
-                arrowhead=3,
-                arrowwidth=5,
-                arrowcolor=field_plot_col,
-            ))
-        )
+        if "E_n_x" in field_dat and "E_n_y" in field_dat:
+            arrow_annotations.append(
+                go.layout.Annotation(dict(
+                    ax=field_dat["center_x"],
+                    ay=field_dat["center_y"],
+                    xref="x", yref="y",
+                    text="",
+                    showarrow=True,
+                    axref="x", ayref="y",
+                    x=field_dat["center_x"] + field_dat["E_n_x"]*10,
+                    y=field_dat["center_y"] + field_dat["E_n_y"]*10,
+                    arrowhead=3,
+                    arrowwidth=5,
+                    arrowcolor=field_plot_col,
+                ))
+            )
+        else:
+            print("field reg doesn't have E_n_x and E_n_y, skipping graphing an arrow")
         # field_dat[""]
 
     fig.update_layout(
@@ -291,13 +290,46 @@ def make_animated_tissue_plot(frame_data, fields_data):
     
     return fig
 
-def build_fields_data(vmstate_fp):
-    with open(vmstate_fp, "r") as f:
-        vmstate_obj = json.load(f)
+def build_pixelated_fields_data(vmstate_obj):
+    
+    pix_elec_fields = []
+    for fid, fspec in vmstate_obj['current_tissue_state']['forces'].items():
+        # print(fspec['type'])
+        if fspec['type'] ==  "pixelated_electric_cell_boundary_force":
+            pix_elec_fields.append(fspec['field_spec'])
+    
+    fields_data = []
+    for pix_elec_forcespec in pix_elec_fields:
+        grid_origin_x = pix_elec_forcespec["grid_origin_x"]
+        grid_origin_y = pix_elec_forcespec["grid_origin_y"]
+        grid_spacing = pix_elec_forcespec["grid_spacing"]
+        grid_ncells_x = pix_elec_forcespec["grid_ncells_x"]
+        grid_ncells_y = pix_elec_forcespec["grid_ncells_y"]
+        
+        grid_width_x = grid_spacing * grid_ncells_x
+        grid_height_y = grid_spacing * grid_ncells_y
+        
+        pixelated_reg_vertices = [
+            [grid_origin_x, grid_origin_y],
+            [grid_origin_x, grid_origin_y + grid_height_y],
+            [grid_origin_x + grid_width_x, grid_origin_y + grid_height_y],
+            [grid_origin_x + grid_width_x, grid_origin_y],
+        ]
+        pixelated_reg_center_x = grid_origin_x + grid_width_x / 2
+        pixelated_reg_center_y = grid_origin_y + grid_height_y / 2
+        fields_data.append({
+            "vertices": pixelated_reg_vertices,
+            "center_x": pixelated_reg_center_x,
+            "center_y": pixelated_reg_center_y,
+        })
+    
+    return fields_data
+
+def build_uniform_fields_data(vmstate_obj):
     
     elec_fields = []
     for fid, fspec in vmstate_obj['current_tissue_state']['forces'].items():
-        if fspec['type'] == "electric_cell_boundary_force":
+        if fspec['type'] == "uniform_electric_cell_boundary_force":
             elec_fields.append(fspec['field_spec'])
     # print(elec_fields)
     
@@ -341,10 +373,14 @@ def make_plotly_visualizer(tiss_ckpt_fps, init_vmstate_fp, vertices_to_highlight
     
     frame_data = build_framedata(checkpoint_objs, vertices_to_highlight=vertices_to_highlight)
     
-    fields_data = build_fields_data(init_vmstate_fp)
+    with open(init_vmstate_fp, "r") as f:
+        init_vmstate_obj = json.load(f)
+    uniform_fields_data = build_uniform_fields_data(init_vmstate_obj)
+    pixelated_fields_data = build_pixelated_fields_data(init_vmstate_obj)
+    
     
     return make_animated_tissue_plot(
         frame_data,
-        fields_data,
+        uniform_fields_data + pixelated_fields_data,
         # arrow_annotations,
     )

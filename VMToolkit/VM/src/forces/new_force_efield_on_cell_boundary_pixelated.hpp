@@ -259,32 +259,24 @@ namespace PixelatedElectricStuff
                     flattened_field_vals_elements.at(flat_pos*2 + 1)
                 );
             }
+            
+            for (int x = 0; x < _gridspec->ncells_x(); x++) {
+                for (int y = 0; y < _gridspec->ncells_y(); y++) {
+                    Vec field = get_electric_field_at_grid_coord(GridCoord(x,y),false);
+                    cout << field.x << " ";
+                }
+                cout << endl;
+            }
+            
+            for (int x = 0; x < _gridspec->ncells_x(); x++) {
+                for (int y = 0; y < _gridspec->ncells_y(); y++) {
+                    Vec field = get_electric_field_at_grid_coord(GridCoord(x,y),false);
+                    cout << field.y << " ";
+                }
+                cout << endl;
+            }
         }
         
-        Vec get_field_at_gridpos(size_t col, size_t row, bool verbose) const
-        {
-            if (!_flattened_field_vecs) {
-                throw runtime_error("get_field_at_pos - Cannot get field - field data has not been set yet");
-            }
-            if (!_gridspec) {
-                throw runtime_error("get_field_at_pos - cannot get field, gridspec has not been set yet");
-            }
-            
-            if (col >= _gridspec->ncells_x()) {
-                cout << "col, row:" << col << "," << row << endl;
-                throw runtime_error("Invalid column - exceeds bounds");
-            }
-            if (row >= _gridspec->ncells_y()) {
-                cout << "col, row:" << col << "," << row << endl;
-                throw runtime_error("Invalid row - exceeds bounds");
-            }
-            size_t flat_pos = col * _gridspec->ncells_y() + row;
-            if (flat_pos > _flattened_field_vecs->size()) {
-                throw runtime_error("??? this shouldn't happen");
-            }
-            
-            return _flattened_field_vecs->at(flat_pos);
-        }
         
         void set_face_params_facewise(
             const vector<int>& fids,
@@ -311,6 +303,7 @@ namespace PixelatedElectricStuff
 		void compute_all_vertex_forces(vector<Vec>& res, bool verbose) override;
         
     private:
+        
         void _check_for_param_names(
             const params_type& num_params,
             const map<string,string>& str_params,
@@ -362,6 +355,8 @@ namespace PixelatedElectricStuff
         double _get_intersection_with_column_and_find_rel_pos_in_row(const Vec& edge_start_VEC, const Vec& edge_end_VEC, int column_to_intersect, int snap_row, bool verbose) const;
         
         vector<Vec> _get_pixel_intersection_absolute_coordinates(const GridCoord& pixel_gridpos, const PixelIntersectionsDescriptor& pix_intersections, bool verbose) const;
+        
+        Vec get_electric_field_at_grid_coord(const GridCoord& gc, bool verbose) const;
         
         optional<GridSpec> _gridspec;
         optional<vector<Vec>> _flattened_field_vecs;

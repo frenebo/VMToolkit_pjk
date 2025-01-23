@@ -19,10 +19,13 @@
 #include "vec.hpp"
 #include "property.hpp"
 
-namespace py = pybind11;
 
 namespace VMSim
 {
+	namespace py = pybind11;
+	
+	
+	
 	// Circulator definitions
 	class VertexCirculator;
 	class FaceCirculator;

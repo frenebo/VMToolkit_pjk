@@ -22,6 +22,7 @@ using std::runtime_error;
 using std::cout;
 using std::endl;
 using std::map;
+using std::string;
 
 namespace VMSim
 {
@@ -62,6 +63,28 @@ namespace VMSim
 		return millis_for_forces;
 	}
 	
+	map<string, vector<Vec>> ForceCompute::for_py_get_all_vertex_instantaneous_forces(bool verbose)
+	{
+		vector<Vec> tot_vertex_forces;
+		compute_all_vertex_forces(tot_vertex_forces, verbose);
+		
+		map<string, vector<Vec>> vtx_forces_by_force_id;
+		
+		for (auto& fit : this->factory_map)
+		{
+			string force_id = fit.first;
+			auto& force = fit.second;
+			
+			vector<Vec> component_forces;
+			force->compute_all_vertex_forces(component_forces, verbose);
+			vtx_forces_by_force_id[force_id] = component_forces;
+		}
+		
+		return vtx_forces_by_force_id;
+	}
+	
+	
+	
 	void ForceCompute::compute_all_vertex_forces(vector<Vec>& tot_vertex_forces, bool verbose)
 	{
 		if (verbose) {
@@ -77,7 +100,7 @@ namespace VMSim
 		// Vector forces start at zero, we add force as w iterate through forces, vectors, halfedges
 		for (auto& fit : this->factory_map)
 		{
-			std::string force_id = fit.first;
+			string force_id = fit.first;
 			if (verbose)
 			{
 				cout << "  computing force '" << force_id << "'" << endl;
@@ -203,6 +226,10 @@ namespace VMSim
 				py::arg("str_params"),
 				py::arg("int_params"),
 				py::arg("flt_array_params"),
+				py::arg("verbose")=false
+			)
+			.def(
+				"get_instantaneous_forces", &ForceCompute::for_py_get_all_vertex_instantaneous_forces,
 				py::arg("verbose")=false
 			)
 			.def("set_face_params_facewise", &ForceCompute::set_face_params_facewise,

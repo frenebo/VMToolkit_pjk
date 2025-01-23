@@ -16,12 +16,12 @@
 #include "types.hpp"
 #include "type_circulators.hpp"
 
-using std::runtime_error;
-using std::vector;
-using std::string;
-
 namespace VMSim
 {
+	using std::runtime_error;
+	using std::vector;
+	using std::string;
+
 
 	class Mesh
 	{

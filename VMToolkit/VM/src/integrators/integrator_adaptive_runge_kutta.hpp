@@ -13,14 +13,14 @@
 #include <map>
 #include <stdexcept>
 
-using std::map;
-using std::runtime_error;
-using std::cout;
-using std::endl;
-
-
 namespace VMSim
 {
+
+  using std::map;
+  using std::runtime_error;
+  using std::cout;
+  using std::endl;
+
 
   class IntegratorAdaptiveRungeKutta : public Integrator 
   {
