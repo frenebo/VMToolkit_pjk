@@ -331,7 +331,6 @@ def build_uniform_fields_data(vmstate_obj):
     for fid, fspec in vmstate_obj['current_tissue_state']['forces'].items():
         if fspec['type'] == "uniform_electric_cell_boundary_force":
             elec_fields.append(fspec['field_spec'])
-    # print(elec_fields)
     
     fields_data = []
     
@@ -360,7 +359,7 @@ def build_uniform_fields_data(vmstate_obj):
 
 
 
-def make_plotly_visualizer(tiss_ckpt_fps, init_vmstate_fp, vertices_to_highlight=None, janky_transitions=True):
+def OLD_make_plotly_visualizer(tiss_ckpt_fps, init_vmstate_fp, vertices_to_highlight=None, janky_transitions=True):
     checkpoint_objs = []
     for ckpt_fp in tiss_ckpt_fps:
         with open(ckpt_fp, "r") as f:
