@@ -10,11 +10,22 @@ from VMToolkit.theoretical_models import TheoreticalRegularHexModel
 from VMToolkit.sim.tissue_builder import HexagonalCellMeshBuilder
 from VMToolkit.sim import SimulationModel
 from VMToolkit.sim.vm_state import (
-    VMState, SimulationSettings, IntegratorSettings, 
-    CellAreaForce, CellPerimeterForce, ConstantVertexForce, CellGroup, VertexGroup,
-    UniformElectricForceOnCellBoundary, EFieldSpecConstantPolygonRegion, PolygonSpec,
-    PixelatedElectricForceOnCellBoundary, PixElecForceCellParam, PixelatedFieldSpec,
-    TopologySettings, T1TransitionSettings,
+    VMState,
+    SimulationSettings,
+    IntegratorSettings, 
+    CellAreaForce,
+    CellPerimeterForce,
+    ConstantVertexForce,
+    CellGroup,
+    VertexGroup,
+    UniformElectricForceOnCellBoundary,
+    EFieldSpecConstantPolygonRegion,
+    PolygonSpec,
+    PixelatedElectricForceOnCellBoundary,
+    PixElecForceCellParam,
+    PixelatedFieldSpec,
+    TopologySettings,
+    T1TransitionSettings,
     IntegratorSettingsDormandPrinceRungeKutta,
 )
 
@@ -231,7 +242,8 @@ def run_experiment(
                     new_edge_len=rest_side_length*t1_new_edge_len_rel,
                 )
             )
-        )
+        ),
+        sim_current_stats=None,
     )
     
     
@@ -264,11 +276,12 @@ def run_experiment(
     ckpt_strnum_nchars = len(str(n_checkpoints - 1))
     
     tot_time_elaspsed = 0
+    sim_model.update_vm_state_from_cpp_vm() # So we get what the instantaneous forces would be right at start
     for i in range(n_checkpoints):
         ckpt_filename = "res{}.json".format(str(i).zfill(ckpt_strnum_nchars))
         ckpt_fp = os.path.join(outdir, ckpt_filename)
         vmstate_json = sim_model.vm_state_json()
-        
+        # update_vm_state_from_cpp_vm
         with open(ckpt_fp, "w") as f:
             f.write(json.dumps(vmstate_json, indent=4))
         

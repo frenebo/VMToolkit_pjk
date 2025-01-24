@@ -19,9 +19,14 @@ from ..vm_state import (
     CellTopology,
     IntegratorSettingsDormandPrinceRungeKutta,
     IntegratorSettings,
-    VertexCurrentForces,
-    CurrentExperiencedForces,
-    CurrentVertexExperiencedForces,
+    # VertexCurrentForces,
+    SimCurrentStats,
+    CurrentForcesStats,
+    VertexAllForcesStats,
+    # CurrentExperiencedForces,
+    # CurrentVertexExperiencedForces,
+    SimCurrentStats,
+    ForceStatsForVertices,
 )
 class CppJsonTissueBuilder:
     @staticmethod
@@ -171,7 +176,7 @@ class VMCppWrapper:
             print("(python) VMCppWrapper.run_with_adaptive_tstep - about to run for telapsed={}".format(time_run))
         
         self._simulation.run_time_adaptive(runtime_tot=time_run, topological_change=self._topological_changes_enabled, verbose=verbose)
-        self._update_vm_state_from_cpp_vm()
+        self.update_vm_state_from_cpp_vm()
     
     def run_steps_manual_tstep(
         self,
@@ -184,9 +189,9 @@ class VMCppWrapper:
             print("About to run simulation for {} steps".format(n_steps))
         
         self._simulation.run_timestep_manual(n_steps, topological_change=self._topological_changes_enabled, verbose=verbose)
-        self._update_vm_state_from_cpp_vm()
+        self.update_vm_state_from_cpp_vm()
         
-    def _update_vm_state_from_cpp_vm(self):
+    def update_vm_state_from_cpp_vm(self):
         # All that we need to look at (for now) should be the coordinates of vertices - 
         # we are asssuming the topology isn't changing.
         
@@ -207,8 +212,7 @@ class VMCppWrapper:
         
         # Update which vertices are members of which faces
         vertex_ids_by_face = self._sim_sys.mesh().get_face_member_vertex_ids()
-        # state_cell_topologies = {}
-        # new_vmstate.topology().cell_topologies()
+        
         for cell_idx, cell_member_vindices in enumerate(vertex_ids_by_face):
             cell_id = self._ids_to_cpp_index_maps["cell_indices_to_ids"][cell_idx]
             member_vtx_ids = []
@@ -217,35 +221,37 @@ class VMCppWrapper:
             
             old_topology = new_vmstate.topology().cell_topologies()[cell_id]
             
-            # new_top = 
-            # if len(member_vtx_ids) != 6 and len(member_vtx_ids) < 20:
-            #     print(cell_member_vindices)
-            #     raise Exception()
             new_vmstate.topology().cell_topologies()[cell_id] = CellTopology(
                 vertices=member_vtx_ids,
                 is_outer=old_topology.is_outer(),
             )
-            # if new_vmstate.topology().cell_topologies()[cell_id] == old_topology:
-            #     raise Exception()
-            # if new_vmstate.topology().cell_topologies()[cell_id] != new_top:
-            #     raise Exception()
-        
+            
         # Update vertex forces
-        vertex_experienced_forces = {}
-        cpp_vtx_instant_forces = self._forces.get_instantaneous_forces()
-        # print(cpp_vtx_instant_forces)
-        # for forceid, force_for_vertices in cpp_vtx_instant_forces.items():
-        #     print(force_for_vertices)
-        #     vtx_id = self._ids_to_cpp_index_maps["vtx_indices_to_ids"][vidx]
-        #     vertex_experienced_forces[vtx_id] = VertexCurrentForces(
-        #         tot_force=[ vtx_instant_force.x, vtx_instant_force.y ]
-        #     )
+        vtx_forcestats_by_forceid = {}
         
-        # new_vmstate.tissue_state().set_current_experienced_forces(
-        #     CurrentExperiencedForces(
-        #         current_vertex_forces=CurrentVertexExperiencedForces(vertex_experienced_forces)
-        #     )
-        # )
+        for forceid, vtx_forces_arr in self._forces.get_instantaneous_forces().items():
+            # print(forceid)
+            # print(vtx_forces_arr)
+            vtx_forces_for_this_forceid = {}
+            for vidx, vforce in enumerate(vtx_forces_arr):
+                vtx_id = self._ids_to_cpp_index_maps["vtx_indices_to_ids"][vidx]
+                vtx_forces_for_this_forceid[vtx_id] = [vforce.x, vforce.y]
+            
+            vtx_forcestats_by_forceid [forceid] = ForceStatsForVertices(
+                force_experienced_by_vertex_id=vtx_forces_for_this_forceid,
+            )
+            
+        
+        # raise NotImplementedError()
+        
+        new_vmstate.set_sim_current_stats(SimCurrentStats(
+            forces_stats=CurrentForcesStats(
+                current_vertex_forces=VertexAllForcesStats(
+                    vertex_force_stats_by_forceid=vtx_forcestats_by_forceid
+                )
+            )
+        ))
+        
             
         
         self._last_vm_state = new_vmstate

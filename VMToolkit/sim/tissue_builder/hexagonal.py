@@ -3,8 +3,14 @@ import numpy as np
 import json
 
 from ..vm_state import (
-    VertexTopology, VertexGeometry, CellTopology, TissueTopology,
-    TissGeometry, TissueState, CellGroup, VertexGroup,
+    VertexTopology,
+    VertexGeometry,
+    CellTopology,
+    TissueTopology,
+    TissGeometry,
+    TissueState,
+    CellGroup,
+    VertexGroup,
 )
 
 class HexagonalCellMeshBuilder:
@@ -603,7 +609,6 @@ class HexagonalCellMeshBuilder:
                 "boundary": CellGroup([boundary_cell_id], force_ids=[]),
             },
             forces={},
-            current_experienced_forces=None,
         )
         
         return tiss_topology, tiss_state

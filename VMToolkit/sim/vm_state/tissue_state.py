@@ -103,81 +103,6 @@ class VertexGroup:
             "vtxids": list(self._vertex_ids),
             "force_ids": list(self._force_ids),
         }
-    
-class VertexCurrentForces:
-    @classmethod
-    def from_json(cls, jobj):
-        for forceid, force_on_vertices_jobj in jobj.items():
-            assert isinstance(force_on_vertices_jobj, list)
-            for vtxforce in force_on_vertices_jobj:
-                assert isinstance(vtxforce, list)
-                assert len(vtxforce) == 2
-                for el in vtxforce:
-                    assert isinstance(el, int) or isinstance(el, float)
-        
-        return VertexCurrentForces(
-            copy.deepcopy(jobj)
-        )
-    
-    def __init__(self, vtx_forces_by_forceid):
-        self._vtx_forces_by_forceid = vtx_forces_by_forceid
-    
-    def vtx_forces_by_forceid(self):
-        return self._vtx_forces_by_forceid
-    
-    def to_json(self):
-        return {
-            "tot_force": copy.deepcopy(self._vtx_forces_by_forceid)
-        }
-
-class CurrentVertexExperiencedForces:
-    @classmethod
-    def from_json(cls, jobj):
-        vertex_exp_forces = {}
-        for vtx_id, vtx_exp_force_jobj in jobj.items():
-            vertex_exp_forces[vtx_id] = VertexCurrentForces.from_json(vtx_exp_force_jobj)
-        
-        return CurrentVertexExperiencedForces(
-            vertex_exp_forces=vertex_exp_forces,
-        )
-    
-    def __init__(
-        self,
-        vertex_exp_forces,
-    ):
-        self._vertex_exp_forces = vertex_exp_forces
-    
-    def vertex_exp_forces(self):
-        return self._vertex_exp_forces
-    
-    def to_json(self):
-        exp_forces_jobj = {}
-        
-        for vtx_id, vtx_force_exp in self._vertex_exp_forces.items():
-            exp_forces_jobj[vtx_id] = vtx_force_exp.to_json()
-            
-        return exp_forces_jobj
-        
-
-class CurrentExperiencedForces:
-    @classmethod
-    def from_json(cls, jobj):
-        return CurrentExperiencedForces(
-            current_vertex_forces=CurrentVertexExperiencedForces.from_json(
-                jobj["vertex_experienced_forces"]
-            ),
-        )
-    
-    def __init__(self, current_vertex_forces):
-        self._current_vertex_forces = current_vertex_forces
-    
-    def current_vertex_forces(self):
-        return self._current_vertex_forces
-    
-    def to_json(self):
-        return {
-            "vertex_experienced_forces": self._current_vertex_forces.to_json()
-        }
 
 class TissueState:
     @staticmethod
@@ -194,19 +119,19 @@ class TissueState:
         for forceid, force_obj in jobj["forces"].items():
             forces[forceid] = TissueForce.from_json(force_obj)
         
-        if jobj["current_experienced_forces"] is None:
-            current_experienced_forces = None
-        else:
-            current_experienced_forces = CurrentExperiencedForces.from_json(
-                jobj["current_experienced_forces"]
-            )
+        # if jobj["current_experienced_forces"] is None:
+        #     current_experienced_forces = None
+        # else:
+        #     current_experienced_forces = CurrentExperiencedForces.from_json(
+        #         jobj["current_experienced_forces"]
+        #     )
             
         return TissueState(
             geometry=TissGeometry.from_json(jobj["geometry"]),
             vertex_groups=vertex_groups,
             cell_groups=cell_groups,
             forces=forces,
-            current_experienced_forces=current_experienced_forces,
+            # current_experienced_forces=current_experienced_forces,
         )
         
     def __init__(
@@ -215,13 +140,13 @@ class TissueState:
         vertex_groups,
         cell_groups,
         forces,
-        current_experienced_forces,
+        # current_experienced_forces,
         ):
         self._geometry = geometry
         self._vertex_groups = vertex_groups
         self._cell_groups = cell_groups
         self._forces = forces
-        self._current_experienced_forces = current_experienced_forces
+        # self._current_experienced_forces = current_experienced_forces
     
     def vertex_groups(self):
         return self._vertex_groups
@@ -236,11 +161,6 @@ class TissueState:
     def forces(self):
         return self._forces
     
-    def set_current_experienced_forces(self, current_experienced_forces):
-        self._current_experienced_forces = current_experienced_forces
-    
-    def current_experienced_forces(self):
-        return self._current_experienced_forces
     
     def to_json(self):
         """ Will return something like this:
@@ -279,17 +199,10 @@ class TissueState:
         for forceid, force in self._forces.items():
             forces_json[forceid] = force.to_json()
         
-        
-        if self._current_experienced_forces is None:
-            current_experienced_forces_jobj = None
-        else:
-            current_experienced_forces_jobj = self._current_experienced_forces.to_json()
-        
         return {
             "geometry": self._geometry.to_json(),
             "vertexgroups": vtx_groups_json,
             "cellgroups": cell_groups_json,
             "forces": forces_json,
-            "current_experienced_forces": current_experienced_forces_jobj,
         }
         
