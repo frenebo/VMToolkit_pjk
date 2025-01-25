@@ -191,7 +191,7 @@ class VMCppWrapper:
         self._simulation.run_timestep_manual(n_steps, topological_change=self._topological_changes_enabled, verbose=verbose)
         self.update_vm_state_from_cpp_vm()
         
-    def update_vm_state_from_cpp_vm(self):
+    def update_vm_state_from_cpp_vm(self, verbose=False):
         # All that we need to look at (for now) should be the coordinates of vertices - 
         # we are asssuming the topology isn't changing.
         
@@ -229,7 +229,7 @@ class VMCppWrapper:
         # Update vertex forces
         vtx_forcestats_by_forceid = {}
         
-        for forceid, vtx_forces_arr in self._forces.get_instantaneous_forces().items():
+        for forceid, vtx_forces_arr in self._forces.get_instantaneous_forces(verbose=verbose).items():
             # print(forceid)
             # print(vtx_forces_arr)
             vtx_forces_for_this_forceid = {}

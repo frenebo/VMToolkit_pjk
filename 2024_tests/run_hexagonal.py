@@ -246,7 +246,6 @@ def run_experiment(
         sim_current_stats=None,
     )
     
-    
     print("MODEL PARAMS")
     print("A0={A0}  P0={P0}  kappa={kappa} gamma={gamma}".format(A0=A0_model,P0=P0_model,kappa=kappa,gamma=gamma))
     print(analytical_predictions)
@@ -276,7 +275,7 @@ def run_experiment(
     ckpt_strnum_nchars = len(str(n_checkpoints - 1))
     
     tot_time_elaspsed = 0
-    sim_model.update_vm_state_from_cpp_vm() # So we get what the instantaneous forces would be right at start
+    sim_model.update_vm_state_from_cpp_vm(verbose=verbose) # So we get what the instantaneous forces would be right at start
     for i in range(n_checkpoints):
         ckpt_filename = "res{}.json".format(str(i).zfill(ckpt_strnum_nchars))
         ckpt_fp = os.path.join(outdir, ckpt_filename)
@@ -286,6 +285,8 @@ def run_experiment(
             f.write(json.dumps(vmstate_json, indent=4))
         
         checkpoint_fps.append(ckpt_fp)
+        if verbose:
+            print("Running with adaptive timestep")
         sim_model.run_with_adaptive_tstep(ckpt_period, do_time_force_computation=True, verbose=verbose)
         tot_time_elaspsed += ckpt_period
         print("Time elapsed: {}".format(tot_time_elaspsed))
@@ -634,6 +635,7 @@ def spawn_child(run_dirpath, run_config_json_fp,  verbose):
     experiment_config = ExperimentConfig(**conf_jobj["params"])
     print(experiment_config)
     
+    
     run_experiment(experiment_config, outdir=run_dirpath, verbose=verbose)
 
 
@@ -670,9 +672,13 @@ def run_battery(
             conf_json_path,
             verbose,
         ])
-        
-    with Pool(processes=nproc) as pool:
-        pool.starmap(spawn_child, child_creation_args)
+    if nproc == 1:
+        for child_args in child_creation_args:
+            print(child_args)
+            spawn_child(*child_args)
+    else:
+        with Pool(processes=nproc) as pool:
+            pool.starmap(spawn_child, child_creation_args)
         
     
 if __name__ == "__main__":

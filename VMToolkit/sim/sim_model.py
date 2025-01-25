@@ -19,8 +19,8 @@ class SimulationModel:
     def vm_state_json(self):
         return self._vm_wrapper.vm_state_json()
     
-    def update_vm_state_from_cpp_vm(self):
-        self._vm_wrapper.update_vm_state_from_cpp_vm()
+    def update_vm_state_from_cpp_vm(self, verbose=False):
+        self._vm_wrapper.update_vm_state_from_cpp_vm(verbose=verbose)
         
     def run_steps_manual_tstep(self, n_steps, verbose=False, do_time_force_computation=False):
         if do_time_force_computation:

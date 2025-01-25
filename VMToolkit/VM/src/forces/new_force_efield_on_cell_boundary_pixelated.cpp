@@ -41,8 +41,8 @@ namespace PixelatedElectricStuff
                 int vertex_idx_from = he.from()->id;
                 int vertex_idx_to = he.to()->id;
                 
-                vtx_forces_out.at(vertex_idx_from) = vtx_forces_out.at(vertex_idx_from) + (1.0/2.0)*force_on_half_edge_by_face;
-                vtx_forces_out.at(vertex_idx_to) = vtx_forces_out.at(vertex_idx_to) + (1.0/2.0)*force_on_half_edge_by_face;
+                vtx_forces_out.at(vertex_idx_from) += (1.0/2.0)*force_on_half_edge_by_face;
+                vtx_forces_out.at(vertex_idx_to) += (1.0/2.0)*force_on_half_edge_by_face;
             }
         }
     }
@@ -381,6 +381,25 @@ namespace PixelatedElectricStuff
             throw runtime_error("  Lengths of vectors don't match - edge_lengths_thru_pixels &  pixels_intersected_by_edge");
         }
         
+        if (verbose) {
+            cout << " pixels intersected by edge: " << endl;
+            cout << "gridspec data:" << endl;
+            cout << "  ncells_x: " << _gridspec->ncells_x() << endl;
+            cout << "  ncells_y: " << _gridspec->ncells_y() << endl;
+            cout << "  spacing_x: " << _gridspec->spacing_x() << endl;
+            cout << "  spacing_y: " << _gridspec->spacing_y() << endl;
+            cout << "  origin_x: " << _gridspec->origin_x() << endl;
+            cout << "  origin_y: " << _gridspec->origin_y() << endl;
+            
+            cout << "  edge start - x,y=" << edge.he()->from()->data().r.x << "," << edge.he()->from()->data().r.y << endl;
+            cout << "  edge end - x,y=" << edge.he()->to()->data().r.x << "," << edge.he()->to()->data().r.y << endl;
+            
+            for (int pidx=0; pidx < pixels_intersected_by_edge.size(); pidx++) {
+                const GridCoord& gc = pixels_intersected_by_edge.at(pidx);
+                cout << "  pixel x,y,edge length thru pixel - " << gc.x() << "," << gc.y() << "," << edge_lengths_thru_pixels.at(pidx) << endl;
+            }
+        }
+        
         Vec sum_result = Vec(0.0,0.0);
         
         for (int pidx=0; pidx < pixels_intersected_by_edge.size(); pidx++) {
@@ -436,19 +455,38 @@ namespace PixelatedElectricStuff
     
     vector<int> NEWForceEFieldOnCellBoundPixelated::_get_crossings_generalized(int start_coord, int end_coord, bool verbose) const
     {
+        if (verbose) {
+            cout << "_get_crossings_generalized - finding crossing positions" << endl;
+        }
         if (start_coord == end_coord) {
+            if (verbose) {
+                cout << "start and end are the same - returning empty vector" << endl;
+            }
             return vector<int>();
         }
         else if (start_coord < end_coord) {
+            if (verbose) {
+                cout << "start is smaller than end - working forwards" << endl;
+            }
             vector<int> crossings;
             for (int i = start_coord; i < end_coord; i++) {
+                if (verbose) {
+                    cout << "  i:" << i << endl;
+                    cout << "     i+1:" << i+1 << endl;
+                }
                 crossings.push_back(i + 1);
             }
             return crossings;
         }
         else if (start_coord > end_coord) {
+            if (verbose) {
+                cout << "end is smaller than start - working backwards" << endl;
+            }
             vector<int> crossings;
             for (int i = start_coord; i > end_coord; i--) {
+                if (verbose) {
+                    cout << "   " << i << endl;
+                }
                 crossings.push_back(i);
             }
             return crossings;
@@ -488,11 +526,20 @@ namespace PixelatedElectricStuff
     
     vector<GridCoord> NEWForceEFieldOnCellBoundPixelated::_get_edge_pixel_intersections(const Edge& edge, bool verbose) const
     {
+        if (verbose) {
+            cout << "NEWForceEFieldOnCellBoundPixelated::_get_edge_pixel_intersections - starting" << endl;
+        }
         Vec edge_start_VEC = edge.he()->from()->data().r;
-        Vec edge_end_VEC = edge.he()->from()->data().r;
+        Vec edge_end_VEC = edge.he()->to()->data().r;
         
         GridCoord edge_grid_start = _get_grid_coords_for_vector(edge_start_VEC, verbose);
         GridCoord edge_grid_end = _get_grid_coords_for_vector(edge_end_VEC, verbose);
+        
+        if (edge_grid_start.x() > 1000 || edge_grid_start.y() > 1000) {
+            cout << "Edge start vec: " << edge_start_VEC.x << "," << edge_start_VEC.y << endl;
+            cout << "Edge end vec: " << edge_end_VEC.x << "," << edge_end_VEC.y << endl;
+            throw runtime_error("???");
+        }
         
         vector<int> column_crossings_xvals = _get_column_crossings_of_edge(edge_grid_start, edge_grid_end, verbose);
         vector<int> row_crossings_yvals = _get_row_crossings_of_edge(edge_grid_start, edge_grid_end, verbose);
@@ -546,6 +593,18 @@ namespace PixelatedElectricStuff
             ));
         }
         
+        // if (verbose) {
+        //     cout << "COL CROSSINGS, ROW CROSSINGS ";
+        //     for (int col_cross_grid_x : column_crossings_xvals) {
+        //         cout << col_cross_grid_x << ",";
+        //     }
+        //     cout << " - ";
+        //     for (int row_cross_grid_y : row_crossings_yvals) {
+        //         cout << row_cross_grid_y << ",";
+        //     }
+        //     cout << endl;
+        // }
+        
         
         
         /* *********************************************
@@ -556,7 +615,10 @@ namespace PixelatedElectricStuff
         
         int col_crossing_index = 0;
         int row_crossing_index = 0;
-        while ( col_crossing_index < column_crossings_xvals.size() && row_crossing_index < row_crossings_yvals.size()) {
+        while ( col_crossing_index < column_crossings_xvals.size() || row_crossing_index < row_crossings_yvals.size()) {
+            if (verbose) {
+                cout << " traversing grid coord - " << current_coord.x() << "," << current_coord.y() << endl;
+            }
             // Determine, which crossing is next?
             // case 1 - there are no column crossings left
             //    - next crossing is a row crossing
@@ -601,7 +663,7 @@ namespace PixelatedElectricStuff
                     );
                 }
                 // case 2 - we are currently below the crossing, going upwards
-                else if (row_crossing_yvalue == current_coord.y() - 1) {
+                else if (row_crossing_yvalue == current_coord.y() + 1) {
                     OPT_next_grid_coord = GridCoord(
                         current_coord.x(),
                         current_coord.y() + 1
@@ -623,7 +685,7 @@ namespace PixelatedElectricStuff
                     );
                 }
                 // case 2 - we are currently to the left of the crossing, going right
-                else if (col_crossing_xvalue == current_coord.x() - 1) {
+                else if (col_crossing_xvalue == current_coord.x() + 1) {
                     OPT_next_grid_coord = GridCoord(
                         current_coord.x() + 1,
                         current_coord.y()
@@ -654,6 +716,9 @@ namespace PixelatedElectricStuff
         
         // We should be at the end
         if (current_coord != edge_grid_end) {
+            cout << "CURRENT COORD: " << current_coord.x() << "," << current_coord.y() << endl;
+            cout << "EDGE GRID END: " << edge_grid_end.x() << "," << edge_grid_end.y() << endl;
+            cout << "EDGE GRID START: " << edge_grid_start.x() << "," << edge_grid_start.y() << endl;
             throw runtime_error("? It seems like we didn't make it to the edge end");
         }
         
