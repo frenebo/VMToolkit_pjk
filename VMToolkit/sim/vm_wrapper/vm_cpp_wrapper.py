@@ -230,8 +230,7 @@ class VMCppWrapper:
         vtx_forcestats_by_forceid = {}
         
         for forceid, vtx_forces_arr in self._forces.get_instantaneous_forces(verbose=verbose).items():
-            # print(forceid)
-            # print(vtx_forces_arr)
+            
             vtx_forces_for_this_forceid = {}
             for vidx, vforce in enumerate(vtx_forces_arr):
                 vtx_id = self._ids_to_cpp_index_maps["vtx_indices_to_ids"][vidx]
@@ -241,8 +240,6 @@ class VMCppWrapper:
                 force_experienced_by_vertex_id=vtx_forces_for_this_forceid,
             )
             
-        
-        # raise NotImplementedError()
         
         new_vmstate.set_sim_current_stats(SimCurrentStats(
             forces_stats=CurrentForcesStats(

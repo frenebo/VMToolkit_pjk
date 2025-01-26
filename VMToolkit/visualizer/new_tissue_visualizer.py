@@ -152,19 +152,37 @@ def build_force_arrow_graph_objects(ck_state, force_id):
     
     arrows_x = []
     arrows_y = []
+    custom_force_data = []
     for vtx_id, (force_x, force_y) in sorted(vtx_current_forces.force_experienced_by_vertex_id().items()):
         vtx_geo = ck_state.tissue_state().geometry().vertices()[vtx_id]
         
-        arrows_x.append(vtx_geo.x())
-        arrows_y.append(vtx_geo.y())
-        arrows_x.append(vtx_geo.x() + force_x * force_scale)
-        arrows_y.append(vtx_geo.y() + force_y * force_scale)
-        arrows_x.append(None)
-        arrows_y.append(None)
+        vtx_force_str = 'f=({},{})'.format(force_x, force_y)
+        
+        arrows_x += [
+            vtx_geo.x(),
+            vtx_geo.x() + force_x * force_scale,
+            None,
+            None,
+        ]
+        
+        arrows_y += [
+            vtx_geo.y(),
+            vtx_geo.y() + force_y * force_scale,
+            None,
+            None,
+        ]
+        custom_force_data += [
+            vtx_force_str,
+            vtx_force_str,
+            vtx_force_str,
+            None,
+        ]
     
     return [go.Scatter(
         x=arrows_x,
         y=arrows_y,
+        customdata=custom_force_data,
+        hovertemplate="%{customdata}",
         marker={
             "size": 10,
             "symbol": 'arrow-bar-up',
@@ -180,8 +198,9 @@ def build_data_for_frame(ck_state):
     mesh_traces = build_cell_mesh_graph_objects(ck_state)
     
     left_force_arrow_traces = build_force_arrow_graph_objects(ck_state, 'left_forcing_field')
+    right_force_arrow_traces = build_force_arrow_graph_objects(ck_state, 'right_forcing_field')
     
-    return mesh_traces + pixelated_field_traces + left_force_arrow_traces
+    return mesh_traces + pixelated_field_traces + left_force_arrow_traces + right_force_arrow_traces
 
 
 def generate_frame_slider(n_frames):

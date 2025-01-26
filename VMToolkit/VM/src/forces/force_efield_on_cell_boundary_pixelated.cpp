@@ -1,4 +1,4 @@
-#include "new_force_efield_on_cell_boundary_pixelated.hpp"
+#include "force_efield_on_cell_boundary_pixelated.hpp"
 
 #include <set>
 #include <algorithm>
@@ -10,10 +10,16 @@ namespace PixelatedElectricStuff
     using std::set;
     using std::optional;
     
-    void NEWForceEFieldOnCellBoundPixelated::compute_all_vertex_forces(vector<Vec>& vtx_forces_out, bool verbose)
+    void ForceEFieldOnCellBoundPixelated::compute_all_vertex_forces(vector<Vec>& vtx_forces_out, bool verbose)
     {
+        if (verbose) {
+            cout << "ForceEFieldOnCellBoundPixelated::compute_all_vertex_forces - starting" << endl;
+        }
         _clear_compute_cache(verbose);
         _cache_computations(verbose);
+        if (verbose) {
+            cout << "ForceEFieldOnCellBoundPixelated::compute_all_vertex_forces - finished caching computatins, about to use them to calculate forces" << endl;
+        }
         
         int n_vertices = _sys.cmesh().cvertices().size();
         vtx_forces_out.clear();
@@ -21,6 +27,9 @@ namespace PixelatedElectricStuff
         
         for (const auto& fit : _face_params) {
             int face_id = fit.first;
+            if (verbose) {
+                cout << "  Finding forces on halfedges on face " << face_id << endl;
+            }
             const Face& face = _sys.cmesh().cfaces().at(face_id);
             const EFieldPixFaceConfig& faceconf = fit.second;
             
@@ -28,37 +37,47 @@ namespace PixelatedElectricStuff
             double face_perimeter = _sys.cmesh().perim(face);
             
             double perimeter_charge_density = face_charge / face_perimeter;
+            if (verbose) {
+                cout << "     Face charge = " << face_charge << endl;
+                cout << "     Face charge density = " << perimeter_charge_density << endl;
+            }
             
             for (const HalfEdge& he : face.circulator()) {
                 int edge_idx = he.edge()->idx();
+                if (verbose) {
+                    cout << "        This halfedge has corresponding edge index " << edge_idx << endl;
+                }
                 const EdgeComputationResult& edge_computation = _cached_edge_computation_results.at(edge_idx);
                 
                 // force = integral_{over edge} dq * Electric field
                 // force = (charge density) * integral_{over edge} dl * electric field
                 Vec force_on_half_edge_by_face = perimeter_charge_density * edge_computation.integrated_efield_with_respect_to_dlength();
+                if (verbose) {
+                    cout << "        Force on half edge in face " << face_id << ": " << force_on_half_edge_by_face.x << "," << force_on_half_edge_by_face.y << endl;
+                }
                 
                 // Half of the force is applied to each adjacent vertex
                 int vertex_idx_from = he.from()->id;
                 int vertex_idx_to = he.to()->id;
                 
-                vtx_forces_out.at(vertex_idx_from) += (1.0/2.0)*force_on_half_edge_by_face;
-                vtx_forces_out.at(vertex_idx_to) += (1.0/2.0)*force_on_half_edge_by_face;
+                vtx_forces_out.at(vertex_idx_from) = vtx_forces_out.at(vertex_idx_from) + (1.0/2.0)*force_on_half_edge_by_face;
+                vtx_forces_out.at(vertex_idx_to) = vtx_forces_out.at(vertex_idx_to) + (1.0/2.0)*force_on_half_edge_by_face;
             }
         }
     }
     
-    void NEWForceEFieldOnCellBoundPixelated::_clear_compute_cache(bool verbose)
+    void ForceEFieldOnCellBoundPixelated::_clear_compute_cache(bool verbose)
     {
         if (verbose) {
-            cout << "NEWForceEFieldOnCellBoundPixelated::_clear_compute_cache - clearing cache" << endl;
+            cout << "ForceEFieldOnCellBoundPixelated::_clear_compute_cache - clearing cache" << endl;
         }
         _cached_edge_computation_results.clear();
     }
     
-    void NEWForceEFieldOnCellBoundPixelated::_cache_computations(bool verbose)
+    void ForceEFieldOnCellBoundPixelated::_cache_computations(bool verbose)
     {
         if (verbose) {
-            cout << "NEWForceEFieldOnCellBoundPixelated::_cache_computations - caching repeatedly needed computations - edge integrations with field" << endl;
+            cout << "ForceEFieldOnCellBoundPixelated::_cache_computations - caching repeatedly needed computations - edge integrations with field" << endl;
         }
         
         set<int> edges_to_compute;
@@ -78,7 +97,7 @@ namespace PixelatedElectricStuff
         for (int edge_id : edges_to_compute) {
             if (_cached_edge_computation_results.contains(edge_id)) {
                 cout << " edge id - " << edge_id << endl;
-                throw runtime_error("Error - NEWForceEFieldOnCellBoundPixelated::_cache_computations - trying to cache edge id but it already exists in the cache");
+                throw runtime_error("Error - ForceEFieldOnCellBoundPixelated::_cache_computations - trying to cache edge id but it already exists in the cache");
             }
             
             const Edge& edge = _sys.cmesh().cedges().at(edge_id);
@@ -87,14 +106,18 @@ namespace PixelatedElectricStuff
         }
         
         if (verbose) {
-            cout << "NEWForceEFieldOnCellBoundPixelated::_cache_computations - FINISHED" << endl;
+            cout << "ForceEFieldOnCellBoundPixelated::_cache_computations - FINISHED" << endl;
         }
     }
     
-    double NEWForceEFieldOnCellBoundPixelated::_get_intersection_with_row_and_find_rel_pos_in_column(const Vec& edge_start_VEC, const Vec& edge_end_VEC, int row_to_intersect, int snap_column, bool verbose) const
+    double ForceEFieldOnCellBoundPixelated::_get_intersection_with_row_and_find_rel_pos_in_column(const Vec& edge_start_VEC, const Vec& edge_end_VEC, int row_to_intersect, int snap_column, bool verbose) const
     {
         if (!_gridspec) {
             throw runtime_error("_gridspec not set - get_intersection_with_row_and_constrain_to_column can't work");
+        }
+        if (verbose) {
+            cout << "    _get_intersection_with_row_and_find_rel_pos_in_column - starting" << endl;
+            cout << "      row to intersect: " << row_to_intersect << ", snap column: " << snap_column << endl;
         }
         GridCoord snap_pixel_gridcoord = GridCoord(snap_column, row_to_intersect);
         Vec pixel_origin = _get_vec_coords_for_grid_pos(snap_pixel_gridcoord, verbose);
@@ -109,18 +132,29 @@ namespace PixelatedElectricStuff
         
         double rel_x = x_abs - pixel_origin.x;
         if (rel_x < 0) {
+            if (verbose) {
+                cout << "     rel pos of intersection with row is less than zero - snapping" << endl;
+            }
             rel_x = 0;
         } else if (rel_x > _gridspec->spacing_x()) {
+            if (verbose) {
+                cout << "     rel pos of intersection with row is greater than x spacing - snapping" << endl;
+            }
             rel_x = _gridspec->spacing_x();
         }
         
         return rel_x;
     }
     
-    double NEWForceEFieldOnCellBoundPixelated::_get_intersection_with_column_and_find_rel_pos_in_row(const Vec& edge_start_VEC, const Vec& edge_end_VEC, int column_to_intersect, int snap_row, bool verbose) const
+    double ForceEFieldOnCellBoundPixelated::_get_intersection_with_column_and_find_rel_pos_in_row(const Vec& edge_start_VEC, const Vec& edge_end_VEC, int column_to_intersect, int snap_row, bool verbose) const
     {
         if (!_gridspec) {
             throw runtime_error("_gridspec not set - get_intersection_with_column_and_find_rel_pos_in_row can't work");
+        }
+        if (verbose) {
+            cout << "    _get_intersection_with_column_and_find_rel_pos_in_row" << endl;
+            cout << "      column to intersect: " << column_to_intersect << ", snap row: " << snap_row << endl;
+            cout << "      edge start, end: (" << edge_start_VEC.x << "," << edge_start_VEC.y << ") & (" << edge_end_VEC.x << "," << edge_end_VEC.y << ")" << endl;
         }
         GridCoord snap_pixel_gridcoord = GridCoord(column_to_intersect, snap_row);
         Vec pixel_origin = _get_vec_coords_for_grid_pos(snap_pixel_gridcoord, verbose);
@@ -130,20 +164,32 @@ namespace PixelatedElectricStuff
         
         double x = pixel_origin.x;
         double dist_along_edge = (x - edge_start_VEC.x) / vx;
-        double y_abs = (dist_along_edge * vy) + edge_start_VEC.x;
+        double y_abs = (dist_along_edge * vy) + edge_start_VEC.y;
         
         double rel_y = y_abs - pixel_origin.y;
+        if (verbose) {
+            cout << "      x: " << x << endl;
+            cout << "      y intersection: " << y_abs << endl;
+            cout << "      relative y: " << rel_y << endl;
+            cout << "      dist_along_edge: " << dist_along_edge << endl;
+        }
         
         if (rel_y < 0) {
+            if (verbose) {
+                cout << "     rel pos of intersection with column is less than zero - snapping" << endl;
+            }
             rel_y = 0;
         } else if (rel_y > _gridspec->spacing_y()) {
+            if (verbose) {
+                cout << "      rel pos of intersection with column is greater than y spacing - snapping" << endl;
+            }
             rel_y = _gridspec->spacing_y();
         }
         
         return rel_y;
     }
     
-    vector<Vec> NEWForceEFieldOnCellBoundPixelated::_get_pixel_intersection_absolute_coordinates(const GridCoord& pixel_gridpos, const PixelIntersectionsDescriptor& pix_intersections, bool verbose) const
+    vector<Vec> ForceEFieldOnCellBoundPixelated::_get_pixel_intersection_absolute_coordinates(const GridCoord& pixel_gridpos, const PixelIntersectionsDescriptor& pix_intersections, bool verbose) const
     {
         vector<Vec> locations_of_intersections;
         Vec pixel_origin = _get_vec_coords_for_grid_pos(pixel_gridpos, verbose);
@@ -177,10 +223,10 @@ namespace PixelatedElectricStuff
     }
     
     
-    vector<double> NEWForceEFieldOnCellBoundPixelated::_get_edge_lengths_passing_thru_pixels(const Edge& edge, const vector<GridCoord>& pixels_intersected_by_edge, bool verbose) const
+    vector<double> ForceEFieldOnCellBoundPixelated::_get_edge_lengths_passing_thru_pixels(const Edge& edge, const vector<GridCoord>& pixels_intersected_by_edge, bool verbose) const
     {
         if (verbose) {
-            cout << "NEWForceEFieldOnCellBoundPixelated::_get_edge_lengths_passing_thru_pixels - finding portions of edge going thru each pixel" << endl;
+            cout << "ForceEFieldOnCellBoundPixelated::_get_edge_lengths_passing_thru_pixels - finding portions of edge going thru each pixel" << endl;
         }
         /*
          * Finding the segments of the edge that pass through each of these pixels
@@ -221,13 +267,23 @@ namespace PixelatedElectricStuff
             
             const GridCoord& this_pixel_grid_pos = pixels_intersected_by_edge.at(pixel_idx);
             const GridCoord& next_pixel_grid_pos = pixels_intersected_by_edge.at(pixel_idx + 1);
-            // get_intersection_with_row_and_snap_to_column
+            
+            if (verbose) {
+                cout << "  Looking at crossing from " << this_pixel_grid_pos.x() << "," << this_pixel_grid_pos.y() << " to " << next_pixel_grid_pos.x() << "," << next_pixel_grid_pos.y() << endl;
+            }
+            
             // If they differ in x
             if (this_pixel_grid_pos.x() != next_pixel_grid_pos.x()  && this_pixel_grid_pos.y() == next_pixel_grid_pos.y()) {
+                if (verbose) {
+                    cout << "    This is a column crossing";
+                }
                 int shared_row = this_pixel_grid_pos.y();
                 
                 // Case 1 - the next pixel is to the right
                 if (next_pixel_grid_pos.x() == this_pixel_grid_pos.x() + 1) {
+                    if (verbose) {
+                        cout << " to the right" << endl;
+                    }
                     int intersection_column = next_pixel_grid_pos.x();
                     
                     double intersection_y = _get_intersection_with_column_and_find_rel_pos_in_row(edge_start_VEC, edge_end_VEC, intersection_column, shared_row, verbose);
@@ -237,6 +293,9 @@ namespace PixelatedElectricStuff
                 }
                 // Case 2 - the next pixel is to the left
                 else if (next_pixel_grid_pos.x() == this_pixel_grid_pos.x() - 1) {
+                    if (verbose) {
+                        cout << " to the left" << endl;
+                    }
                     int intersection_column = this_pixel_grid_pos.x();
                     
                     double intersection_y = _get_intersection_with_column_and_find_rel_pos_in_row(edge_start_VEC, edge_end_VEC, intersection_column, shared_row, verbose);
@@ -250,10 +309,16 @@ namespace PixelatedElectricStuff
             }
             // If they differ in y
             else if (this_pixel_grid_pos.x() == next_pixel_grid_pos.x() && this_pixel_grid_pos.y() != next_pixel_grid_pos.y()) {
+                if (verbose) {
+                    cout << "    This is a column crossing";
+                }
                 int shared_column = this_pixel_grid_pos.x();
                 
                 //Case 1 - the next pixel is above
                 if (next_pixel_grid_pos.y() == this_pixel_grid_pos.y() + 1) {
+                    if (verbose) {
+                        cout << " to the above" << endl;
+                    }
                     int intersection_row = next_pixel_grid_pos.y();
                     
                     double intersection_x = _get_intersection_with_row_and_find_rel_pos_in_column(edge_start_VEC, edge_end_VEC, intersection_row, shared_column, verbose);
@@ -263,6 +328,9 @@ namespace PixelatedElectricStuff
                 }
                 // Case 2 - the next pixel is below
                 else if (next_pixel_grid_pos.y() == this_pixel_grid_pos.y() - 1) {
+                    if (verbose) {
+                        cout << " to below" << endl;
+                    }
                     int intersection_row = this_pixel_grid_pos.y();
                     
                     double intersection_x = _get_intersection_with_row_and_find_rel_pos_in_column(edge_start_VEC, edge_end_VEC, intersection_row, shared_column, verbose);
@@ -296,6 +364,11 @@ namespace PixelatedElectricStuff
                 }
                 
                 Vec intersection_loc = pix_intersection_locations.at(0);
+                if (verbose) {
+                    cout << "  First pixel - intersection location is ("
+                        << intersection_loc.x << "," << intersection_loc.y <<
+                        "), edge start loc is (" << edge_start_VEC.x << "," << edge_start_VEC.y << ")" << endl;
+                }
                 double len_within_pixel = (edge_start_VEC - intersection_loc).len();
                 
                 edge_length_passing_thru_each_pixel.push_back(len_within_pixel);
@@ -308,6 +381,11 @@ namespace PixelatedElectricStuff
                 }
                 
                 Vec intersection_loc = pix_intersection_locations.at(0);
+                if (verbose) {
+                    cout << "  Last pixel - intersection location is ("
+                        << intersection_loc.x << "," << intersection_loc.y <<
+                        "), edge end loc is (" << edge_end_VEC.x << "," << edge_end_VEC.y << ")" << endl;
+                }
                 double len_within_pixel = (edge_end_VEC - intersection_loc).len();
                 
                 edge_length_passing_thru_each_pixel.push_back(len_within_pixel);
@@ -321,6 +399,13 @@ namespace PixelatedElectricStuff
                 
                 Vec first_intersection_loc = pix_intersection_locations.at(0);
                 Vec second_intersection_loc = pix_intersection_locations.at(1);
+                
+                
+                if (verbose) {
+                    cout << "  Middle pixels - intersection location are (" <<
+                        first_intersection_loc.x << "," << first_intersection_loc.y << ") & (" <<
+                        second_intersection_loc.x << "," << second_intersection_loc.y << ")" << endl;
+                }
                 
                 double len_within_pixel = (second_intersection_loc - first_intersection_loc).len();
                 
@@ -337,7 +422,7 @@ namespace PixelatedElectricStuff
         return edge_length_passing_thru_each_pixel;
     }
     
-    Vec NEWForceEFieldOnCellBoundPixelated::get_electric_field_at_grid_coord(const GridCoord& gc, bool verbose) const
+    Vec ForceEFieldOnCellBoundPixelated::get_electric_field_at_grid_coord(const GridCoord& gc, bool verbose) const
     {
         if (!_gridspec.has_value()) {
             throw runtime_error("get_electric_field_at_grid_coord - can't run, _gridspec has not been set yet");
@@ -365,17 +450,17 @@ namespace PixelatedElectricStuff
         return _flattened_field_vecs->at(flattened_pos);
     }
     
-    EdgeComputationResult NEWForceEFieldOnCellBoundPixelated::_integrate_field_over_edge(const Edge& edge, bool verbose) const
+    EdgeComputationResult ForceEFieldOnCellBoundPixelated::_integrate_field_over_edge(const Edge& edge, bool verbose) const
     {
         if (verbose) {
-            cout << "  NEWForceEFieldOnCellBoundPixelated::_integrate_field_over_edge - starting" << endl;
+            cout << "  ForceEFieldOnCellBoundPixelated::_integrate_field_over_edge - starting" << endl;
         }
         if (!_gridspec) {
-            throw runtime_error("NEWForceEFieldOnCellBoundPixelated::_integrate_field_over_edge - err, _gridspec has not been set");
+            throw runtime_error("ForceEFieldOnCellBoundPixelated::_integrate_field_over_edge - err, _gridspec has not been set");
         }
-        vector<GridCoord> pixels_intersected_by_edge = _get_edge_pixel_intersections(edge, verbose);
+        const vector<GridCoord> pixels_intersected_by_edge = _get_edge_pixel_intersections(edge, verbose);
         
-        vector<double> edge_lengths_thru_pixels = _get_edge_lengths_passing_thru_pixels(edge, pixels_intersected_by_edge, verbose);
+        const vector<double> edge_lengths_thru_pixels = _get_edge_lengths_passing_thru_pixels(edge, pixels_intersected_by_edge, verbose);
         
         if (edge_lengths_thru_pixels.size() != pixels_intersected_by_edge.size()) {
             throw runtime_error("  Lengths of vectors don't match - edge_lengths_thru_pixels &  pixels_intersected_by_edge");
@@ -391,12 +476,12 @@ namespace PixelatedElectricStuff
             cout << "  origin_x: " << _gridspec->origin_x() << endl;
             cout << "  origin_y: " << _gridspec->origin_y() << endl;
             
-            cout << "  edge start - x,y=" << edge.he()->from()->data().r.x << "," << edge.he()->from()->data().r.y << endl;
-            cout << "  edge end - x,y=" << edge.he()->to()->data().r.x << "," << edge.he()->to()->data().r.y << endl;
+            cout << "  edge start :x,y=" << edge.he()->from()->data().r.x << "," << edge.he()->from()->data().r.y << endl;
+            cout << "  edge end :x,y=" << edge.he()->to()->data().r.x << "," << edge.he()->to()->data().r.y << endl;
             
             for (int pidx=0; pidx < pixels_intersected_by_edge.size(); pidx++) {
                 const GridCoord& gc = pixels_intersected_by_edge.at(pidx);
-                cout << "  pixel x,y,edge length thru pixel - " << gc.x() << "," << gc.y() << "," << edge_lengths_thru_pixels.at(pidx) << endl;
+                cout << "  pixel x,y,edge length thru pixel : " << gc.x() << "," << gc.y() << "," << edge_lengths_thru_pixels.at(pidx) << endl;
             }
         }
         
@@ -420,7 +505,7 @@ namespace PixelatedElectricStuff
         return EdgeComputationResult(sum_result);
     }
     
-    Vec NEWForceEFieldOnCellBoundPixelated::_get_vec_coords_for_grid_pos(GridCoord gc, bool verbose) const
+    Vec ForceEFieldOnCellBoundPixelated::_get_vec_coords_for_grid_pos(GridCoord gc, bool verbose) const
     {
         if (!_gridspec) {
             throw runtime_error("_gridspec not set - _get_vec_coords_for_grid_pos");
@@ -435,7 +520,7 @@ namespace PixelatedElectricStuff
         return Vec(vec_x, vec_y);
     }
     
-    GridCoord NEWForceEFieldOnCellBoundPixelated::_get_grid_coords_for_vector(Vec vec, bool verbose) const
+    GridCoord ForceEFieldOnCellBoundPixelated::_get_grid_coords_for_vector(Vec vec, bool verbose) const
     {
         if (!_gridspec) {
             throw runtime_error("_gridspec not set - get_col_row_for_vector");
@@ -453,35 +538,35 @@ namespace PixelatedElectricStuff
         return GridCoord(grid_x, grid_y);
     }
     
-    vector<int> NEWForceEFieldOnCellBoundPixelated::_get_crossings_generalized(int start_coord, int end_coord, bool verbose) const
+    vector<int> ForceEFieldOnCellBoundPixelated::_get_crossings_generalized(int start_coord, int end_coord, bool verbose) const
     {
         if (verbose) {
             cout << "_get_crossings_generalized - finding crossing positions" << endl;
         }
         if (start_coord == end_coord) {
             if (verbose) {
-                cout << "start and end are the same - returning empty vector" << endl;
+                cout << "  start and end are the same - returning empty vector" << endl;
             }
             return vector<int>();
         }
         else if (start_coord < end_coord) {
-            if (verbose) {
-                cout << "start is smaller than end - working forwards" << endl;
-            }
+            // if (verbose) {
+            //     cout << "start is smaller than end - working forwards" << endl;
+            // }
             vector<int> crossings;
             for (int i = start_coord; i < end_coord; i++) {
-                if (verbose) {
-                    cout << "  i:" << i << endl;
-                    cout << "     i+1:" << i+1 << endl;
-                }
+                // if (verbose) {
+                //     cout << "  i:" << i << endl;
+                //     cout << "     i+1:" << i+1 << endl;
+                // }
                 crossings.push_back(i + 1);
             }
             return crossings;
         }
         else if (start_coord > end_coord) {
-            if (verbose) {
-                cout << "end is smaller than start - working backwards" << endl;
-            }
+            // if (verbose) {
+            //     cout << "end is smaller than start - working backwards" << endl;
+            // }
             vector<int> crossings;
             for (int i = start_coord; i > end_coord; i--) {
                 if (verbose) {
@@ -495,7 +580,7 @@ namespace PixelatedElectricStuff
         }
     }
     
-    vector<int> NEWForceEFieldOnCellBoundPixelated::_get_column_crossings_of_edge(GridCoord edge_start, GridCoord edge_end, bool verbose) const
+    vector<int> ForceEFieldOnCellBoundPixelated::_get_column_crossings_of_edge(GridCoord edge_start, GridCoord edge_end, bool verbose) const
     {
         if (verbose) {
             cout << "  get_column_crossings_of_edge - finding which columns are crossed" << endl;
@@ -507,7 +592,7 @@ namespace PixelatedElectricStuff
         return _get_crossings_generalized(start_x, end_x, verbose);
     }
     
-    vector<int> NEWForceEFieldOnCellBoundPixelated::_get_row_crossings_of_edge(GridCoord edge_start, GridCoord edge_end, bool verbose) const
+    vector<int> ForceEFieldOnCellBoundPixelated::_get_row_crossings_of_edge(GridCoord edge_start, GridCoord edge_end, bool verbose) const
     {
         if (verbose) {
             cout << "  get_row_crossings_of_edge - finding which rows are crossed" << endl;
@@ -519,15 +604,21 @@ namespace PixelatedElectricStuff
         return _get_crossings_generalized(start_y, end_y, verbose);
     }
     
-    double NEWForceEFieldOnCellBoundPixelated::get_relative_position_of_crossing_along_edge(int crossing_coord, double edge_start_coord, double edge_end_coord) const
+    double ForceEFieldOnCellBoundPixelated::_get_relative_position_of_crossing_along_edge(double crossing_coord, double edge_start_coord, double edge_end_coord, bool verbose) const
     {
-        return (crossing_coord - edge_start_coord) / (edge_end_coord - edge_start_coord);
+        double delta_edge_coord = (edge_end_coord - edge_start_coord);
+        double rel_pos = (static_cast<double>(crossing_coord) - edge_start_coord) / delta_edge_coord;
+        if (verbose) {
+            cout << "     _get_relative_position_of_crossing_along_edge - rel_pos = " << rel_pos << endl;
+        }
+        return rel_pos;
+        // return (crossing_coord - edge_start_coord) / ;
     }
     
-    vector<GridCoord> NEWForceEFieldOnCellBoundPixelated::_get_edge_pixel_intersections(const Edge& edge, bool verbose) const
+    vector<GridCoord> ForceEFieldOnCellBoundPixelated::_get_edge_pixel_intersections(const Edge& edge, bool verbose) const
     {
         if (verbose) {
-            cout << "NEWForceEFieldOnCellBoundPixelated::_get_edge_pixel_intersections - starting" << endl;
+            cout << "ForceEFieldOnCellBoundPixelated::_get_edge_pixel_intersections - starting" << endl;
         }
         Vec edge_start_VEC = edge.he()->from()->data().r;
         Vec edge_end_VEC = edge.he()->to()->data().r;
@@ -573,10 +664,11 @@ namespace PixelatedElectricStuff
                 verbose
             ).x;
             
-            col_crossing_relative_positions_along_edge.push_back(get_relative_position_of_crossing_along_edge(
+            col_crossing_relative_positions_along_edge.push_back(_get_relative_position_of_crossing_along_edge(
                 col_cross_VEC_x,
                 edge_start_VEC.x,
-                edge_end_VEC.x
+                edge_end_VEC.x,
+                verbose
             ));
         }
         vector<double> row_crossing_relative_positions_along_edge;
@@ -586,24 +678,13 @@ namespace PixelatedElectricStuff
                 verbose
             ).y;
             
-            row_crossing_relative_positions_along_edge.push_back(get_relative_position_of_crossing_along_edge(
+            row_crossing_relative_positions_along_edge.push_back(_get_relative_position_of_crossing_along_edge(
                 row_cross_VEC_y,
                 edge_start_VEC.y,
-                edge_end_VEC.y
+                edge_end_VEC.y,
+                verbose
             ));
         }
-        
-        // if (verbose) {
-        //     cout << "COL CROSSINGS, ROW CROSSINGS ";
-        //     for (int col_cross_grid_x : column_crossings_xvals) {
-        //         cout << col_cross_grid_x << ",";
-        //     }
-        //     cout << " - ";
-        //     for (int row_cross_grid_y : row_crossings_yvals) {
-        //         cout << row_cross_grid_y << ",";
-        //     }
-        //     cout << endl;
-        // }
         
         
         
@@ -615,9 +696,12 @@ namespace PixelatedElectricStuff
         
         int col_crossing_index = 0;
         int row_crossing_index = 0;
+        if (verbose) {
+            cout << "Traversing grid coords, ordered by relative positions along edge.." << endl;
+        }
         while ( col_crossing_index < column_crossings_xvals.size() || row_crossing_index < row_crossings_yvals.size()) {
             if (verbose) {
-                cout << " traversing grid coord - " << current_coord.x() << "," << current_coord.y() << endl;
+                cout << " current grid coord - " << current_coord.x() << "," << current_coord.y() << endl;
             }
             // Determine, which crossing is next?
             // case 1 - there are no column crossings left
@@ -628,14 +712,24 @@ namespace PixelatedElectricStuff
             
             optional<bool> OPT_next_crossing_is_row;
             if (col_crossing_index == column_crossings_xvals.size()) {
+                if (verbose) {
+                    cout << "       only row crossings left - next crossing is row" << endl;
+                }
                 OPT_next_crossing_is_row = true;
             } else if (row_crossing_index == row_crossings_yvals.size()) {
+                if (verbose) {
+                    cout << "       only column crossings left - next crossing is row" << endl;
+                }
                 OPT_next_crossing_is_row = false;
             } else {
                 double col_crossing_pos_on_edge = col_crossing_relative_positions_along_edge.at(col_crossing_index);
                 double row_crossing_pos_on_edge = row_crossing_relative_positions_along_edge.at(row_crossing_index);
+                if (verbose) {
+                    cout << "       picking between next row and next col crossings - next col rel pos, row rel pos, are:"
+                         << col_crossing_pos_on_edge << "," << row_crossing_pos_on_edge << endl;
+                }
                 
-                if (row_crossing_pos_on_edge > col_crossing_pos_on_edge) {
+                if (row_crossing_pos_on_edge < col_crossing_pos_on_edge) {
                     OPT_next_crossing_is_row = true;
                 } else {
                     OPT_next_crossing_is_row = false;

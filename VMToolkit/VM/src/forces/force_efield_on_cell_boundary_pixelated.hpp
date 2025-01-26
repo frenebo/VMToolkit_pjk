@@ -1,5 +1,5 @@
-#ifndef __NEW_FORCE_EFIELD_ON_CELL_BOUNDARY_PIXELATED_HPP__
-#define __NEW_FORCE_EFIELD_ON_CELL_BOUNDARY_PIXELATED_HPP__
+#ifndef __FORCE_EFIELD_ON_CELL_BOUNDARY_PIXELATED_HPP__
+#define __FORCE_EFIELD_ON_CELL_BOUNDARY_PIXELATED_HPP__
 
 #include <optional>
 #include "force.hpp"
@@ -180,15 +180,15 @@ namespace PixelatedElectricStuff
     };
     
     
-    class NEWForceEFieldOnCellBoundPixelated : public Force
+    class ForceEFieldOnCellBoundPixelated : public Force
     {
     public:
         // The actual class definition
-		NEWForceEFieldOnCellBoundPixelated(const System &sys) : Force{sys}
+		ForceEFieldOnCellBoundPixelated(const System &sys) : Force{sys}
         {
 		}
         
-		virtual ~NEWForceEFieldOnCellBoundPixelated() {}
+		virtual ~ForceEFieldOnCellBoundPixelated() {}
         
         
         void set_global_params(
@@ -200,7 +200,7 @@ namespace PixelatedElectricStuff
         ) override
         {
             if (verbose) {
-                cout << "  NEWForceEFieldOnCellBoundPixelated::set_global_params - starting" << endl;
+                cout << "  ForceEFieldOnCellBoundPixelated::set_global_params - starting" << endl;
             }
             _check_for_param_names(
                 num_params,
@@ -348,7 +348,7 @@ namespace PixelatedElectricStuff
         vector<int> _get_crossings_generalized(int start_coord, int end_coord, bool verbose) const;
         vector<int> _get_column_crossings_of_edge(GridCoord edge_start, GridCoord edge_end, bool verbose) const;
         vector<int> _get_row_crossings_of_edge(GridCoord edge_start, GridCoord edge_end, bool verbose) const;
-        double get_relative_position_of_crossing_along_edge(int crossing_coord, double edge_start_coord, double edge_end_coord) const;
+        double _get_relative_position_of_crossing_along_edge(double crossing_coord, double edge_start_coord, double edge_end_coord, bool verbose) const;
         
         double _get_intersection_with_row_and_find_rel_pos_in_column(const Vec& edge_start_VEC, const Vec& edge_end_VEC, int row_to_intersect, int snap_column, bool verbose) const;
         

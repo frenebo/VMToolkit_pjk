@@ -225,6 +225,13 @@ namespace VMSim
         int vfrom_id = vert.id;
         int vto_id = he.to()->id;
         
+        if (vto_id == vfrom_id) {
+            throw runtime_error("vert is also the vto of this halfedge");
+        }
+        if (vert.id != he.from()->id) {
+            throw runtime_error("ForceEFieldOnCellBoundary::_compute_he_force - vert id does not match the halfedge");
+        }
+        
         Vec v_r = vert.data().r;
         Vec vto_r = he.to()->data().r;
         
@@ -266,6 +273,7 @@ namespace VMSim
             cout << "        ForceEFieldOnCellBoundary::_compute_he_force - force on vertex " << vert.id << " by he " << he.idx() << " is :" << hev_force.x << ", " << hev_force.y << endl;
         }
         
-        return hev_force;
+        // Half of the force on this halfedge will go to the other vertex that touches it
+        return (0.5) * hev_force;
     }
 }
