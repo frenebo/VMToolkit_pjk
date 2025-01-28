@@ -226,10 +226,14 @@ def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     
     parser.add_argument("--comsoldata", required=True, help="Path to a txt file with the field x,y,z values")
-    parser.add_argument("--shape_param", type=float, required=True, help="Desired shape parameter - P0/sqrt(A0)")
+    parser.add_argument("--shape_param", type=float, default=1.0, help="Desired shape parameter - P0/sqrt(A0)")
     
-    parser.add_argument("--y_param",type=float, required=True, help="Desired Y param - Gamma/(Kappa * A0)")
-    parser.add_argument("--cell_equilibrium_area", type=float, default=16*0.00059180327, help="Desired equilibrium area for the cells to be, as determined by vertex model energy parameters")
+    parser.add_argument("--y_param",type=float, default=0.2, help="Desired Y param - Gamma/(Kappa * A0)")
+    parser.add_argument("--cell_equilibrium_area",
+                        type=float,
+                        # default=16*0.00059180327,
+                        default=0.00059180327,
+                        help="Desired equilibrium area for the cells to be, as determined by vertex model energy parameters")
     
     parser.add_argument("--tissue_width", type=float, default=6.0, help="Width of tissue in mm (6mm for conv)")
     parser.add_argument("--tissue_height", type=float, default=1.5, help="Height of tissue in mm (1.5mm for conv)")

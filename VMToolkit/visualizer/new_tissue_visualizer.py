@@ -6,6 +6,8 @@ from ..sim.vm_state import (
 )
 import numpy as np
 import plotly.graph_objects as go
+import copy
+
 
 def get_xy_lims_for_all_state_vertices(ckpt_states):
     all_x = []
@@ -26,7 +28,7 @@ def build_uniform_field_graph_objects(ck_state):
         
         raise NotImplementedError("Uniform field visualization not implemented yet")
 
-def build_cell_mesh_graph_objects(ck_state):
+def build_cell_mesh_graph_objects(ck_state, viz_params):
     all_vtx_x = []
     all_vtx_y = []
     
@@ -54,6 +56,9 @@ def build_cell_mesh_graph_objects(ck_state):
             marker_size=8,
             # fill="toself",
             marker_color='blue',
+            line={
+                "width": viz_params["edge_line_width"]
+            }
             # line=dict(color="red", width=2)
         )
     ]
@@ -142,13 +147,13 @@ def build_pixelated_field_graph_objects(ck_state, field_plot_col='green'):
             
     return traces
 
-def build_force_arrow_graph_objects(ck_state, force_id):
+def build_force_arrow_graph_objects(ck_state, force_id, viz_params):
     if ck_state.sim_current_stats() is None:
         return []
     
     vtx_current_forces = ck_state.sim_current_stats().forces_stats().current_vertex_forces().vertex_force_stats_by_forceid()[force_id]
     
-    force_scale = 5
+    force_scale = viz_params["force_arrow_scale_factor"]
     
     arrows_x = []
     arrows_y = []
@@ -192,17 +197,17 @@ def build_force_arrow_graph_objects(ck_state, force_id):
     )]
     
 
-def build_data_for_frame(ck_state, fields_to_show=None):
+def build_data_for_frame(ck_state, viz_params, fields_to_show=None):
     pixelated_field_traces = build_pixelated_field_graph_objects(ck_state)
     
-    mesh_traces = build_cell_mesh_graph_objects(ck_state)
+    mesh_traces = build_cell_mesh_graph_objects(ck_state, viz_params=viz_params)
     
     all_traces = mesh_traces + pixelated_field_traces
     
     if fields_to_show is not None:
         assert isinstance(fields_to_show, list)
         for field_force_id in fields_to_show:
-            all_traces  += build_force_arrow_graph_objects(ck_state, field_force_id)
+            all_traces  += build_force_arrow_graph_objects(ck_state, field_force_id, viz_params=viz_params)
     # right_force_arrow_traces = build_force_arrow_graph_objects(ck_state, 'right_forcing_field')
     
     return all_traces
@@ -243,10 +248,14 @@ def generate_frame_slider(n_frames):
         "steps": steps
     }
     
-def create_plotly_figure(ckpt_states, verbose=False, fields_to_show=None):
+def create_plotly_figure(ckpt_states, viz_params, verbose=False, fields_to_show=None):
     xlims, ylims = get_xy_lims_for_all_state_vertices(ckpt_states)
     
-    all_frames_data = [ build_data_for_frame(ck_state, fields_to_show=fields_to_show) for ck_state in ckpt_states ]
+    all_frames_data = [ build_data_for_frame(
+        ck_state,
+        viz_params=viz_params,
+        fields_to_show=fields_to_show,
+    ) for ck_state in ckpt_states ]
     all_frames = [go.Frame(data=frame_dat, name=frame_idx) for frame_idx, frame_dat in enumerate(all_frames_data)]
     
     print("length of all frames data: ", len(all_frames))
@@ -302,6 +311,13 @@ def create_plotly_figure(ckpt_states, verbose=False, fields_to_show=None):
     
     return fig
 
-def new_visualize_simulation(ckpt_states, fields_to_show=None, verbose=False):
-    return create_plotly_figure(ckpt_states,fields_to_show=fields_to_show,  verbose=verbose)
+default_viz_params = {
+    "edge_line_width": 1.0,
+    "force_arrow_scale_factor": 1.0,
+}
+
+def new_visualize_simulation(ckpt_states, fields_to_show=None, verbose=False, user_viz_params={}):
+    viz_params = copy.deepcopy(default_viz_params)
+    viz_params.update(user_viz_params)
+    return create_plotly_figure(ckpt_states,fields_to_show=fields_to_show,  verbose=verbose, viz_params=viz_params)
     
