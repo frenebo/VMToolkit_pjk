@@ -263,17 +263,25 @@ namespace PixelatedElectricStuff
             for (int x = 0; x < _gridspec->ncells_x(); x++) {
                 for (int y = 0; y < _gridspec->ncells_y(); y++) {
                     Vec field = get_electric_field_at_grid_coord(GridCoord(x,y),false);
+                    if (verbose) {
                     cout << field.x << " ";
+                    }
                 }
+                if (verbose) {
                 cout << endl;
+                }
             }
             
             for (int x = 0; x < _gridspec->ncells_x(); x++) {
                 for (int y = 0; y < _gridspec->ncells_y(); y++) {
                     Vec field = get_electric_field_at_grid_coord(GridCoord(x,y),false);
+                    if (verbose) {
                     cout << field.y << " ";
+                    }
                 }
+                if (verbose) {
                 cout << endl;
+                }
             }
         }
         

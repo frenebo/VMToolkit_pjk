@@ -348,27 +348,33 @@ class TheoreticalRegularHexModel:
         P_0_num,
         K_num,
         gamma_num,
+        verbose=False,
     ):
         if A_0_num <= 0:
             raise ValueError("Invalid value A_0_num = {} - must be positive".format(A_0_num))
         if K_num <= 0:
             raise ValueError("Invalid value K_num = {} - must be positive".format(K_num))
         
-        mu_val = np.sqrt(A_0_num) # Scaling factor to get tilded variables
         
+        if verbose:
+            print("Finding elastic properties of a hexagon with this model")
         
         eq_vals = self.get_important_vals_at_givenpoint(
             gamma_reg_value=gamma_num,
             P_r_reg_value=P_0_num,
             K_reg_value=K_num,
             A_r_reg_value=A_0_num,
+            verbose=verbose,
         )
+        if verbose:
+            print("Equilibrium vals:")
+            print(eq_vals)
         
-        xi_til_eq     = eq_vals["xi_til_eq"] # Equilibrium side length, in tilded variable
+        side_length_eq = eq_vals["xi_eq"] # Equilibrium side length, in tilded variable
         poisson_ratio = eq_vals["poisson_ratio"] # Same in either variable
         bulk_modulus = eq_vals["bulk_modulus"]
         
-        side_length_eq = xi_til_eq * mu_val
+        # side_length_eq = xi_til_eq * mu_val
         rest_area = (3*np.sqrt(3)/2) * (side_length_eq ** 2)
         
         if poisson_ratio <= -1:
@@ -414,16 +420,32 @@ class TheoreticalRegularHexModel:
         P_r_reg_value,
         K_reg_value,
         A_r_reg_value,
+        verbose=False
     ):
+        if verbose:
+            print("get_imporant_vals_at_givenpoint params:")
+            print("  gamma_reg_value: {}".format(gamma_reg_value))
+            print("  P_r_reg_value: {}".format(P_r_reg_value))
+            print("  K_reg_value: {}".format(K_reg_value))
+            print("  A_r_reg_value: {}".format(A_r_reg_value))
+        
         mu_val = np.sqrt(A_r_reg_value)
+        if verbose:
+            print(" mu val (length scale): {}".format(mu_val))
         # Finding equilibrium and poisson ratio is easier in tilded coordinates
         Y_value = gamma_reg_value / (K_reg_value*A_r_reg_value)
+        if verbose:
+            print(" Y value: {}".format(Y_value))
         P_r_tilvalue = P_r_reg_value / mu_val
+        if verbose:
+            print(" P_r_tilvalue: {}".format(P_r_tilvalue))
         
         xi_til_eq = self.find_xi_til_equilibrium_numeric(
             Y_value,
             P_r_tilvalue,
         )
+        if verbose:
+            print(" xi til equilibrium: {}".format(xi_til_eq))
         
         gradient_at_eq = self.get_gradient(
             xi_til_eq,
@@ -442,6 +464,8 @@ class TheoreticalRegularHexModel:
         # Change of variables back to normal, to calculate bulk modulus.
         # Bulk moduus is not dimensionless, so we need to change back to do calculations
         xi_nontilded_eq = xi_til_eq * mu_val
+        if verbose:
+            print(" xi REAL equilibrium: {}".format(xi_nontilded_eq))
         
         bulk_modulus = self.get_bulk_modulus_numerical(
             xi_reg_eq_value=xi_nontilded_eq,
@@ -458,7 +482,7 @@ class TheoreticalRegularHexModel:
         
         return {
             "poisson_ratio": poisson_ratio,
-            "xi_til_eq": xi_til_eq,
+            "xi_eq": xi_nontilded_eq ,
             "bulk_modulus": bulk_modulus
         }
 

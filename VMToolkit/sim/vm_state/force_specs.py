@@ -269,6 +269,8 @@ class PixelatedElectricForceOnCellBoundary(CellForce):
         cell_params,
         field_spec,
     ):
+        assert isinstance(field_spec, PixelatedFieldSpec)
+        
         self._cell_params = cell_params
         self._field_spec = field_spec
     

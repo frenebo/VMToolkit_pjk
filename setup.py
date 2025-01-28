@@ -12,6 +12,7 @@ setup(
         'VMToolkit.visualizer',
         'VMToolkit.theoretical_models',
         'VMToolkit.sim',
+        'VMToolkit.sim.utils',
         'VMToolkit.sim.tissue_builder',
         'VMToolkit.sim.vm_state',
         'VMToolkit.sim.vm_wrapper',

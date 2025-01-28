@@ -192,15 +192,20 @@ def build_force_arrow_graph_objects(ck_state, force_id):
     )]
     
 
-def build_data_for_frame(ck_state):
+def build_data_for_frame(ck_state, fields_to_show=None):
     pixelated_field_traces = build_pixelated_field_graph_objects(ck_state)
     
     mesh_traces = build_cell_mesh_graph_objects(ck_state)
     
-    left_force_arrow_traces = build_force_arrow_graph_objects(ck_state, 'left_forcing_field')
-    right_force_arrow_traces = build_force_arrow_graph_objects(ck_state, 'right_forcing_field')
+    all_traces = mesh_traces + pixelated_field_traces
     
-    return mesh_traces + pixelated_field_traces + left_force_arrow_traces + right_force_arrow_traces
+    if fields_to_show is not None:
+        assert isinstance(fields_to_show, list)
+        for field_force_id in fields_to_show:
+            all_traces  += build_force_arrow_graph_objects(ck_state, field_force_id)
+    # right_force_arrow_traces = build_force_arrow_graph_objects(ck_state, 'right_forcing_field')
+    
+    return all_traces
 
 
 def generate_frame_slider(n_frames):
@@ -238,10 +243,10 @@ def generate_frame_slider(n_frames):
         "steps": steps
     }
     
-def create_plotly_figure(ckpt_states, verbose=False):
+def create_plotly_figure(ckpt_states, verbose=False, fields_to_show=None):
     xlims, ylims = get_xy_lims_for_all_state_vertices(ckpt_states)
     
-    all_frames_data = [ build_data_for_frame(ck_state) for ck_state in ckpt_states ]
+    all_frames_data = [ build_data_for_frame(ck_state, fields_to_show=fields_to_show) for ck_state in ckpt_states ]
     all_frames = [go.Frame(data=frame_dat, name=frame_idx) for frame_idx, frame_dat in enumerate(all_frames_data)]
     
     print("length of all frames data: ", len(all_frames))
@@ -297,6 +302,6 @@ def create_plotly_figure(ckpt_states, verbose=False):
     
     return fig
 
-def new_visualize_simulation(ckpt_states, verbose=False):
-    return create_plotly_figure(ckpt_states, verbose=verbose)
+def new_visualize_simulation(ckpt_states, fields_to_show=None, verbose=False):
+    return create_plotly_figure(ckpt_states,fields_to_show=fields_to_show,  verbose=verbose)
     

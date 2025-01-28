@@ -336,6 +336,13 @@ def generate_vals_for_A0_P0(shapeparam_vals, param_kappa, param_gamma):
         A0_scaled = A0_unscaled / unscaled_rest_area
         P0_scaled = P0_unscaled / math.sqrt(unscaled_rest_area)
         
+        raise NotImplementedError("oops - this needs to correct the kappa and gamma paramters with the change of length scale!")
+        
+        # TheoreticalRegularHexModel().find_elastic_props_of_hexagon(
+        #     A_0_num=A0_scaled,
+        #     P0
+        # )
+        
         vals_for_A0_P0.append({
             "A0": A0_scaled,
             "P0": P0_scaled,

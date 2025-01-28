@@ -626,11 +626,11 @@ namespace PixelatedElectricStuff
         GridCoord edge_grid_start = _get_grid_coords_for_vector(edge_start_VEC, verbose);
         GridCoord edge_grid_end = _get_grid_coords_for_vector(edge_end_VEC, verbose);
         
-        if (edge_grid_start.x() > 1000 || edge_grid_start.y() > 1000) {
-            cout << "Edge start vec: " << edge_start_VEC.x << "," << edge_start_VEC.y << endl;
-            cout << "Edge end vec: " << edge_end_VEC.x << "," << edge_end_VEC.y << endl;
-            throw runtime_error("???");
-        }
+        // if (edge_grid_start.x() > 10000000 || edge_grid_start.y() > 10000000) {
+        //     cout << "Edge start vec: " << edge_start_VEC.x << "," << edge_start_VEC.y << endl;
+        //     cout << "Edge end vec: " << edge_end_VEC.x << "," << edge_end_VEC.y << endl;
+        //     throw runtime_error("???");
+        // }
         
         vector<int> column_crossings_xvals = _get_column_crossings_of_edge(edge_grid_start, edge_grid_end, verbose);
         vector<int> row_crossings_yvals = _get_row_crossings_of_edge(edge_grid_start, edge_grid_end, verbose);
