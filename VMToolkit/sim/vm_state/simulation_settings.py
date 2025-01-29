@@ -60,6 +60,8 @@ class T1TransitionSettings:
         if not self._enabled:
             return {
                 "enabled": False,
+                "min_edge_len": self._min_edge_len,
+                "new_edge_len": self._new_edge_len,
             }
         else:
             return {

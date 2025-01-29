@@ -21,7 +21,12 @@ from VMToolkit.sim.vm_state import (
 )
 
 
-def generate_vertex_model_energy_parameters(shape_param, Y_param, cell_equilibrium_area):
+def generate_vertex_model_energy_parameters(
+    shape_param,
+    Y_param,
+    cell_equilibrium_area,
+    bulk_modulus,
+    ):
     init_A0 = 1
     init_P0 = shape_param * math.sqrt(init_A0)
     
@@ -70,19 +75,35 @@ def generate_vertex_model_energy_parameters(shape_param, Y_param, cell_equilibri
         gamma_num=step1_gamma,
     )
     
-    if not np.isclose(step1_gamma / (step1_kappa * step1_A0), Y_param):
+    force_correction_factor = step1_elastic_props["bulk_modulus"] / bulk_modulus
+    print(step1_elastic_props["bulk_modulus"])
+    
+    step2_A0 = step1_A0
+    step2_P0 = step1_P0
+    step2_gamma = force_correction_factor * step1_gamma
+    step2_kappa = force_correction_factor * step1_kappa
+    
+    step2_elastic_props = TheoreticalRegularHexModel().find_elastic_props_of_hexagon(
+        A_0_num=step2_A0,
+        P_0_num=step2_P0,
+        K_num=step2_kappa,
+        gamma_num=step2_gamma,
+    )
+    
+    if not np.isclose(step2_gamma / (step2_kappa * step2_A0), Y_param):
         raise ValueError("Y param should remain unchanged after change of length scale")
     
+    if not np.isclose(step2_elastic_props["rest_area"], cell_equilibrium_area):
+        raise ValueError("Rest area should match the desired value")
+    
     return {
-        "A0": step1_A0,
-        "P0": step1_P0,
-        "gamma": step1_gamma,
-        "kappa": step1_kappa,
+        "A0": step2_A0,
+        "P0": step2_P0,
+        "gamma": step2_gamma,
+        "kappa": step2_kappa,
     }
     
 def rest_side_length_for_rest_area(rest_area):
-    
-    # rest_area = (3*(math.sqrt(3))/2) * (rest_side_length ** 2)
     return math.sqrt(rest_area) / math.sqrt((3*(math.sqrt(3))/2))
 
 def run_sim(args):
@@ -91,8 +112,9 @@ def run_sim(args):
     cell_equilibrium_area = args.cell_equilibrium_area
     tissue_width = args.tissue_width
     tissue_height = args.tissue_height
-    vertex_friction_gamma = args.vertex_friction_gamma
+    vertex_friction_gamma_relative = args.vertex_friction_gamma_relative
     init_integrator_dt = args.init_integrator_dt
+    bulk_modulus = args.bulk_modulus
     
     relative_dormand_prince_max_error = args.dormand_prince_max_error_rel
     relative_t1_min_edgelen = args.t1_min_edge_length_rel
@@ -102,17 +124,12 @@ def run_sim(args):
     
     n_checkpoints = args.n_checkpoints
     ckpt_period = args.checkpoint_period
+    field_off_checkpoint = args.field_off_checkpoint
     
     outdir = args.outdir
     
     verbose = args.verbose
-    # parser.add_argument("--dormand_prince_max_error_rel", type=float, default=0.002, help="max error allowed in the dormand prince runge kutta (relative to rest cell edge length)")
-    # parser.add_argument("--t1_min_edge_length_rel", type=float, default=0.02, help="edge length at which t1 transition happens (relative to rest cell edge length)")
-    # parser.add_argument("--t1_new_edge_length_rel", type=float, default=0.03, help="new edge length after t1 transition (relative to rest cell edge length)")
     
-    # parser.add_argument("--init_integrator_dt", type=float, default=0.01, help="default dt for the runge kutta adaptive timestep")
-    # parser.add_argument("--dormandprince_max_error", type=float, default=0.01, help="max error allowed in the dormand prince runge kutta")
-
     
     with open(args.comsoldata, "r") as f:
         electric_field_spec = read_comsol_electric_field_data(
@@ -122,9 +139,11 @@ def run_sim(args):
     
     rest_side_length = rest_side_length_for_rest_area(cell_equilibrium_area)
     
-    dormand_prince_max_error = args.dormand_prince_max_error_rel * rest_side_length
-    t1_min_edgelen = args.t1_min_edge_length_rel * rest_side_length
-    t1_new_edgelen = args.t1_new_edge_length_rel * rest_side_length
+    dormand_prince_max_error = relative_dormand_prince_max_error * rest_side_length
+    t1_min_edgelen = relative_t1_min_edgelen * rest_side_length
+    t1_new_edgelen = relative_t1_new_edgelen * rest_side_length
+    
+    vertex_friction_gamma = vertex_friction_gamma_relative * cell_equilibrium_area
     
     cm = HexagonalCellMeshBuilder(
         side_length=rest_side_length,
@@ -137,6 +156,7 @@ def run_sim(args):
         shape_param=cell_shape_param,
         Y_param=cell_y_param,
         cell_equilibrium_area=cell_equilibrium_area,
+        bulk_modulus=bulk_modulus,
     )
     
     tiss_init_state.forces()["perim_f_all"] = CellPerimeterForce(
@@ -206,6 +226,9 @@ def run_sim(args):
     tot_time_elaspsed = 0
     sim_model.update_vm_state_from_cpp_vm(verbose=verbose) # So we get what the instantaneous forces would be right at start
     for i in range(n_checkpoints):
+        if field_off_checkpoint is not None and i == field_off_checkpoint:
+            sim_model.delete_force("comsol_field_force")
+        
         ckpt_filename = "res{}.json".format(str(i).zfill(ckpt_strnum_nchars))
         ckpt_fp = os.path.join(outdir, ckpt_filename)
         vmstate_json = sim_model.vm_state_json()
@@ -232,22 +255,24 @@ def main():
     parser.add_argument("--cell_equilibrium_area",
                         type=float,
                         # default=16*0.00059180327,
-                        default=0.00059180327,
+                        default=0.01,
                         help="Desired equilibrium area for the cells to be, as determined by vertex model energy parameters")
+    parser.add_argument("--bulk_modulus", type=float, default=100.0, help="Bulk modulus desired for cell paramters")
     
     parser.add_argument("--tissue_width", type=float, default=6.0, help="Width of tissue in mm (6mm for conv)")
     parser.add_argument("--tissue_height", type=float, default=1.5, help="Height of tissue in mm (1.5mm for conv)")
-    parser.add_argument("--vertex_friction_gamma", type=float, default=1.0, help="Vertex friction experienced")
+    parser.add_argument("--vertex_friction_gamma_relative", type=float, default=15.0, help="Vertex friction experienced / per rest cell area. So friction = rel_friction * cell_rest_area")
     
     parser.add_argument("--init_integrator_dt", type=float, default=0.01, help="default dt for the runge kutta adaptive timestep")
     parser.add_argument("--dormand_prince_max_error_rel", type=float, default=0.002, help="max error allowed in the dormand prince runge kutta (relative to rest cell edge length)")
     parser.add_argument("--t1_min_edge_length_rel", type=float, default=0.02, help="edge length at which t1 transition happens (relative to rest cell edge length)")
     parser.add_argument("--t1_new_edge_length_rel", type=float, default=0.03, help="new edge length after t1 transition (relative to rest cell edge length)")
     
-    parser.add_argument("--checkpoint_period", type=float, default=0.04, help="checkpoint period timelength")
-    parser.add_argument("--n_checkpoints", type=int, default=20, help="How many checkpoints to do")
+    parser.add_argument("--checkpoint_period", type=float, default=0.02, help="checkpoint period timelength")
+    parser.add_argument("--n_checkpoints", type=int, default=30, help="How many checkpoints to do")
+    parser.add_argument("--field_off_checkpoint", type=int, default=10, help="Which checkpoint to turn off the electric field")
     
-    parser.add_argument("--electric_field_force_multiplier", type=float, default=0.001, help="How much to scale up or down the electric field from comsol")
+    parser.add_argument("--electric_field_force_multiplier", type=float, default=0.0007, help="How much to scale up or down the electric field from comsol")
     
     parser.add_argument("--outdir", required=True)
     

@@ -253,6 +253,33 @@ class VMCppWrapper:
         
         self._last_vm_state = new_vmstate
     
+    def delete_force(self, force_id, verbose=False):
+        if verbose:
+            print(self._last_vm_state.tissue_state().forces())
+        tiss_force = self._last_vm_state.tissue_state().forces()[force_id]
+        if verbose:
+            print("Tiss force deleting: ")
+            print(tiss_force)
+        
+        
+        # if isinstance(tiss_force, VertexForce)
+        self._forces.delete_force(force_id, verbose=verbose)
+        try:
+            del self._last_vm_state.tissue_state().forces()[force_id]
+        except:
+            print(self._last_vm_state.tissue_state().forces())
+            raise
+        
+        for v_grp_id, v_group in self._last_vm_state.tissue_state().vertex_groups().items():
+            if force_id in v_group.force_ids():
+                v_group.set_force_ids([vgrp_fid for vgrp_fid in v_group.force_ids() if vgrp_fid != force_id])
+        
+        for c_grp_id, c_group in self._last_vm_state.tissue_state().cell_groups().items():
+            if force_id in c_group.force_ids():
+                c_group.set_force_ids([cgrp_fid for cgrp_fid in c_group.force_ids() if cgrp_fid != force_id])
+        
+        # vertex_groups
+    
     
     def _initialize_cpp(self, verbose=False):
         ##### Running sim

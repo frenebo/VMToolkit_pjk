@@ -19,6 +19,9 @@ class SimulationModel:
     def vm_state_json(self):
         return self._vm_wrapper.vm_state_json()
     
+    def delete_force(self, force_id):
+        self._vm_wrapper.delete_force(force_id)
+    
     def update_vm_state_from_cpp_vm(self, verbose=False):
         self._vm_wrapper.update_vm_state_from_cpp_vm(verbose=verbose)
         

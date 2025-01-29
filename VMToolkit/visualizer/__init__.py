@@ -1,2 +1,2 @@
-from .old_tissue_visualizer import OLD_make_plotly_visualizer
-from .new_tissue_visualizer import new_visualize_simulation
+# from .old_tissue_visualizer import OLD_make_plotly_visualizer
+from .tissue_visualizer import visualize_simulation

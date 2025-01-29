@@ -73,6 +73,13 @@ class CellGroup:
     def force_ids(self):
         return self._force_ids
     
+    def set_force_ids(self, new_force_ids):
+        assert isinstance(new_force_ids, list)
+        for force_id in new_force_ids:
+            assert type(force_id) == str
+        
+        self._force_ids = list(new_force_ids)
+    
     def to_json(self):
         return {
             "cell_ids": list(self._cell_ids),
@@ -97,6 +104,13 @@ class VertexGroup:
     
     def force_ids(self):
         return self._force_ids
+    
+    def set_force_ids(self, new_force_ids):
+        assert isinstance(new_force_ids, list)
+        for force_id in new_force_ids:
+            assert type(force_id) == str
+        
+        self._force_ids = list(new_force_ids)
     
     def to_json(self):
         return {

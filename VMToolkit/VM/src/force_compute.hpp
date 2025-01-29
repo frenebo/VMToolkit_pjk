@@ -61,6 +61,8 @@ namespace VMSim
       void set_vertex_params_vertexwise(const std::string& force_id, const vector<int>& vids, const vector<params_type>& params, bool verbose);
 
       void add_force(const std::string& force_id, const std::string& force_type, bool verbose);
+      
+      void delete_force(const std::string& force_id, bool verbose);
 
     private:
       const System& _sys;

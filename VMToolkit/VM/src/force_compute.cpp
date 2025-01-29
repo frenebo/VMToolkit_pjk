@@ -215,6 +215,17 @@ namespace VMSim
 			throw runtime_error("Unknown force name : " + force_id + ".");
 		}
 	}
+      void ForceCompute::delete_force(const std::string& force_id, bool verbose)
+	  {
+		if (verbose) {
+			cout << "ForceCompute::delete_force - deleting force with id " << force_id << endl;
+		}
+		if (this->factory_map.find(force_id) == this->factory_map.end()) {
+			throw runtime_error("ForceCompute::delete_force - cannot delete force with id '" + force_id + "' - does not exist");
+		}
+		
+		this->factory_map.erase(force_id);
+	  }
 	
 	void export_ForceCompute(py::module &m)
 	{
@@ -240,6 +251,9 @@ namespace VMSim
 			)
 			.def("add_force", &ForceCompute::add_force,
 				py::arg("force_id"), py::arg("force_type"), py::arg("verbose")=false
+			)
+			.def("delete_force", &ForceCompute::delete_force,
+				py::arg("force_id"), py::arg("verbose")=false
 			)
 			.def("start_force_compute_timers", &ForceCompute::start_force_compute_timers,
 				py::arg("verbose")=false

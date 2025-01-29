@@ -316,7 +316,7 @@ default_viz_params = {
     "force_arrow_scale_factor": 1.0,
 }
 
-def new_visualize_simulation(ckpt_states, fields_to_show=None, verbose=False, user_viz_params={}):
+def visualize_simulation(ckpt_states, fields_to_show=None, verbose=False, user_viz_params={}):
     viz_params = copy.deepcopy(default_viz_params)
     viz_params.update(user_viz_params)
     return create_plotly_figure(ckpt_states,fields_to_show=fields_to_show,  verbose=verbose, viz_params=viz_params)
